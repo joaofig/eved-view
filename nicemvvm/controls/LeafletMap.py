@@ -1,11 +1,12 @@
-from typing import Tuple, Any, Dict, Callable
+from typing import Tuple, Any, Dict, Callable, Self
 from dataclasses import dataclass
+from unittest import case
 
 from nicegui import ui
 from nicegui.elements.leaflet import Leaflet
 from nicegui.events import GenericEventArguments
 
-from nicemvvm.Observable import Observable, Observer
+from nicemvvm.Observable import Observable, Observer, ObserverHandler
 
 
 @dataclass
@@ -13,7 +14,7 @@ class LatLng:
     lat: float
     lng: float
     alt: float = 0.0
-    
+
 
 class LeafletMap(Leaflet, Observer):
     def __init__(self):
@@ -28,14 +29,33 @@ class LeafletMap(Leaflet, Observer):
         center = e.args["center"]
         self._outbound_handler("center", center)
 
-    def bind_zoom(self, source: Observable, property_name: str) -> None:
-        self.on("map-zoom", self._on_map_zoom)
+    def bind(self,
+             source: Observable,
+             property_name: str,
+             local_name: str,
+             handler: ObserverHandler|None = None) -> Self:
 
-        source.register(property_name, self._inbound_handler)
-        self.bind(source, property_name, "zoom")
+        match local_name:
+            case "zoom":
+                self.on("map-zoom", self._on_map_zoom)
+                source.register(property_name, self._inbound_handler)
+            case "center":
+                self.on("map-move", self._on_map_move)
+                source.register(property_name, self._inbound_handler)
 
-    def bind_center(self, source: Observable, property_name: str) -> None:
-        self.on("map-move", self._on_map_move)
+        Observer.bind(self, source, property_name, local_name, handler)
+        return self
 
-        source.register(property_name, self._inbound_handler)
-        self.bind(source, property_name, "center")
+
+
+    # def bind_zoom(self, source: Observable, property_name: str) -> None:
+    #     self.on("map-zoom", self._on_map_zoom)
+    #
+    #     source.register(property_name, self._inbound_handler)
+    #     self.bind(source, property_name, "zoom")
+    #
+    # def bind_center(self, source: Observable, property_name: str) -> None:
+    #     self.on("map-move", self._on_map_move)
+    #
+    #     source.register(property_name, self._inbound_handler)
+    #     self.bind(source, property_name, "center")

@@ -18,6 +18,7 @@ class MainView:
                     Label("Zoom:")
                     Label().bind(view_model, "zoom", "text")
             with splitter.after:
-                m = LeafletMap().classes("h-full")
-                m.bind_zoom(view_model, "zoom")
-                m.bind_center(view_model, "center")
+                (LeafletMap().classes("h-full")
+                    .bind(view_model, "zoom", "zoom")
+                    .bind(view_model, "center", "center")
+                )

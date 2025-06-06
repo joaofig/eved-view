@@ -1,4 +1,4 @@
-from typing import Callable, Any, Coroutine, Dict, List
+from typing import Callable, Any, Coroutine, Dict, List, Self
 
 ObserverHandler = Callable[[object, str, Any], None | Coroutine[Any, Any, None]]
 
@@ -41,12 +41,13 @@ class Observer:
              source: Observable,
              property_name: str,
              local_name: str,
-             handler: ObserverHandler|None = None) -> None:
+             handler: ObserverHandler|None = None) -> Self:
         self._prop_map[property_name] = local_name
         self._source_map[local_name] = source
         self._prop_pam[local_name] = property_name
         source.register(property_name, handler or self._inbound_handler)
         setattr(self, local_name, getattr(source, property_name))
+        return self
 
     def unbind(self, local_name: str,
                source: Observable,
