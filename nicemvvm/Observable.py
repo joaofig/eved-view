@@ -1,24 +1,27 @@
-from typing import Callable, Any, Coroutine
+from typing import Callable, Any, Coroutine, Dict, List
 
 ObserverHandler = Callable[[object, str, Any], None | Coroutine[Any, Any, None]]
 
 
 class Observable:
     def __init__(self):
-        self._handlers = list()
+        self._handlers: Dict[str, List[ObserverHandler]] = {}
 
-    def bind(self, handler: ObserverHandler) -> None:
-        self.unbind(handler)
-        if handler not in self._handlers:
-            self._handlers.append(handler)
+    def register(self, property_name: str, handler: ObserverHandler):
+        if property_name not in self._handlers:
+            self._handlers[property_name] = []
+        self._handlers[property_name].append(handler)
 
-    def unbind(self, handler: ObserverHandler) -> None:
-        if handler in self._handlers:
-            self._handlers.remove(handler)
+    def unregister(self, property_name: str, handler: ObserverHandler) -> None:
+        if property_name in self._handlers:
+            prop_handlers = self._handlers[property_name]
+            prop_handlers.remove(handler)
 
     def notify(self, property_name: str, value: Any) -> None:
-        for observer in self._handlers:
-            observer(self, property_name, value)
+        if property_name in self._handlers:
+            prop_handlers = self._handlers[property_name]
+            for handler in prop_handlers:
+                handler(self, property_name, value)
 
     def notify_set(self, property_name: str, value: Any) -> None:
         prop_name = f"_{property_name}"
@@ -28,46 +31,49 @@ class Observable:
             self.notify(property_name, value)
 
 
-class ObserverMixin:
-    def __init__(self, observable: Observable) -> None:
-        self._observable = observable
-        observable.bind(self._handler)
+class Observer:
+    def __init__(self) -> None:
+        self._prop_map: Dict[str, str] = {}
+        self._prop_pam: Dict[str, str] = {}
+        self._source_map: Dict[str, Observable] = {}
 
-        self._map = dict()
+    def bind(self,
+             source: Observable,
+             property_name: str,
+             local_name: str,
+             handler: ObserverHandler|None = None) -> None:
+        self._prop_map[property_name] = local_name
+        self._source_map[local_name] = source
+        self._prop_pam[local_name] = property_name
+        source.register(property_name, handler or self._inbound_handler)
+        setattr(self, local_name, getattr(source, property_name))
 
-    def bind(self, local_property: str, remote_property: str) -> None:
-        self._map[remote_property] = local_property
+    def unbind(self, local_name: str,
+               source: Observable,
+               handler: ObserverHandler|None = None) -> None:
+        if local_name in self._prop_map:
+            property_name = self._prop_pam[local_name]
+            source.unregister(property_name, handler or self._inbound_handler)
+            del self._source_map[local_name]
+            del self._prop_pam[local_name]
+            del self._prop_map[property_name]
 
-    def unbind(self, remote_property: str) -> None:
-        if remote_property in self._map:
-            self._map.pop(remote_property, None)
+    def _inbound_handler(self, _: object, property_name: str, value: Any) -> None:
+        """
+        This is the default binding handler that just propagates the changed value to an internal property.
+        :param _: Not used.
+        :param property_name: The name of the changed property.
+        :param value: The changed property value.
+        :return: None
+        """
+        if property_name in self._prop_map:
+            local_name = self._prop_map[property_name]
 
-    def _handler(self, _: object, property_name: str, value: Any) -> None:
-        if property_name in self._map:
-            local_property = self._map[property_name]
-            if getattr(self, local_property) != value:
-                setattr(self, local_property, value)
+            if value != getattr(self, local_name):
+                setattr(self, local_name, value)
 
-
-class CompositeObserver:
-    def __init__(self,
-                 observable: Observable,
-                 target: object) -> None:
-        self._observable = observable
-        self._target = target
-        observable.bind(self._handler)
-
-        self._map = dict()
-
-    def bind(self, target_property: str, remote_property: str) -> None:
-        self._map[remote_property] = target_property
-
-    def unbind(self, remote_property: str) -> None:
-        if remote_property in self._map:
-            self._map.pop(remote_property, None)
-
-    def _handler(self, _: object, property_name: str, value: Any) -> None:
-        if property_name in self._map:
-            target_property = self._map[property_name]
-            if getattr(self._target, target_property) != value:
-                setattr(self._target, target_property, value)
+    def _outbound_handler(self, local_name: str, value: Any) -> None:
+        if local_name in self._prop_pam:
+            property_name = self._prop_pam[local_name]
+            source = self._source_map[local_name]
+            setattr(source, property_name, value)
