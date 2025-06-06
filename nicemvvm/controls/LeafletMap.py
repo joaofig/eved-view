@@ -1,4 +1,5 @@
 from typing import Tuple, Any, Dict, Callable
+from dataclasses import dataclass
 
 from nicegui import ui
 from nicegui.elements.leaflet import Leaflet
@@ -6,6 +7,13 @@ from nicegui.events import GenericEventArguments
 
 from nicemvvm.Observable import Observable, Observer
 
+
+@dataclass
+class LatLng:
+    lat: float
+    lng: float
+    alt: float = 0.0
+    
 
 class LeafletMap(Leaflet, Observer):
     def __init__(self):
