@@ -45,17 +45,3 @@ class LeafletMap(Leaflet, Observer):
 
         Observer.bind(self, source, property_name, local_name, handler)
         return self
-
-
-
-    # def bind_zoom(self, source: Observable, property_name: str) -> None:
-    #     self.on("map-zoom", self._on_map_zoom)
-    #
-    #     source.register(property_name, self._inbound_handler)
-    #     self.bind(source, property_name, "zoom")
-    #
-    # def bind_center(self, source: Observable, property_name: str) -> None:
-    #     self.on("map-move", self._on_map_move)
-    #
-    #     source.register(property_name, self._inbound_handler)
-    #     self.bind(source, property_name, "center")
