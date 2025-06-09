@@ -21,12 +21,10 @@ class LeafletMap(Leaflet, Observer):
         Leaflet.__init__(self)
         Observer.__init__(self)
 
-    def _on_map_zoom(self, e: GenericEventArguments):
-        zoom = e.args["zoom"]
-        self._outbound_handler("zoom", zoom)
-
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]
+        zoom = e.args["zoom"]
+        self._outbound_handler("zoom", zoom)
         self._outbound_handler("center", center)
 
     def bind(self,
@@ -37,7 +35,7 @@ class LeafletMap(Leaflet, Observer):
 
         match local_name:
             case "zoom":
-                self.on("map-zoom", self._on_map_zoom)
+                self.on("map-zoom", self._on_map_move)
                 source.register(property_name, self._inbound_handler)
             case "center":
                 self.on("map-move", self._on_map_move)
@@ -45,3 +43,7 @@ class LeafletMap(Leaflet, Observer):
 
         Observer.bind(self, source, property_name, local_name, handler)
         return self
+
+    def invalidate_size(self, animate: bool = False):
+        self.run_map_method("invalidateSize", animate)
+

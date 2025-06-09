@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from nicemvvm.Observable import Observable
 
@@ -7,7 +7,7 @@ class MapViewModel(Observable):
     def __init__(self):
         super().__init__()
         self._zoom = 10
-        self._center: List[float] = [0.0, 0.0]
+        self._center: Tuple[float,float] = (0.0, 0.0)
         self._center_text: str = "(0, 0)"
 
     @property
@@ -19,11 +19,11 @@ class MapViewModel(Observable):
         self.notify_set("zoom", value)
 
     @property
-    def center(self) -> List[float]:
+    def center(self) -> Tuple[float,float]:
         return self._center
 
     @center.setter
-    def center(self, value: List[float]) -> None:
+    def center(self, value: Tuple[float,float]) -> None:
         self.notify_set("center", value)
         self.center_text = f"({self.center[0]}, {self.center[1]})"
 

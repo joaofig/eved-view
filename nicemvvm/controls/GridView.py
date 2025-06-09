@@ -36,7 +36,7 @@ class GridView(NiceGUIAgGrid, Observer):
             self._options = options
 
         super().__init__(
-            options=options,
+            options=self._options,
             auto_size_columns=True)
 
     @property
