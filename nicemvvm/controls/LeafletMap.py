@@ -1,12 +1,10 @@
-from typing import Tuple, Any, Dict, Callable, Self
+from typing import Self
 from dataclasses import dataclass
-from unittest import case
 
-from nicegui import ui
 from nicegui.elements.leaflet import Leaflet
 from nicegui.events import GenericEventArguments
 
-from nicemvvm.Observable import Observable, Observer, ObserverHandler
+from nicemvvm.observables.Observable import Observable, Observer, ObserverHandler
 
 
 @dataclass
@@ -36,10 +34,10 @@ class LeafletMap(Leaflet, Observer):
         match local_name:
             case "zoom":
                 self.on("map-zoom", self._on_map_move)
-                source.register(property_name, self._inbound_handler)
+                source.register(self._inbound_handler)
             case "center":
                 self.on("map-move", self._on_map_move)
-                source.register(property_name, self._inbound_handler)
+                source.register(self._inbound_handler)
 
         Observer.bind(self, source, property_name, local_name, handler)
         return self

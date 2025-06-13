@@ -1,4 +1,4 @@
-from Observable import Observable
+from nicemvvm.observables.Observable import Observable
 from typing import Any
 
 

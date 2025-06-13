@@ -1,5 +1,8 @@
 from nicegui import ui, context
+
+from app.models.TripModel import TripModel
 from app.views.MainView import MainView
+from nicemvvm.ResourceLocator import ResourceLocator
 
 
 @ui.page("/")
@@ -9,4 +12,10 @@ async def index():
     MainView()
 
 
+def setup_app():
+    locator = ResourceLocator()
+    locator["TripModel"] = TripModel()
+
+
+setup_app()
 ui.run()

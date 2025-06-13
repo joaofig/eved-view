@@ -1,8 +1,8 @@
 import pandas as pd
 
 from os import path
-from lib.config import load_config
-from src.db.BaseDb import BaseDb
+from tools.config import load_config
+from tools.database.sqlite.BaseDb import BaseDb
 
 
 class EvedDb(BaseDb):

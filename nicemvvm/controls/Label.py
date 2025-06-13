@@ -1,6 +1,6 @@
 from nicegui.elements.label import Label as NiceGUILabel
 
-from nicemvvm.Observable import Observer, Observable
+from nicemvvm.observables.Observable import Observer
 
 
 class Label(NiceGUILabel, Observer):

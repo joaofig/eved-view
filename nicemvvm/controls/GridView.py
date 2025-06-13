@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 from dataclasses import dataclass
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
-from nicemvvm.Observable import Observable, Observer
+from nicemvvm.observables.Observable import Observer
 
 
 @dataclass

@@ -1,6 +1,8 @@
-from typing import Dict, List, Tuple
+from typing import Tuple
 
-from nicemvvm.Observable import Observable
+from app.models.TripModel import TripModel
+from nicemvvm.observables.Observable import Observable
+from nicemvvm.ResourceLocator import ResourceLocator
 
 
 class MapViewModel(Observable):
@@ -9,6 +11,8 @@ class MapViewModel(Observable):
         self._zoom = 10
         self._center: Tuple[float,float] = (0.0, 0.0)
         self._center_text: str = "(0, 0)"
+        self._locator = ResourceLocator()
+        self._trip_model: TripModel = self._locator["TripModel"]
 
     @property
     def zoom(self) -> int:

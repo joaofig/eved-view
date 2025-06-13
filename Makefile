@@ -7,3 +7,7 @@ setup:
 
 run:
 	uv run evedview.py
+
+check:
+	uvx ruff check .
+
