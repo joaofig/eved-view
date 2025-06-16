@@ -12,7 +12,7 @@ class MainView:
 
         with ui.splitter().classes("w-full h-screen") as splitter:
             with splitter.before:
-                TripView()
+                TripView(view_model)
                 ui.label('This is some content on the left hand side.')
                 Label().bind(view_model, "center_text", "text")
 

@@ -14,7 +14,7 @@ class MapViewModel(Observable):
         self._center_text: str = "(0, 0)"
         self._locator = ResourceLocator()
         self._trip_model: TripModel = self._locator["TripModel"]
-        self._trips: ObservableList = ObservableList()
+        self._trips: ObservableList = ObservableList(self._trip_model.load())
 
     @property
     def zoom(self) -> int:

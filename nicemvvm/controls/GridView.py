@@ -1,8 +1,8 @@
-from typing import Any, Dict, List, Mapping
-from dataclasses import dataclass
+from typing import Any, Dict, List, Mapping, Self
+from dataclasses import dataclass, is_dataclass, asdict
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
-from nicemvvm.observables.Observable import Observer
+from nicemvvm.observables.Observable import Observer, Observable, ObserverHandler
 from nicemvvm.observables.ObservableCollections import ObservableList
 
 
@@ -20,6 +20,13 @@ class GridViewColumn:
             "type": self.type,
             "filter": self.filter
         }
+
+
+def to_dict(item: Any) -> Dict[str, Any]:
+    if is_dataclass(item):
+        return asdict(item)
+    else:
+        return item.__dict__
 
 
 class GridView(NiceGUIAgGrid, Observer):
@@ -41,6 +48,17 @@ class GridView(NiceGUIAgGrid, Observer):
             options=self._options,
             auto_size_columns=True)
 
+    def bind(self,
+             source: Observable,
+             property_name: str,
+             local_name: str,
+             handler: ObserverHandler | None = None) -> Self:
+
+        Observer.bind(self, source, property_name, local_name, handler)
+        if local_name == "items":
+            self.update()
+        return self
+
     @property
     def columns(self) -> List[GridViewColumn]:
         return self._columns
@@ -58,7 +76,7 @@ class GridView(NiceGUIAgGrid, Observer):
     @items.setter
     def items(self, items: List[Dict]) -> None:
         self._items = items
-        self._options["rowData"] = items
+        self._options["rowData"] = [to_dict(item) for item in items]
 
         if isinstance(items, ObservableList):
             source: ObservableList = items

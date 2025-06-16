@@ -1,3 +1,5 @@
+import math
+
 from datetime import datetime
 from typing import List, Dict
 from dataclasses import dataclass, field
@@ -37,7 +39,7 @@ class Trip:
     traj_id: int
     vehicle_id: int
     trip_id: int
-    length: float
+    km: float
     duration: float
     engine: str
     weight: float
@@ -83,20 +85,23 @@ class TripModel:
     def __init__(self):
         self.trips: Dict[int, Trip] = {}
 
-    def load(self) -> None:
+    def load(self) -> List[Trip]:
         raw_trips = load_all_trips()
+        trip_list: List[Trip] = []
         for raw_trip in raw_trips.itertuples(index=False):
             trip = Trip(traj_id=raw_trip.traj_id,
                         vehicle_id=raw_trip.vehicle_id,
                         trip_id=raw_trip.trip_id,
-                        length=raw_trip.length_m,
+                        km=round(raw_trip.length_m / 1000, 1),
                         duration=raw_trip.duration_s,
                         engine=raw_trip.engine,
                         weight=raw_trip.weight,
-                        start=datetime.fromtimestamp(raw_trip.dt_ini),
-                        end=datetime.fromtimestamp(raw_trip.dt_end),
+                        start=raw_trip.dt_ini[:19],
+                        end=raw_trip.dt_end[:19],
                         signals=[])
             self.trips[trip.traj_id] = trip
+            trip_list.append(trip)
+        return trip_list
 
 
     def __getitem__(self, traj_id: int) -> Trip:

@@ -1,5 +1,5 @@
 from typing import Any, Iterable, SupportsIndex, Dict, List
-from Observable import Observable
+from nicemvvm.observables.Observable import Observable
 
 
 class ObservableList(Observable, list):
