@@ -1,6 +1,5 @@
-from typing import Callable, Any, Iterable, SupportsIndex, Dict, List
-from abc import ABC
-from Observable import ObserverHandler, Observable
+from typing import Any, Iterable, SupportsIndex, Dict, List
+from Observable import Observable
 
 
 class ObservableList(Observable, list):

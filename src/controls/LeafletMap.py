@@ -15,8 +15,3 @@ class LeafletMap:
 
         if len(classes) > 0:
             self.map.classes(classes)
-
-    def polyline(
-        self, points: List[Tuple[float, float]], props: Dict | None = None
-    ) -> GenericLayer:
-        return self.map.generic_layer(name="polyline", args=[points, props])

@@ -3,6 +3,7 @@ from typing import Tuple
 from app.models.TripModel import TripModel
 from nicemvvm.observables.Observable import Observable
 from nicemvvm.ResourceLocator import ResourceLocator
+from nicemvvm.observables.ObservableCollections import ObservableList
 
 
 class MapViewModel(Observable):
@@ -13,6 +14,7 @@ class MapViewModel(Observable):
         self._center_text: str = "(0, 0)"
         self._locator = ResourceLocator()
         self._trip_model: TripModel = self._locator["TripModel"]
+        self._trips: ObservableList = ObservableList()
 
     @property
     def zoom(self) -> int:
@@ -38,3 +40,8 @@ class MapViewModel(Observable):
     @center_text.setter
     def center_text(self, text: str) -> None:
         self.notify_set("center_text", text)
+
+    @property
+    def trips(self) -> ObservableList:
+        return self._trips
+
