@@ -10,9 +10,10 @@ class TripView(Column):
 
         self._grid = GridView().bind(view_model, "trips", "items")
         self._grid.columns = [
-            GridViewColumn(header="Trip", field="traj_id", filter=True),
-            GridViewColumn(header="Vehicle", field="vehicle_id", filter=True),
-            GridViewColumn(header="km", field="km", filter=True),
-            GridViewColumn(header="Start", field="start", filter=True),
+            GridViewColumn(header="Trip", field="traj_id", filter=True, width=70),
+            GridViewColumn(header="Vehicle", field="vehicle_id", filter=True, width=75),
+            GridViewColumn(header="km", field="km", filter=True, width=60),
+            GridViewColumn(header="Start", field="start", filter=True, width=100),
             GridViewColumn(header="End", field="end", filter=True),
         ]
+        self._grid.set_row_id("traj_id")

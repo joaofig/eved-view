@@ -12,13 +12,19 @@ class GridViewColumn:
     field: str
     type: str|List[str]|None = None   # "rightAligned", "numericColumn"
     filter: bool = False
+    sortable: bool = True
+    selection: bool = False
+    width: int|None = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "headerName": self.header,
             "field": self.field,
             "type": self.type,
-            "filter": self.filter
+            "filter": self.filter,
+            "sortable": self.sortable,
+            "checkboxSelection": self.selection,
+            "width": self.width,
         }
 
 
@@ -40,6 +46,10 @@ class GridView(NiceGUIAgGrid, Observer):
                 "rowData": [],
                 "rowSelection": "single",
                 "loading": False,
+                "defaultColDef": {
+                    "flex": 0
+                },
+                ":getRowId": ""
             }
         else:
             self._options = options
@@ -47,6 +57,13 @@ class GridView(NiceGUIAgGrid, Observer):
         super().__init__(
             options=self._options,
             auto_size_columns=True)
+
+    def set_row_id(self, row_id: str) -> None:
+        if len(row_id) == 0:
+            self._options[":getRowId"] = ""
+        else:
+            self._options[":getRowId"] = f"(params) => params.data.{row_id}"
+        self.update()
 
     def bind(self,
              source: Observable,
@@ -70,11 +87,11 @@ class GridView(NiceGUIAgGrid, Observer):
         self.update()
 
     @property
-    def items(self) -> List[Dict]:
+    def items(self) -> List[Any]:
         return self._items
 
     @items.setter
-    def items(self, items: List[Dict]) -> None:
+    def items(self, items: List[Any]) -> None:
         self._items = items
         self._options["rowData"] = [to_dict(item) for item in items]
 
