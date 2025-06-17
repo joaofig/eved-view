@@ -13,12 +13,14 @@ class MainView:
         with ui.splitter().classes("w-full h-screen") as splitter:
             with splitter.before:
                 TripView(view_model)
-                ui.label('This is some content on the left hand side.')
-                Label().bind(view_model, "center_text", "text")
 
-                with ui.row():
-                    Label("Zoom:")
-                    Label().bind(view_model, "zoom", "text")
+                Label("Center:")
+                Label().bind(view_model, "center_text", "text")
+                Label("Zoom:")
+                Label().bind(view_model, "zoom", "text")
+                Label("Selected Trip ID:")
+                Label().bind(view_model, "selected_trip_id", "text")
+
             with splitter.after:
                 self.m = (LeafletMap()
                             .classes("h-full w-full")

@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from app.models.TripModel import TripModel
+from app.models.TripModel import TripModel, Trip
 from nicemvvm.observables.Observable import Observable
 from nicemvvm.ResourceLocator import ResourceLocator
 from nicemvvm.observables.ObservableCollections import ObservableList
@@ -15,6 +15,8 @@ class MapViewModel(Observable):
         self._locator = ResourceLocator()
         self._trip_model: TripModel = self._locator["TripModel"]
         self._trips: ObservableList = ObservableList(self._trip_model.load())
+        self._selected_trip: Trip|None = None
+        self._selected_trip_id: str = ""
 
     @property
     def zoom(self) -> int:
@@ -45,3 +47,22 @@ class MapViewModel(Observable):
     def trips(self) -> ObservableList:
         return self._trips
 
+    @property
+    def selected_trip(self) -> Trip|None:
+        return self._selected_trip
+
+    @selected_trip.setter
+    def selected_trip(self, trip: Trip|None) -> None:
+        self.notify_set("selected_trip", trip)
+        if trip is not None:
+            self.selected_trip_id = str(trip.traj_id)
+        else:
+            self.selected_trip_id = ""
+
+    @property
+    def selected_trip_id(self) -> str:
+        return self._selected_trip_id
+
+    @selected_trip_id.setter
+    def selected_trip_id(self, trip_id: str) -> None:
+        self.notify_set("selected_trip_id", trip_id)
