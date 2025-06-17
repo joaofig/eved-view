@@ -1,9 +1,8 @@
 from nicegui import ui
+from nicemvvm import nm
 
 from app.viewmodels.MapViewModel import MapViewModel
 from app.views.TripView import TripView
-from nicemvvm.controls.Label import Label
-from nicemvvm.controls.LeafletMap import LeafletMap
 
 
 class MainView:
@@ -14,15 +13,17 @@ class MainView:
             with splitter.before:
                 TripView(view_model)
 
-                Label("Center:")
-                Label().bind(view_model, "center_text", "text")
-                Label("Zoom:")
-                Label().bind(view_model, "zoom", "text")
-                Label("Selected Trip ID:")
-                Label().bind(view_model, "selected_trip_id", "text")
+                ui.label("Center:")
+                nm.label().bind(view_model, "center_text", "text")
+                ui.label("Zoom:")
+                nm.label().bind(view_model, "zoom", "text")
+                ui.label("Selected Trip ID:")
+                nm.label().bind(view_model, "selected_trip_id", "text")
+
+                ui.button("Test").props("size=sm")
 
             with splitter.after:
-                self.m = (LeafletMap()
+                self.m = (nm.leaflet()
                             .classes("h-full w-full")
                             .bind(view_model, "zoom", "zoom")
                             .bind(view_model, "center", "center"))
