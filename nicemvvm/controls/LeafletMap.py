@@ -1,7 +1,7 @@
 from typing import Self, Tuple, List, Dict
 from dataclasses import dataclass, field
 
-from nicegui.elements.leaflet import Leaflet
+from nicegui import ui
 from nicegui.elements.leaflet_layers import GenericLayer
 from nicegui.events import GenericEventArguments
 
@@ -67,9 +67,9 @@ class Polygon(Polyline):
 
 
 
-class LeafletMap(Leaflet, Observer):
+class LeafletMap(ui.leaflet, Observer):
     def __init__(self):
-        Leaflet.__init__(self)
+        ui.leaflet.__init__(self)
         Observer.__init__(self)
 
         self._polylines: List[GenericLayer] = []
