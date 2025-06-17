@@ -1,7 +1,21 @@
+import functools
 from typing import Callable, Any, Coroutine, Dict, List, Self, Mapping, Set
 from abc import ABC
 
 ObserverHandler = Callable[[str, Mapping[str, Any]], None | Coroutine[Any, Any, None]]
+
+
+def notify(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        name = func.__name__
+        this, value = args
+        old_value = getattr(this, name)
+        if old_value != value and isinstance(this, Observable):
+            observable: Observable = this
+            observable.notify("property", name=name, value=value)
+        return func(*args, **kwargs)
+    return wrapper
 
 
 class Observable(ABC):
