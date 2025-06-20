@@ -8,8 +8,9 @@ class TripView(ui.column):
         super().__init__()
 
         self._grid = nm.gridview() \
-            .bind(view_model, "trips", "items") \
-            .bind(view_model, "selected_trip", "selected_item")
+            .bind_all(view_model,
+                      items="trips",
+                      selected_item="selected_trip")
         self._grid.columns = [
             nm.gridview_col(header="Trip", field="traj_id", filter=True, width=70),
             nm.gridview_col(header="Vehicle", field="vehicle_id", filter=True, width=75),

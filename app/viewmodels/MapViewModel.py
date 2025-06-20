@@ -1,7 +1,8 @@
-from typing import Tuple
+from typing import Tuple, Any, Mapping
 
 from app.models.TripModel import TripModel, Trip
-from nicemvvm.observables.Observable import Observable, notify
+from nicemvvm.Command import Command
+from nicemvvm.observables.Observable import Observable, notify, Observer
 from nicemvvm.ResourceLocator import ResourceLocator
 from nicemvvm.observables.ObservableCollections import ObservableList
 
@@ -71,3 +72,29 @@ class MapViewModel(Observable):
     @notify
     def selected_trip_id(self, trip_id: str) -> None:
         self._selected_trip_id = trip_id
+
+
+class AddToMapCommand(Command):
+    def __init__(self, view_model: MapViewModel):
+        super().__init__()
+        self._view_model = view_model
+        view_model.register(self._handler)
+        self.is_enabled = False
+
+    def _handler(self,
+                 action: str,
+                 args: Mapping[str, Any]) -> None:
+        if action == "property":
+            name = args["name"]
+            value = args["value"]
+            if name == "selected_trip":
+                self.is_enabled = (value is not None)
+
+    def run(self, arg: Any = None) -> Any:
+        trip = self._view_model.selected_trip
+        if trip is not None:
+            if len(trip.signals) == 0:
+                trip.load_signals()
+            if len(trip.nodes) == 0:
+                trip.load_nodes()
+        return None

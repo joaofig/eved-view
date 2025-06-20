@@ -76,6 +76,18 @@ class GridView(NiceGUIAgGrid, Observer):
             self.update()
         return self
 
+    def bind_all(self,
+                 source: Observable,
+                 items: str = "",
+                 selected_item: str = "",
+                 handler: ObserverHandler | None = None) -> Self:
+
+        if len(items) > 0:
+            self.bind(source, items, "items", handler)
+        if len(selected_item) > 0:
+            self.bind(source, selected_item, "selected_item", handler)
+        return self
+
     @property
     def columns(self) -> List[GridViewColumn]:
         return self._columns
