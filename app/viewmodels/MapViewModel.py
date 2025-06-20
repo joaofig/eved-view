@@ -74,21 +74,14 @@ class MapViewModel(Observable):
         self._selected_trip_id = trip_id
 
 
-class AddToMapCommand(Command):
-    def __init__(self, view_model: MapViewModel):
-        super().__init__()
+class AddToMapCommand(Command, Observer):
+    def __init__(self, view_model: MapViewModel, **kwargs):
         self._view_model = view_model
-        view_model.register(self._handler)
-        self.is_enabled = False
-
-    def _handler(self,
-                 action: str,
-                 args: Mapping[str, Any]) -> None:
-        if action == "property":
-            name = args["name"]
-            value = args["value"]
-            if name == "selected_trip":
-                self.is_enabled = (value is not None)
+        super().__init__(is_enabled=False, **kwargs)
+        self.bind(view_model,
+                  property_name="selected_trip",
+                  local_name="is_enabled",
+                  converter=lambda x: x is not None)
 
     def run(self, arg: Any = None) -> Any:
         trip = self._view_model.selected_trip

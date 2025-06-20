@@ -3,10 +3,13 @@ from typing import Any
 
 
 class Command(Observable):
-    def __init__(self, is_async: bool = False):
-        super().__init__()
-        self._is_enabled: bool = True
+    def __init__(self,
+                 is_async: bool = False,
+                 is_enabled: bool = True,
+                 **kwargs):
+        self._is_enabled: bool = is_enabled
         self._is_async: bool = is_async
+        super().__init__(**kwargs)
 
     @property
     def is_enabled(self) -> bool:

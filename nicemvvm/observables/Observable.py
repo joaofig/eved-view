@@ -3,6 +3,7 @@ from typing import Callable, Any, Coroutine, Dict, List, Self, Mapping, Set
 from abc import ABC
 
 ObserverHandler = Callable[[str, Mapping[str, Any]], None | Coroutine[Any, Any, None]]
+ConverterFunction = Callable[[Any], Any]
 
 
 def notify(func):
@@ -19,8 +20,9 @@ def notify(func):
 
 
 class Observable(ABC):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._handlers: Set[ObserverHandler] = set()
+        super().__init__(**kwargs)
 
     def register(self,
                  handler: ObserverHandler):
@@ -48,21 +50,38 @@ class Observable(ABC):
 
 
 class Observer:
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         self._prop_map: Dict[str, str] = {}
         self._prop_pam: Dict[str, str] = {}
         self._source_map: Dict[str, Observable] = {}
+        self._converter: ConverterFunction|None = None
+        super().__init__(**kwargs)
 
     def bind(self,
              source: Observable,
              property_name: str,
              local_name: str,
-             handler: ObserverHandler|None = None) -> Self:
+             handler: ObserverHandler|None = None,
+             converter: ConverterFunction|None = None) -> Self:
+        """
+        Binds a property of an observable to a local property of this observable.
+        :param source: Observable source
+        :param property_name: Property name to observe
+        :param local_name: Property name to bind to.
+        :param handler: Optional handler to call when the property changes.
+        :param converter: Optional converter function to call before setting the local property.
+        :return: Returns the observer object.
+        """
         self._prop_map[property_name] = local_name
         self._source_map[local_name] = source
         self._prop_pam[local_name] = property_name
+        self._converter = converter
         source.register(handler or self._inbound_handler)
-        setattr(self, local_name, getattr(source, property_name))
+
+        value = getattr(source, property_name)
+        if converter is not None:
+            value = converter(value)
+        setattr(self, local_name, value)
         return self
 
     def unbind(self, local_name: str,
@@ -91,6 +110,8 @@ class Observer:
                 local_name = self._prop_map[property_name]
 
                 value = args["value"]
+                if self._converter is not None:
+                    value = self._converter(value)
                 if value != getattr(self, local_name):
                     setattr(self, local_name, value)
 
