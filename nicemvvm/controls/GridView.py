@@ -4,7 +4,7 @@ from dataclasses import dataclass, is_dataclass, asdict
 from nicegui import events
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
-from nicemvvm.observables.Observable import Observer, Observable, ObserverHandler
+from nicemvvm.observables.Observable import Observer, Observable, ObserverHandler, ConverterFunction
 from nicemvvm.observables.ObservableCollections import ObservableList
 
 
@@ -66,7 +66,8 @@ class GridView(NiceGUIAgGrid, Observer):
              source: Observable,
              property_name: str,
              local_name: str,
-             handler: ObserverHandler | None = None) -> Self:
+             handler: ObserverHandler | None = None,
+             converter: ConverterFunction|None = None) -> Self:
 
         if local_name == "selected_item":
             self.on('selectionChanged', self._selection_changed_handler)

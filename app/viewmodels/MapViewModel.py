@@ -27,6 +27,19 @@ class MapPolyLine:
                      {"color": self.color, "weight": self.weight, "opacity": self.opacity}]
         }
 
+    def to_dict(self) -> Dict[str, Any]:
+        d = {
+            "id": f"{self.traj_id}_{self.trace_name}",
+            "layer": self.to_layer(),
+            "data": {
+                "visible": self.is_visible,
+                "traj_id": self.traj_id,
+                "vehicle_id": self.vehicle_id,
+                "trace_name": self.trace_name,
+            }
+        }
+        return d
+
 
 class MapViewModel(Observable):
     def __init__(self):

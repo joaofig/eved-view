@@ -21,7 +21,15 @@ class MapView(ui.column):
                           )
 
             with splitter.after:
-                ui.label("Map contents")
+                grid = nm.gridview().classes("h_full h-full") \
+                    .bind_all(view_model, items="polylines")
+                grid.columns = [
+                    nm.gridview_col(header="Trip", field="traj_id", filter=True, width=100),
+                    nm.gridview_col(header="Vehicle", field="vehicle_id", filter=True, width=100),
+                    nm.gridview_col(header="Trace", field="trace_name", filter=True, width=100),
+                    nm.gridview_col(header="km", field="km", filter=True, width=100),
+                ]
+                grid.row_id = "traj_id"
 
             # Make sure the map is correctly resized
             splitter.on_value_change(lambda _: self.m.invalidate_size(animate=True))

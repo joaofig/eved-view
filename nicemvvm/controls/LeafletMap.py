@@ -20,63 +20,63 @@ class LatLng:
         return [self.lat, self.lng]
 
 
-@dataclass
-class Path:
-    stroke: bool = True
-    color: str = "#3388ff"
-    opacity: float = 1.0
-    weight: float = 3.0
-    line_cap: str = "round"
-    line_join: str = "round"
-    dash_array: str = ""
-    dash_offset: int = 0
-    fill: bool = False
-    fill_color: str = "#3388ff"
-    fill_opacity: float = 0.2
-    fill_rule: str = "evenodd"
-
-    @staticmethod
-    def from_dict(d: Dict) -> 'Path':
-        return Path(**d)
-
-    def to_dict(self):
-        return {
-            "stroke": self.stroke,
-            "color": self.color,
-            "opacity": self.opacity,
-            "weight": self.weight,
-            "lineCap": self.line_cap,
-            "lineJoin": self.line_join,
-            "dashArray": self.dash_array,
-            "dashOffset": self.dash_offset,
-            "fill": self.fill,
-            "fillColor": self.fill_color,
-            "fillOpacity": self.fill_opacity,
-            "fillRule": self.fill_rule,
-        }
-
-
-@dataclass
-class Polyline(Path):
-    points: List[List[float]] = field(default_factory=list)
-    smooth_factor: float = 1.0
-    no_clip: bool = False
-
-    @staticmethod
-    def from_dict(d: Dict) -> 'Polyline':
-        return Polyline(**d)
-
-    def to_dict(self):
-        return {
-            "smoothFactor": self.smooth_factor,
-            "noClip": self.no_clip,
-            "points": [[l.lat, l.lng] for l in self.points]
-        } | Path.to_dict(self)
-
-
-@dataclass
-class Polygon(Polyline):
-    ...
+# @dataclass
+# class Path:
+#     stroke: bool = True
+#     color: str = "#3388ff"
+#     opacity: float = 1.0
+#     weight: float = 3.0
+#     line_cap: str = "round"
+#     line_join: str = "round"
+#     dash_array: str = ""
+#     dash_offset: int = 0
+#     fill: bool = False
+#     fill_color: str = "#3388ff"
+#     fill_opacity: float = 0.2
+#     fill_rule: str = "evenodd"
+#
+#     @staticmethod
+#     def from_dict(d: Dict) -> 'Path':
+#         return Path(**d)
+#
+#     def to_dict(self):
+#         return {
+#             "stroke": self.stroke,
+#             "color": self.color,
+#             "opacity": self.opacity,
+#             "weight": self.weight,
+#             "lineCap": self.line_cap,
+#             "lineJoin": self.line_join,
+#             "dashArray": self.dash_array,
+#             "dashOffset": self.dash_offset,
+#             "fill": self.fill,
+#             "fillColor": self.fill_color,
+#             "fillOpacity": self.fill_opacity,
+#             "fillRule": self.fill_rule,
+#         }
+#
+#
+# @dataclass
+# class Polyline(Path):
+#     points: List[List[float]] = field(default_factory=list)
+#     smooth_factor: float = 1.0
+#     no_clip: bool = False
+#
+#     @staticmethod
+#     def from_dict(d: Dict) -> 'Polyline':
+#         return Polyline(**d)
+#
+#     def to_dict(self):
+#         return {
+#             "smoothFactor": self.smooth_factor,
+#             "noClip": self.no_clip,
+#             "points": self.points
+#         } | Path.to_dict(self)
+#
+#
+# @dataclass
+# class Polygon(Polyline):
+#     ...
 
 
 class LeafletMap(ui.leaflet, Observer):
@@ -84,7 +84,7 @@ class LeafletMap(ui.leaflet, Observer):
         ui.leaflet.__init__(self)
         Observer.__init__(self)
 
-        self._polylines: List[GenericLayer] = []
+        self._polylines: Dict[str, Dict[str, Any]] = {}
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]
@@ -94,21 +94,36 @@ class LeafletMap(ui.leaflet, Observer):
         zoom = e.args["zoom"]
         self._outbound_handler("zoom", zoom)
 
-    @property
-    def polylines(self) -> List[GenericLayer]:
-        return self._polylines
-
-    @polylines.setter
-    def polylines(self, polylines: List[GenericLayer]) -> None:
-        self._polylines = polylines
-        for polyline in polylines:
-            self.add_layer(polyline)
-
     def _polylines_handler(self, action: str, args: Dict[str, Any]) -> None:
         match action:
             case "append":
-                polyline = args["value"]
-                layer = self.generic_layer(**polyline.to_layer())
+                polyline = args["value"].to_dict()
+                if not polyline["id"] in self._polylines:
+                    layer = self.generic_layer(**polyline["layer"])
+                    self._polylines[polyline["id"]] = {
+                        "layer": layer,
+                        "polyline": polyline,
+                    }
+            case "extend":
+                for p in args["values"]:
+                    polyline = p.to_dict()
+                    if not polyline["id"] in self._polylines:
+                        layer = self.generic_layer(**polyline["layer"])
+                        self._polylines[polyline["id"]] = {
+                            "layer": layer,
+                            "polyline": polyline,
+                        }
+            case "pop" | "remove":
+                polyline = args["value"].to_dict()
+                if polyline["id"] in self._polylines:
+                    layer = self._polylines[polyline["id"]]["layer"]
+                    self.run_map_method("removeLayer", layer)
+                    del self._polylines[polyline["id"]]
+            case "clear":
+                for layer in self._polylines.values():
+                    self.run_map_method("removeLayer", layer["layer"])
+                self._polylines = {}
+
 
     def bind(self,
              source: Observable,
@@ -127,7 +142,7 @@ class LeafletMap(ui.leaflet, Observer):
             case "polylines":
                 polylines = getattr(source, property_name)
                 if isinstance(polylines, ObservableList):
-                    obs_list: ObservableList[Polyline] = polylines
+                    obs_list: ObservableList = polylines
                     obs_list.register(self._polylines_handler)
                 return self
 
