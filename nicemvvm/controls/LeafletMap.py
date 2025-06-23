@@ -35,6 +35,10 @@ class Path:
     fill_opacity: float = 0.2
     fill_rule: str = "evenodd"
 
+    @staticmethod
+    def from_dict(d: Dict) -> 'Path':
+        return Path(**d)
+
     def to_dict(self):
         return {
             "stroke": self.stroke,
@@ -54,9 +58,13 @@ class Path:
 
 @dataclass
 class Polyline(Path):
-    points: List[LatLng] = field(default_factory=list)
+    points: List[List[float]] = field(default_factory=list)
     smooth_factor: float = 1.0
     no_clip: bool = False
+
+    @staticmethod
+    def from_dict(d: Dict) -> 'Polyline':
+        return Polyline(**d)
 
     def to_dict(self):
         return {
@@ -97,7 +105,10 @@ class LeafletMap(ui.leaflet, Observer):
             self.add_layer(polyline)
 
     def _polylines_handler(self, action: str, args: Dict[str, Any]) -> None:
-        ...
+        match action:
+            case "append":
+                polyline = args["value"]
+                layer = self.generic_layer(**polyline.to_layer())
 
     def bind(self,
              source: Observable,
@@ -118,6 +129,7 @@ class LeafletMap(ui.leaflet, Observer):
                 if isinstance(polylines, ObservableList):
                     obs_list: ObservableList[Polyline] = polylines
                     obs_list.register(self._polylines_handler)
+                return self
 
         Observer.bind(self, source, property_name, local_name,
                       handler, converter)

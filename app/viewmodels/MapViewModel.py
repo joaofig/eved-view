@@ -1,5 +1,5 @@
 from dataclasses import field, dataclass
-from typing import Tuple, Any, Mapping, List
+from typing import Tuple, Any, Mapping, List, Dict
 
 from app.models.TripModel import TripModel, Trip
 from nicemvvm.Command import Command
@@ -19,6 +19,13 @@ class MapPolyLine:
     opacity: float
     trace_name: str
     locations: List[LatLng] = field(default_factory=list)
+
+    def to_layer(self) -> Dict[str, Any]:
+        return {
+            "name": "polyline",
+            "args": [[[p.lat, p.lng] for p in self.locations],
+                     {"color": self.color, "weight": self.weight, "opacity": self.opacity}]
+        }
 
 
 class MapViewModel(Observable):

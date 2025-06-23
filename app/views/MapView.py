@@ -17,6 +17,7 @@ class MapView(ui.column):
                             .classes("h-full w-full")
                             .bind(view_model, "zoom", "zoom")
                             .bind(view_model, "center", "center")
+                            .bind(view_model, "polylines", "polylines")
                           )
 
             with splitter.after:
