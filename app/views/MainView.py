@@ -14,15 +14,30 @@ class MainView:
                 TripView(view_model)
 
                 ui.label("Center:")
-                nm.label().bind(view_model, "center_text", "text")
+                nm.label().bind(view_model, "center",
+                                "text",
+                                converter=lambda v: f"({v[0]}, {v[1]})")
                 ui.label("Zoom:")
                 nm.label().bind(view_model, "zoom", "text")
-                ui.label("Selected Trip ID:")
-                nm.label().bind(view_model, "selected_trip_id", "text")
+                # ui.label("Selected Trip ID:")
+                # nm.label().bind(view_model, "selected_trip_id", "text")
 
-                add_to_map = nm.button("Add to Map").props("size=md no-caps")
-                add_to_map.command = AddToMapCommand(view_model)
-                add_to_map.disable()
+                with ui.row():
+                    (
+                        nm.button("Add GPS",
+                                  command=AddToMapCommand(view_model, trace_name="gps"))
+                            .props("size=sm no-caps").disable()
+                    )
+                    (
+                        nm.button("Add Match",
+                                  command=AddToMapCommand(view_model, trace_name="match"))
+                            .props("size=sm no-caps").disable()
+                    )
+                    (
+                        nm.button("Add Nodes",
+                                  command=AddToMapCommand(view_model, trace_name="nodes"))
+                            .props("size=sm no-caps").disable()
+                    )
 
             with splitter.after:
                 MapView(view_model)

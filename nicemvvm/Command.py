@@ -1,4 +1,4 @@
-from nicemvvm.observables.Observable import Observable, notify
+from nicemvvm.observables.Observable import Observable, notify_change
 from typing import Any
 
 
@@ -16,7 +16,7 @@ class Command(Observable):
         return self._is_enabled
 
     @is_enabled.setter
-    @notify
+    @notify_change
     def is_enabled(self, value: bool):
         self._is_enabled = value
 

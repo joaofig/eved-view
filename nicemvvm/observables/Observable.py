@@ -2,11 +2,11 @@ import functools
 from typing import Callable, Any, Coroutine, Dict, List, Self, Mapping, Set
 from abc import ABC
 
-ObserverHandler = Callable[[str, Mapping[str, Any]], None | Coroutine[Any, Any, None]]
+ObserverHandler = Callable[[str, Mapping[str, Any]], None] | Coroutine[Any, Any, None]
 ConverterFunction = Callable[[Any], Any]
 
 
-def notify(func):
+def notify_change(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         name = func.__name__

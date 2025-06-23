@@ -7,10 +7,17 @@ from nicemvvm.observables.Observable import Observer
 
 
 class Button(ui.button, Observer):
-    def __init__(self, text:str, color: str = "primary", icon: str|None = None):
+    def __init__(self, text:str,
+                 color: str = "primary",
+                 icon: str|None = None,
+                 command: Command|None = None
+                 ):
         ui.button.__init__(self, text=text, color=color, icon=icon)
 
-        self._command: Command|None = None
+        self._command: Command|None = command
+        if command is not None:
+            self.on("click", command.run)
+            command.register(self._command_handler)
 
     def _command_handler(self,
                          action: str,
