@@ -1,6 +1,6 @@
 import functools
-from typing import Callable, Any, Coroutine, Dict, List, Self, Mapping, Set
 from abc import ABC
+from typing import Any, Callable, Coroutine, Dict, Mapping, Self, Set
 
 ObserverHandler = Callable[[str, Mapping[str, Any]], None] | Coroutine[Any, Any, None]
 ConverterFunction = Callable[[Any], Any]
@@ -16,6 +16,7 @@ def notify_change(func):
             observable: Observable = this
             observable.notify("property", name=name, value=value)
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -24,8 +25,7 @@ class Observable(ABC):
         self._handlers: Set[ObserverHandler] = set()
         super().__init__(**kwargs)
 
-    def register(self,
-                 handler: ObserverHandler):
+    def register(self, handler: ObserverHandler):
         if handler not in self._handlers:
             self._handlers.add(handler)
 
@@ -37,16 +37,12 @@ class Observable(ABC):
         for handler in self._handlers:
             handler(action, kwargs)
 
-    def notify_set(self,
-                   name: str,
-                   value: Any) -> None:
+    def notify_set(self, name: str, value: Any) -> None:
         prop_name = f"_{name}"
         old_value = getattr(self, prop_name)
         if old_value is not value or old_value != value:
             setattr(self, prop_name, value)
-            self.notify("property",
-                        name=name,
-                        value=value)
+            self.notify("property", name=name, value=value)
 
 
 class Observer:
@@ -54,15 +50,17 @@ class Observer:
         self._prop_map: Dict[str, str] = {}
         self._prop_pam: Dict[str, str] = {}
         self._source_map: Dict[str, Observable] = {}
-        self._converter: ConverterFunction|None = None
+        self._converter: ConverterFunction | None = None
         super().__init__(**kwargs)
 
-    def bind(self,
-             source: Observable,
-             property_name: str,
-             local_name: str,
-             handler: ObserverHandler|None = None,
-             converter: ConverterFunction|None = None) -> Self:
+    def bind(
+        self,
+        source: Observable,
+        property_name: str,
+        local_name: str,
+        handler: ObserverHandler | None = None,
+        converter: ConverterFunction | None = None,
+    ) -> Self:
         """
         Binds a property of an observable to a local property of this observable.
         :param source: Observable source
@@ -84,9 +82,12 @@ class Observer:
         setattr(self, local_name, value)
         return self
 
-    def unbind(self, local_name: str,
-               source: Observable,
-               handler: ObserverHandler|None = None) -> None:
+    def unbind(
+        self,
+        local_name: str,
+        source: Observable,
+        handler: ObserverHandler | None = None,
+    ) -> None:
         if local_name in self._prop_map:
             property_name = self._prop_pam[local_name]
             source.unregister(handler or self._inbound_handler)
@@ -94,9 +95,7 @@ class Observer:
             del self._prop_pam[local_name]
             del self._prop_map[property_name]
 
-    def _inbound_handler(self,
-                         action: str,
-                         args: Mapping[str, Any]) -> None:
+    def _inbound_handler(self, action: str, args: Mapping[str, Any]) -> None:
         """
         This is the default binding handler that just propagates the changed value to an internal property.
         :param _: Not used.

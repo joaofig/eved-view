@@ -12,11 +12,11 @@ def notify(func):
         if old_value != value:
             print(f"Value changed from {old_value} to {value}")
         return func(*args, **kwargs)
+
     return wrapper
 
 
 class MyClass:
-
     _data: int = 0
 
     @property

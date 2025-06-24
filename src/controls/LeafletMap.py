@@ -1,6 +1,6 @@
-from typing import Dict, List, Tuple
+from typing import Dict
+
 from nicegui import ui
-from nicegui.elements.leaflet_layers import GenericLayer
 
 
 class LeafletMap:

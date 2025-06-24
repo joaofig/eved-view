@@ -1,12 +1,16 @@
-import asyncio
-from typing import Self, Tuple, List, Dict, Any
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any, Dict, List, Self, Tuple
 
 from nicegui import ui
 from nicegui.elements.leaflet_layers import GenericLayer
 from nicegui.events import GenericEventArguments
 
-from nicemvvm.observables.Observable import Observable, Observer, ObserverHandler, ConverterFunction
+from nicemvvm.observables.Observable import (
+    ConverterFunction,
+    Observable,
+    Observer,
+    ObserverHandler,
+)
 from nicemvvm.observables.ObservableCollections import ObservableList
 
 
@@ -98,7 +102,7 @@ class LeafletMap(ui.leaflet, Observer):
         match action:
             case "append":
                 polyline = args["value"].to_dict()
-                if not polyline["id"] in self._polylines:
+                if polyline["id"] not in self._polylines:
                     layer = self.generic_layer(**polyline["layer"])
                     self._polylines[polyline["id"]] = {
                         "layer": layer,
@@ -107,7 +111,7 @@ class LeafletMap(ui.leaflet, Observer):
             case "extend":
                 for p in args["values"]:
                     polyline = p.to_dict()
-                    if not polyline["id"] in self._polylines:
+                    if polyline["id"] not in self._polylines:
                         layer = self.generic_layer(**polyline["layer"])
                         self._polylines[polyline["id"]] = {
                             "layer": layer,
@@ -124,14 +128,14 @@ class LeafletMap(ui.leaflet, Observer):
                     self.run_map_method("removeLayer", layer["layer"])
                 self._polylines = {}
 
-
-    def bind(self,
-             source: Observable,
-             property_name: str,
-             local_name: str,
-             handler: ObserverHandler|None = None,
-             converter: ConverterFunction|None = None) -> Self:
-
+    def bind(
+        self,
+        source: Observable,
+        property_name: str,
+        local_name: str,
+        handler: ObserverHandler | None = None,
+        converter: ConverterFunction | None = None,
+    ) -> Self:
         match local_name:
             case "zoom":
                 self.on("map-zoomend", self._on_map_zoom)
@@ -146,26 +150,24 @@ class LeafletMap(ui.leaflet, Observer):
                     obs_list.register(self._polylines_handler)
                 return self
 
-        Observer.bind(self, source, property_name, local_name,
-                      handler, converter)
+        Observer.bind(self, source, property_name, local_name, handler, converter)
         return self
 
     def invalidate_size(self, animate: bool = False) -> Self:
         self.run_map_method("invalidateSize", animate)
         return self
 
-    def fit_bounds(self, bounds: List[LatLng], options: Dict|None = None) -> Self:
+    def fit_bounds(self, bounds: List[LatLng], options: Dict | None = None) -> Self:
         if len(bounds) > 0:
             min_lat = min(b.lat for b in bounds)
             max_lat = max(b.lat for b in bounds)
             min_lng = min(b.lng for b in bounds)
             max_lng = max(b.lng for b in bounds)
             bounds_list = [[min_lat, min_lng], [max_lat, max_lng]]
-            self.run_map_method("fitBounds",bounds_list, options)
+            self.run_map_method("fitBounds", bounds_list, options)
         return self
 
-    def polyline(self,
-                 points: List[Tuple[float, float]],
-                 props: Dict|None = None
+    def polyline(
+        self, points: List[Tuple[float, float]], props: Dict | None = None
     ) -> GenericLayer:
         return self.generic_layer(name="polyline", args=[points, props])

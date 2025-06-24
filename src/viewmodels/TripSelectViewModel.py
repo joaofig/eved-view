@@ -1,5 +1,6 @@
-from src.db.EvedDb import EvedDb
 from typing import List
+
+from src.db.EvedDb import EvedDb
 from src.viewmodels.BaseViewModel import BaseViewModel
 
 

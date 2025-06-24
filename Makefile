@@ -11,3 +11,8 @@ run:
 check:
 	uvx ruff check .
 
+
+format:
+	uvx ruff format .
+	uvx ruff check . --fix
+	uvx ruff check --select I . --fix

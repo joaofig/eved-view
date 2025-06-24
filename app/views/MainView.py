@@ -1,8 +1,9 @@
 from nicegui import ui
-from nicemvvm import nm
+
+from app.viewmodels.MapViewModel import AddToMapCommand, MapViewModel
 from app.views.MapView import MapView
-from app.viewmodels.MapViewModel import MapViewModel, AddToMapCommand
 from app.views.TripView import TripView
+from nicemvvm import nm
 
 
 class MainView:
@@ -14,9 +15,12 @@ class MainView:
                 TripView(view_model)
 
                 ui.label("Center:")
-                nm.label().bind(view_model, "center",
-                                "text",
-                                converter=lambda v: f"({v[0]}, {v[1]})")
+                nm.label().bind(
+                    view_model,
+                    "center",
+                    "text",
+                    converter=lambda v: f"({v[0]}, {v[1]})",
+                )
                 ui.label("Zoom:")
                 nm.label().bind(view_model, "zoom", "text")
                 # ui.label("Selected Trip ID:")
@@ -24,19 +28,28 @@ class MainView:
 
                 with ui.row():
                     (
-                        nm.button("Add GPS",
-                                  command=AddToMapCommand(view_model, trace_name="gps"))
-                            .props("size=sm no-caps").disable()
+                        nm.button(
+                            "Add GPS",
+                            command=AddToMapCommand(view_model, trace_name="gps"),
+                        )
+                        .props("size=sm no-caps")
+                        .disable()
                     )
                     (
-                        nm.button("Add Match",
-                                  command=AddToMapCommand(view_model, trace_name="match"))
-                            .props("size=sm no-caps").disable()
+                        nm.button(
+                            "Add Match",
+                            command=AddToMapCommand(view_model, trace_name="match"),
+                        )
+                        .props("size=sm no-caps")
+                        .disable()
                     )
                     (
-                        nm.button("Add Nodes",
-                                  command=AddToMapCommand(view_model, trace_name="nodes"))
-                            .props("size=sm no-caps").disable()
+                        nm.button(
+                            "Add Nodes",
+                            command=AddToMapCommand(view_model, trace_name="nodes"),
+                        )
+                        .props("size=sm no-caps")
+                        .disable()
                     )
 
             with splitter.after:

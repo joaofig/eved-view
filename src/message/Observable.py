@@ -1,6 +1,6 @@
-from typing import Iterable, Any, SupportsIndex, Callable, List, Set
-from inspect import iscoroutinefunction
 from asyncio import run
+from inspect import iscoroutinefunction
+from typing import Any, Callable, Iterable, List, Set, SupportsIndex
 
 
 class BaseObservable:

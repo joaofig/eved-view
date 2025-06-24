@@ -1,4 +1,4 @@
-from nicegui import ui, context
+from nicegui import context, ui
 
 from app.models.TripModel import TripModel
 from app.views.MainView import MainView

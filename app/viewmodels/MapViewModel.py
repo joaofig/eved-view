@@ -1,12 +1,12 @@
-from dataclasses import field, dataclass
-from typing import Tuple, Any, Mapping, List, Dict
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Tuple
 
-from app.models.TripModel import TripModel, Trip
+from app.models.TripModel import Trip, TripModel
 from nicemvvm.Command import Command
 from nicemvvm.controls.LeafletMap import LatLng
-from nicemvvm.observables.Observable import Observable, notify_change, Observer
-from nicemvvm.ResourceLocator import ResourceLocator
+from nicemvvm.observables.Observable import Observable, Observer, notify_change
 from nicemvvm.observables.ObservableCollections import ObservableList
+from nicemvvm.ResourceLocator import ResourceLocator
 
 
 @dataclass
@@ -23,8 +23,10 @@ class MapPolyLine:
     def to_layer(self) -> Dict[str, Any]:
         return {
             "name": "polyline",
-            "args": [[[p.lat, p.lng] for p in self.locations],
-                     {"color": self.color, "weight": self.weight, "opacity": self.opacity}]
+            "args": [
+                [[p.lat, p.lng] for p in self.locations],
+                {"color": self.color, "weight": self.weight, "opacity": self.opacity},
+            ],
         }
 
     def to_dict(self) -> Dict[str, Any]:
@@ -36,7 +38,7 @@ class MapPolyLine:
                 "traj_id": self.traj_id,
                 "vehicle_id": self.vehicle_id,
                 "trace_name": self.trace_name,
-            }
+            },
         }
         return d
 
@@ -45,18 +47,24 @@ class MapViewModel(Observable):
     def __init__(self):
         super().__init__()
         self._zoom = 10
-        self._center: Tuple[float,float] = (0.0, 0.0)
+        self._center: Tuple[float, float] = (0.0, 0.0)
         self._center_text: str = "(0, 0)"
         self._locator = ResourceLocator()
         self._trip_model: TripModel = self._locator["TripModel"]
         self._trips: ObservableList = ObservableList(self._trip_model.load())
-        self._selected_trip: Trip|None = None
+        self._selected_trip: Trip | None = None
         self._selected_trip_id: str = ""
         self._polylines: ObservableList[MapPolyLine] = ObservableList()
         self._bounds: List[LatLng] = list()
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
-        n = len([t for t in self._polylines if t.traj_id == trip.traj_id and t.trace_name == trace_name])
+        n = len(
+            [
+                t
+                for t in self._polylines
+                if t.traj_id == trip.traj_id and t.trace_name == trace_name
+            ]
+        )
         return n > 0
 
     def show_polyline(self, trip: Trip, trace_name: str) -> None:
@@ -98,12 +106,12 @@ class MapViewModel(Observable):
         self._zoom = value
 
     @property
-    def center(self) -> Tuple[float,float]:
+    def center(self) -> Tuple[float, float]:
         return self._center
 
     @center.setter
     @notify_change
-    def center(self, value: Tuple[float,float]) -> None:
+    def center(self, value: Tuple[float, float]) -> None:
         self._center = value
 
     @property
@@ -111,12 +119,12 @@ class MapViewModel(Observable):
         return self._trips
 
     @property
-    def selected_trip(self) -> Trip|None:
+    def selected_trip(self) -> Trip | None:
         return self._selected_trip
 
     @selected_trip.setter
     @notify_change
-    def selected_trip(self, trip: Trip|None) -> None:
+    def selected_trip(self, trip: Trip | None) -> None:
         self._selected_trip = trip
         if trip is not None:
             self.selected_trip_id = str(trip.traj_id)
@@ -151,10 +159,12 @@ class AddToMapCommand(Command, Observer):
         self._view_model = view_model
         self._trace_name = trace_name
         super().__init__(is_enabled=False, **kwargs)
-        self.bind(view_model,
-                  property_name="selected_trip",
-                  local_name="is_enabled",
-                  converter=lambda x: x is not None)
+        self.bind(
+            view_model,
+            property_name="selected_trip",
+            local_name="is_enabled",
+            converter=lambda x: x is not None,
+        )
 
     def run(self, arg: Any = None) -> Any:
         trip = self._view_model.selected_trip

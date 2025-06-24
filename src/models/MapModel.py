@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
 
-from src.db.EvedDb import EvedDb
+# from src.db.EvedDb import EvedDb
 
 
 @dataclass
@@ -44,8 +44,6 @@ class MapModel:
     def __init__(self):
         self.trips: List[VehicleTrip] = []
 
-    def load_trajectory(self, traj_id) -> None:
-        base_db = EvedDb()
-        traj_df = base_db.get_trajectory(traj_id)
-
-
+    # def load_trajectory(self, traj_id) -> None:
+    #     base_db = EvedDb()
+    #     traj_df = base_db.get_trajectory(traj_id)

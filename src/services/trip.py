@@ -37,4 +37,3 @@
 #     """
 #     return TripModel(points=await db.query(sql, parameters=[traj_id]), color="green")
 
-from src.db.EvedDb import EvedDb

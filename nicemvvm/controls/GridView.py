@@ -1,10 +1,16 @@
 import asyncio
+from dataclasses import asdict, dataclass, is_dataclass
 from typing import Any, Dict, List, Mapping, Self
-from dataclasses import dataclass, is_dataclass, asdict
+
 from nicegui import events
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
-from nicemvvm.observables.Observable import Observer, Observable, ObserverHandler, ConverterFunction
+from nicemvvm.observables.Observable import (
+    ConverterFunction,
+    Observable,
+    Observer,
+    ObserverHandler,
+)
 from nicemvvm.observables.ObservableCollections import ObservableList
 
 
@@ -12,11 +18,11 @@ from nicemvvm.observables.ObservableCollections import ObservableList
 class GridViewColumn:
     header: str
     field: str
-    type: str|List[str]|None = None   # "rightAligned", "numericColumn"
+    type: str | List[str] | None = None  # "rightAligned", "numericColumn"
     filter: bool = False
     sortable: bool = True
     selection: bool = False
-    width: int|None = None
+    width: int | None = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -38,10 +44,10 @@ def to_dict(item: Any) -> Dict[str, Any]:
 
 
 class GridView(NiceGUIAgGrid, Observer):
-    def __init__(self, options: Dict|None = None):
+    def __init__(self, options: Dict | None = None):
         self._columns: List[GridViewColumn] = []
         self._items: List[Any] = []
-        self._selected_item: Any|None = None
+        self._selected_item: Any | None = None
         self._row_id: str = ""
 
         if options is None:
@@ -50,39 +56,37 @@ class GridView(NiceGUIAgGrid, Observer):
                 "rowData": [],
                 "rowSelection": "single",
                 "loading": False,
-                "defaultColDef": {
-                    "flex": 0
-                },
+                "defaultColDef": {"flex": 0},
                 # ":getRowId": ""
             }
         else:
             self._options = options
 
-        super().__init__(
-            options=self._options,
-            auto_size_columns=True)
+        super().__init__(options=self._options, auto_size_columns=True)
 
-    def bind(self,
-             source: Observable,
-             property_name: str,
-             local_name: str,
-             handler: ObserverHandler | None = None,
-             converter: ConverterFunction|None = None) -> Self:
-
+    def bind(
+        self,
+        source: Observable,
+        property_name: str,
+        local_name: str,
+        handler: ObserverHandler | None = None,
+        converter: ConverterFunction | None = None,
+    ) -> Self:
         if local_name == "selected_item":
-            self.on('selectionChanged', self._selection_changed_handler)
+            self.on("selectionChanged", self._selection_changed_handler)
 
         Observer.bind(self, source, property_name, local_name, handler)
         if local_name == "items":
             self.update()
         return self
 
-    def bind_all(self,
-                 source: Observable,
-                 items: str = "",
-                 selected_item: str = "",
-                 handler: ObserverHandler | None = None) -> Self:
-
+    def bind_all(
+        self,
+        source: Observable,
+        items: str = "",
+        selected_item: str = "",
+        handler: ObserverHandler | None = None,
+    ) -> Self:
         if len(items) > 0:
             self.bind(source, items, "items", handler)
         if len(selected_item) > 0:
@@ -154,11 +158,11 @@ class GridView(NiceGUIAgGrid, Observer):
                 await self.run_row_method(row, "setSelected", True)
 
     @property
-    def selected_item(self) -> Any|None:
+    def selected_item(self) -> Any | None:
         return self._selected_item
 
     @selected_item.setter
-    def selected_item(self, item: Any|None) -> None:
+    def selected_item(self, item: Any | None) -> None:
         if self._selected_item != item:
             self._selected_item = item
             asyncio.create_task(self._select_item(item))

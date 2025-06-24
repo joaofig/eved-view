@@ -1,12 +1,10 @@
-from nicemvvm.observables.Observable import Observable, notify_change
 from typing import Any
+
+from nicemvvm.observables.Observable import Observable, notify_change
 
 
 class Command(Observable):
-    def __init__(self,
-                 is_async: bool = False,
-                 is_enabled: bool = True,
-                 **kwargs):
+    def __init__(self, is_async: bool = False, is_enabled: bool = True, **kwargs):
         self._is_enabled: bool = is_enabled
         self._is_async: bool = is_async
         super().__init__(**kwargs)

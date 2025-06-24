@@ -1,6 +1,7 @@
+from os import path
+
 import pandas as pd
 
-from os import path
 from tools.config import load_config
 from tools.database.sqlite.BaseDb import BaseDb
 

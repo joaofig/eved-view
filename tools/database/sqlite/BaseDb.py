@@ -1,12 +1,10 @@
-import sqlite3
 import contextlib
-from typing import List, Tuple
+import sqlite3
+from sqlite3 import Connection
+from typing import List
 
-import numpy as np
 import pandas as pd
 import pandas.io.sql as sqlio
-
-from sqlite3 import Connection
 
 
 class BaseDb(object):
@@ -30,8 +28,9 @@ class BaseDb(object):
         conn.close()
 
     def query_df(
-        self, sql: str,
-            parameters=None,
+        self,
+        sql: str,
+        parameters=None,
     ) -> pd.DataFrame:
         conn = self.connect()
         df = sqlio.read_sql_query(sql, conn, params=parameters)

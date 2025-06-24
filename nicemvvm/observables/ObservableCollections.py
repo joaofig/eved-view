@@ -1,10 +1,11 @@
-from typing import Any, Iterable, SupportsIndex, Dict, List
+from typing import Any, Iterable, SupportsIndex
+
 from nicemvvm.observables.Observable import Observable
 
 
 class ObservableList(Observable, list):
     """A list that notifies observers when it's modified"""
-    
+
     def __init__(self, data: Iterable = None):
         Observable.__init__(self)
         list.__init__(self)
@@ -13,7 +14,7 @@ class ObservableList(Observable, list):
 
     def append(self, value: Any) -> None:
         list.append(self, value)
-        self.notify("append", value=value, index=len(self)-1)
+        self.notify("append", value=value, index=len(self) - 1)
 
     def extend(self, iterable: Iterable) -> None:
         old_length = len(self)
@@ -70,7 +71,7 @@ class ObservableList(Observable, list):
 
 class ObservableDict(Observable, dict):
     """A dictionary that notifies observers when it's modified"""
-    
+
     def __init__(self, *args, **kwargs):
         Observable.__init__(self)
         dict.__init__(self, *args, **kwargs)
@@ -79,7 +80,7 @@ class ObservableDict(Observable, dict):
         old_value = self.get(key, None)
         had_key = key in self
         dict.__setitem__(self, key, value)
-        
+
         if had_key:
             self.notify("update", key=key, old_value=old_value, new_value=value)
         else:
@@ -109,7 +110,7 @@ class ObservableDict(Observable, dict):
         # Capture old state
         old_dict = dict(self)
         dict.update(self, other, **kwargs)
-        
+
         # Find what changed
         for key, value in self.items():
             if key not in old_dict:
