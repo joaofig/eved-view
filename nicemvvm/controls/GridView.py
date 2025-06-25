@@ -14,6 +14,16 @@ from nicemvvm.observables.Observable import (
 from nicemvvm.observables.ObservableCollections import ObservableList
 
 
+def convert_item(item: Any) -> Dict[str, Any]:
+    if is_dataclass(item):
+        return asdict(item)
+    return dict()
+
+
+def convert_items(items: List[Any]) -> List[Dict[str, Any]]:
+    return [convert_item(it) for it in items]
+
+
 @dataclass
 class GridViewColumn:
     header: str
@@ -64,6 +74,9 @@ class GridView(NiceGUIAgGrid, Observer):
 
         super().__init__(options=self._options, auto_size_columns=True)
 
+    def _item_list_handler(self, action: str, args: Dict[str, Any]) -> None:
+        ...
+
     def bind(
         self,
         source: Observable,
@@ -77,7 +90,9 @@ class GridView(NiceGUIAgGrid, Observer):
 
         Observer.bind(self, source, property_name, local_name, handler)
         if local_name == "items":
-            self.update()
+            items = getattr(source, property_name)
+            if isinstance(items, ObservableList):
+                ...
         return self
 
     def bind_all(
