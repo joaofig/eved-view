@@ -8,8 +8,9 @@ class TripView(ui.column):
     def __init__(self, view_model: Observable):
         super().__init__()
 
-        self._grid = nm.gridview().bind_all(
-            view_model, items="trips", selected_item="selected_trip"
+        self._grid = (nm.gridview()
+                        .bind(view_model, property_name="trips", local_name="items")
+                        .bind(view_model, property_name="selected_trip", local_name="selected_item")
         )
         self._grid.columns = [
             nm.gridview_col(header="Trip", field="traj_id", filter=True, width=70),

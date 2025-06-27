@@ -48,9 +48,9 @@ class Observable(ABC):
 class Observer:
     def __init__(self, **kwargs) -> None:
         self._prop_map: Dict[str, str] = {}
+        self._conv_map: Dict[str, ConverterFunction] = {}
         self._prop_pam: Dict[str, str] = {}
         self._source_map: Dict[str, Observable] = {}
-        self._converter: ConverterFunction | None = None
         super().__init__(**kwargs)
 
     def bind(
@@ -71,12 +71,13 @@ class Observer:
         :return: Returns the observer object.
         """
         self._prop_map[property_name] = local_name
+        self._conv_map[property_name] = converter
         self._source_map[local_name] = source
         self._prop_pam[local_name] = property_name
-        self._converter = converter
         source.register(handler or self._inbound_handler)
 
         value = getattr(source, property_name)
+        converter = self._conv_map[property_name]
         if converter is not None:
             value = converter(value)
         setattr(self, local_name, value)
@@ -109,8 +110,9 @@ class Observer:
                 local_name = self._prop_map[property_name]
 
                 value = args["value"]
-                if self._converter is not None:
-                    value = self._converter(value)
+                converter = self._conv_map[property_name]
+                if converter is not None:
+                    value = converter(value)
                 if value != getattr(self, local_name):
                     setattr(self, local_name, value)
 

@@ -59,11 +59,12 @@ class GridView(NiceGUIAgGrid, Observer):
         self._items: List[Any] = []
         self._selected_item: Any | None = None
         self._row_id: str = ""
+        self._item_converter: ConverterFunction | None = None
 
         if options is None:
             self._options = {
                 "columnDefs": [],
-                "rowData": [],
+                "rowData": self._items,
                 "rowSelection": "single",
                 "loading": False,
                 "defaultColDef": {"flex": 0},
@@ -74,8 +75,49 @@ class GridView(NiceGUIAgGrid, Observer):
 
         super().__init__(options=self._options, auto_size_columns=True)
 
-    def _item_list_handler(self, action: str, args: Dict[str, Any]) -> None:
-        ...
+    def _item_list_handler(self, action: str,
+                           args: Dict[str, Any]) -> None:
+        converter = self._item_converter
+
+        match action:
+            case "append" | "iadd":
+                item = args["value"]
+                if converter is not None:
+                    item = converter(item)
+                self._items.append(item)
+
+            case "extend":
+                values = args["values"]
+                self._items.extend([
+                    item if converter is None else converter(item) for item in values
+                ])
+
+            case "insert":
+                item = args["value"]
+                index = args["index"]
+                self._items.insert(index, item if converter is None else converter(item))
+
+            case "remove" | "pop":
+                item = args["value"]
+                index = args["index"]
+                self._items.remove(self._items[index])
+
+            case "clear":
+                self._items.clear()
+
+            case "set_slice":
+                new_values = args["new_values"]
+                list_slice = args["slice"]
+                self._items[list_slice] = [
+                    item if converter is None else converter(item) for item in new_values
+                ]
+
+            case "set_item":
+                new_value = args["new_value"]
+                index = args["index"]
+                self._items[index] = new_value if converter is None else converter(new_value)
+
+        self.update()
 
     def bind(
         self,
@@ -85,28 +127,35 @@ class GridView(NiceGUIAgGrid, Observer):
         handler: ObserverHandler | None = None,
         converter: ConverterFunction | None = None,
     ) -> Self:
-        if local_name == "selected_item":
-            self.on("selectionChanged", self._selection_changed_handler)
+        match local_name:
+            case "selected_item":
+                self.on("selectionChanged", self._selection_changed_handler)
+                Observer.bind(self, source, property_name, local_name, handler)
 
-        Observer.bind(self, source, property_name, local_name, handler)
-        if local_name == "items":
-            items = getattr(source, property_name)
-            if isinstance(items, ObservableList):
-                ...
-        return self
+            case "items":
+                items = getattr(source, property_name)
+                if isinstance(items, ObservableList):
+                    obs_list:ObservableList = items
+                    obs_list.register(self._item_list_handler)
+                self._item_converter = converter
+                self._items.extend([item if converter is None else converter(item)
+                                    for item in items])
+                self.update()
 
-    def bind_all(
-        self,
-        source: Observable,
-        items: str = "",
-        selected_item: str = "",
-        handler: ObserverHandler | None = None,
-    ) -> Self:
-        if len(items) > 0:
-            self.bind(source, items, "items", handler)
-        if len(selected_item) > 0:
-            self.bind(source, selected_item, "selected_item", handler)
         return self
+    #
+    # def bind_all(
+    #     self,
+    #     source: Observable,
+    #     items: str = "",
+    #     selected_item: str = "",
+    #     handler: ObserverHandler | None = None,
+    # ) -> Self:
+    #     if len(items) > 0:
+    #         self.bind(source, items, "items", handler)
+    #     if len(selected_item) > 0:
+    #         self.bind(source, selected_item, "selected_item", handler)
+    #     return self
 
     @property
     def columns(self) -> List[GridViewColumn]:

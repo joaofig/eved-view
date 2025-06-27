@@ -27,7 +27,7 @@ class MapView(ui.column):
                 grid = (
                     nm.gridview()
                     .classes("h_full h-full")
-                    .bind_all(view_model, items="polylines")
+                    .bind(view_model, "polylines", "items")
                 )
                 grid.columns = [
                     nm.gridview_col(
