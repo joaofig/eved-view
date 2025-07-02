@@ -25,23 +25,22 @@ class MapView(ui.column):
 
             with splitter.after:
                 grid = (
-                    nm.gridview()
+                    nm.gridview(row_selection="multiple",
+                                supress_auto_size=True,
+                                supress_size_to_fit=True)
                     .classes("h_full h-full")
                     .bind(view_model, "polylines", "items")
                 )
                 grid.columns = [
-                    nm.gridview_col(
-                        header="Trip", field="traj_id", filter=True, width=100
-                    ),
-                    nm.gridview_col(
-                        header="Vehicle", field="vehicle_id", filter=True, width=100
-                    ),
-                    nm.gridview_col(
-                        header="Trace", field="trace_name", filter=True, width=100
-                    ),
-                    nm.gridview_col(header="km", field="km", filter=True, width=100),
+                    nm.gridview_col(header="Trip", field="traj_id",
+                                    filter=True, width=60, selection=True),
+                    nm.gridview_col(header="Vehicle", field="vehicle_id",
+                                    filter=True, width=60),
+                    nm.gridview_col(header="Trace", field="trace_name",
+                                    filter=True, width=60),
+                    nm.gridview_col(header="km", field="km", filter=True, width=60),
                 ]
-                grid.row_id = "traj_id"
+                grid.row_id = "polyline_id"
 
             # Make sure the map is correctly resized
             splitter.on_value_change(lambda _: self.m.invalidate_size(animate=True))

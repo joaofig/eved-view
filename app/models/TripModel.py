@@ -103,6 +103,7 @@ class TripModel:
                 start=raw_trip.dt_ini[:19],
                 end=raw_trip.dt_end[:19],
                 signals=[],
+                nodes=[],
             )
             self.trips[trip.traj_id] = trip
             trip_list.append(trip)

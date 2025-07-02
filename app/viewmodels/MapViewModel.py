@@ -11,6 +11,7 @@ from nicemvvm.ResourceLocator import ResourceLocator
 
 @dataclass
 class MapPolyLine:
+    polyline_id: str
     traj_id: int
     vehicle_id: int
     is_visible: bool
@@ -18,6 +19,7 @@ class MapPolyLine:
     weight: float
     opacity: float
     trace_name: str
+    km: float
     locations: List[LatLng] = field(default_factory=list)
 
     def to_layer(self) -> Dict[str, Any]:
@@ -54,6 +56,7 @@ class MapViewModel(Observable):
         self._trips: ObservableList = ObservableList(self._trip_model.load())
         self._selected_trip: Trip | None = None
         self._selected_trip_id: str = ""
+        self._selected_polylines: ObservableList[MapPolyLine] = ObservableList()
         self._polylines: ObservableList[MapPolyLine] = ObservableList()
         self._bounds: List[LatLng] = list()
 
@@ -84,6 +87,7 @@ class MapViewModel(Observable):
                     color = "black"
 
             poly = MapPolyLine(
+                polyline_id=f"{trip.traj_id}_{trace_name}",
                 traj_id=trip.traj_id,
                 vehicle_id=trip.vehicle_id,
                 is_visible=True,
@@ -92,6 +96,7 @@ class MapViewModel(Observable):
                 opacity=1.0,
                 trace_name=trace_name,
                 locations=locations,
+                km=trip.km,
             )
             self._polylines.append(poly)
             self.bounds = locations
@@ -143,6 +148,10 @@ class MapViewModel(Observable):
     @property
     def polylines(self) -> ObservableList[MapPolyLine]:
         return self._polylines
+
+    @property
+    def selected_polylines(self) -> ObservableList[MapPolyLine]:
+        return self._selected_polylines
 
     @property
     def bounds(self) -> List[LatLng]:

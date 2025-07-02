@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Mapping, Self
 from nicegui import events
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
+from nicemvvm.ValueConverter import ValueConverter
 from nicemvvm.observables.Observable import (
     ConverterFunction,
     Observable,
@@ -12,16 +13,6 @@ from nicemvvm.observables.Observable import (
     ObserverHandler,
 )
 from nicemvvm.observables.ObservableCollections import ObservableList
-
-
-def convert_item(item: Any) -> Dict[str, Any]:
-    if is_dataclass(item):
-        return asdict(item)
-    return dict()
-
-
-def convert_items(items: List[Any]) -> List[Dict[str, Any]]:
-    return [convert_item(it) for it in items]
 
 
 @dataclass
@@ -54,24 +45,28 @@ def to_dict(item: Any) -> Dict[str, Any]:
 
 
 class GridView(NiceGUIAgGrid, Observer):
-    def __init__(self, options: Dict | None = None):
+    def __init__(self,
+                 row_selection: str = "single",
+                 supress_auto_size: bool = False,
+                 supress_size_to_fit: bool = False,
+                 options: Dict | None = None):
         self._columns: List[GridViewColumn] = []
         self._items: List[Any] = []
         self._selected_item: Any | None = None
+        self._selected_items: List[Any] = []
         self._row_id: str = ""
         self._item_converter: ConverterFunction | None = None
 
-        if options is None:
-            self._options = {
-                "columnDefs": [],
-                "rowData": self._items,
-                "rowSelection": "single",
-                "loading": False,
-                "defaultColDef": {"flex": 0},
-                # ":getRowId": ""
-            }
-        else:
-            self._options = options
+        self._options = {
+            "columnDefs": [],
+            "rowData": self._items,
+            "rowSelection": row_selection,
+            "loading": False,
+            "supressAutoSize": supress_auto_size,
+            "supressSizeToFit": supress_size_to_fit,
+        }
+        if options:
+            self._options.update(options)
 
         super().__init__(options=self._options, auto_size_columns=True)
 
@@ -125,12 +120,16 @@ class GridView(NiceGUIAgGrid, Observer):
         property_name: str,
         local_name: str,
         handler: ObserverHandler | None = None,
-        converter: ConverterFunction | None = None,
+        converter: ValueConverter | None = None,
     ) -> Self:
         match local_name:
             case "selected_item":
                 self.on("selectionChanged", self._selection_changed_handler)
-                Observer.bind(self, source, property_name, local_name, handler)
+                Observer.bind(self, source, property_name, local_name, handler, converter)
+
+            # case "selected_items":
+            #     self.on("selectionChanged", self._selection_changed_handler)
+            #     Observer.bind(self, source, property_name, local_name, handler, converter)
 
             case "items":
                 items = getattr(source, property_name)
@@ -138,7 +137,7 @@ class GridView(NiceGUIAgGrid, Observer):
                     obs_list:ObservableList = items
                     obs_list.register(self._item_list_handler)
                 self._item_converter = converter
-                self._items.extend([item if converter is None else converter(item)
+                self._items.extend([item if converter is None else converter.convert(item)
                                     for item in items])
                 self.update()
 
@@ -178,10 +177,16 @@ class GridView(NiceGUIAgGrid, Observer):
                 self._outbound_handler("selected_item", item)
                 break
 
+    async def _find_selected_rows(self, column: str) -> None:
+        identifiers = [r[column] for r in await self.get_selected_rows()]
+        selected_items = []
+
+        self._outbound_handler("selected_items", selected_items)
+
     def _selection_changed_handler(self, event: events.GenericEventArguments) -> None:
         if event.args["source"] == "rowClicked":
             column = self._row_id
-            if len(column) > 0:
+            if column:
                 asyncio.create_task(self._find_selected_row(column))
 
     def _items_handler(self, action: str, args: Mapping[str, Any]) -> None:
@@ -220,3 +225,7 @@ class GridView(NiceGUIAgGrid, Observer):
         if self._selected_item != item:
             self._selected_item = item
             asyncio.create_task(self._select_item(item))
+
+    @property
+    def selected_items(self) -> List[Any] | None:
+        return self._selected_items

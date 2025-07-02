@@ -2,6 +2,7 @@ import functools
 from abc import ABC
 from typing import Any, Callable, Coroutine, Dict, Mapping, Self, Set
 
+
 ObserverHandler = Callable[[str, Mapping[str, Any]], None] | Coroutine[Any, Any, None]
 ConverterFunction = Callable[[Any], Any]
 
@@ -95,13 +96,14 @@ class Observer:
             del self._source_map[local_name]
             del self._prop_pam[local_name]
             del self._prop_map[property_name]
+            del self._conv_map[property_name]
 
     def _inbound_handler(self, action: str, args: Mapping[str, Any]) -> None:
         """
-        This is the default binding handler that just propagates the changed value to an internal property.
-        :param _: Not used.
-        :param property_name: The name of the changed property.
-        :param value: The changed property value.
+        This is the default binding handler that just propagates the changed value to an internal property,
+        as per the bind call.
+        :param action: Action to perform.
+        :param args: The arguments to pass to the action.
         :return: None
         """
         if action == "property":
