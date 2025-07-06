@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Tuple
 
 from app.models.TripModel import Trip, TripModel
 from nicemvvm.Command import Command
+from nicemvvm.ValueConverter import ValueConverter
 from nicemvvm.controls.LeafletMap import LatLng
 from nicemvvm.observables.Observable import Observable, Observer, notify_change
 from nicemvvm.observables.ObservableCollections import ObservableList
@@ -79,7 +80,7 @@ class MapViewModel(Observable):
                 case "match":
                     color = "red"
                     locations = [LatLng(p.match_lat, p.match_lon) for p in trip.signals]
-                case "graph":
+                case "nodes":
                     color = "gray"
                     locations = [LatLng(n.lat, n.lon) for n in trip.nodes]
                 case _:
@@ -99,6 +100,7 @@ class MapViewModel(Observable):
                 km=trip.km,
             )
             self._polylines.append(poly)
+            self._selected_polylines.append(poly)
             self.bounds = locations
 
     @property
@@ -163,6 +165,12 @@ class MapViewModel(Observable):
         self._bounds = value
 
 
+class SelectedTripValueConverter(ValueConverter):
+    @staticmethod
+    def convert(x: Any) -> Any:
+        return x is not None
+
+
 class AddToMapCommand(Command, Observer):
     def __init__(self, view_model: MapViewModel, trace_name: str, **kwargs):
         self._view_model = view_model
@@ -172,7 +180,7 @@ class AddToMapCommand(Command, Observer):
             view_model,
             property_name="selected_trip",
             local_name="is_enabled",
-            converter=lambda x: x is not None,
+            converter=SelectedTripValueConverter(),
         )
 
     def run(self, arg: Any = None) -> Any:

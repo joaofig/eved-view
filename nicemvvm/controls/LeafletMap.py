@@ -6,12 +6,12 @@ from nicegui.elements.leaflet_layers import GenericLayer
 from nicegui.events import GenericEventArguments
 
 from nicemvvm.observables.Observable import (
-    ConverterFunction,
     Observable,
     Observer,
     ObserverHandler,
 )
 from nicemvvm.observables.ObservableCollections import ObservableList
+from nicemvvm.ValueConverter import ValueConverter
 
 
 @dataclass
@@ -24,63 +24,296 @@ class LatLng:
         return [self.lat, self.lng]
 
 
-# @dataclass
-# class Path:
-#     stroke: bool = True
-#     color: str = "#3388ff"
-#     opacity: float = 1.0
-#     weight: float = 3.0
-#     line_cap: str = "round"
-#     line_join: str = "round"
-#     dash_array: str = ""
-#     dash_offset: int = 0
-#     fill: bool = False
-#     fill_color: str = "#3388ff"
-#     fill_opacity: float = 0.2
-#     fill_rule: str = "evenodd"
-#
-#     @staticmethod
-#     def from_dict(d: Dict) -> 'Path':
-#         return Path(**d)
-#
-#     def to_dict(self):
-#         return {
-#             "stroke": self.stroke,
-#             "color": self.color,
-#             "opacity": self.opacity,
-#             "weight": self.weight,
-#             "lineCap": self.line_cap,
-#             "lineJoin": self.line_join,
-#             "dashArray": self.dash_array,
-#             "dashOffset": self.dash_offset,
-#             "fill": self.fill,
-#             "fillColor": self.fill_color,
-#             "fillOpacity": self.fill_opacity,
-#             "fillRule": self.fill_rule,
-#         }
-#
-#
-# @dataclass
-# class Polyline(Path):
-#     points: List[List[float]] = field(default_factory=list)
-#     smooth_factor: float = 1.0
-#     no_clip: bool = False
-#
-#     @staticmethod
-#     def from_dict(d: Dict) -> 'Polyline':
-#         return Polyline(**d)
-#
-#     def to_dict(self):
-#         return {
-#             "smoothFactor": self.smooth_factor,
-#             "noClip": self.no_clip,
-#             "points": self.points
-#         } | Path.to_dict(self)
-#
-#
-# @dataclass
-# class Polygon(Polyline):
-#     ...
+class Path:
+    def __init__(
+        self,
+        stroke: bool = True,
+        color: str = "#3388ff",
+        opacity: float = 1.0,
+        weight: float = 3.0,
+        line_cap: str = "round",
+        line_join: str = "round",
+        dash_array: str = "",
+        dash_offset: int = 0,
+        fill: bool = False,
+        fill_color: str = "#3388ff",
+        fill_opacity: float = 0.2,
+        fill_rule: str = "evenodd",
+    ):
+        self._m: ui.leaflet | None = None
+        self._options = {
+            "stroke": stroke,
+            "color": color,
+            "opacity": opacity,
+            "weight": weight,
+            "lineCap": line_cap,
+            "lineJoin": line_join,
+            "dashArray": dash_array,
+            "dashOffset": dash_offset,
+            "fill": fill,
+            "fillColor": fill_color,
+            "fillOpacity": fill_opacity,
+            "fillRule": fill_rule,
+        }
+        self._layer: GenericLayer | None = None
+
+    def to_dict(self):
+        return self._options
+
+    def redraw(self):
+        if self._layer is not None:
+            self._layer.run_method("redraw", None)
+
+    def set_style(self) -> None:
+        if self._layer is not None:
+            self._layer.run_method("setStyle", self._options)
+
+    def remove(self):
+        if self._layer is not None:
+            self._layer.run_method("remove", None)
+
+    @property
+    def stroke(self) -> bool:
+        return self._options["stroke"]
+
+    @stroke.setter
+    def stroke(self, value: bool):
+        self._options["stroke"] = value
+        self.set_style()
+
+    @property
+    def color(self) -> str:
+        return self._options["color"]
+
+    @color.setter
+    def color(self, value: str):
+        self._options["color"] = value
+        self.set_style()
+
+    @property
+    def opacity(self) -> float:
+        return self._options["opacity"]
+
+    @opacity.setter
+    def opacity(self, value: float):
+        self._options["opacity"] = value
+        self.set_style()
+
+    @property
+    def weight(self) -> float:
+        return self._options["weight"]
+
+    @weight.setter
+    def weight(self, value: float):
+        self._options["weight"] = value
+        self.set_style()
+
+    @property
+    def line_cap(self) -> str:
+        return self._options["lineCap"]
+
+    @line_cap.setter
+    def line_cap(self, value: str):
+        self._options["lineCap"] = value
+        self.set_style()
+
+    @property
+    def line_join(self) -> str:
+        return self._options["lineJoin"]
+
+    @line_join.setter
+    def line_join(self, value: str):
+        self._options["lineJoin"] = value
+        self.set_style()
+
+    @property
+    def dash_array(self) -> str:
+        return self._options["dashArray"]
+
+    @dash_array.setter
+    def dash_array(self, value: str):
+        self._options["dashArray"] = value
+        self.set_style()
+
+    @property
+    def dash_offset(self) -> int:
+        return self._options["dashOffset"]
+
+    @dash_offset.setter
+    def dash_offset(self, value: int):
+        self._options["dashOffset"] = value
+        self.set_style()
+
+    @property
+    def fill(self) -> bool:
+        return self._options["fill"]
+
+    @fill.setter
+    def fill(self, value: bool):
+        self._options["fill"] = value
+        self.set_style()
+
+    @property
+    def fill_color(self) -> str:
+        return self._options["fillColor"]
+
+    @fill_color.setter
+    def fill_color(self, value: str):
+        self._options["fillColor"] = value
+        self.set_style()
+
+    @property
+    def fill_opacity(self) -> float:
+        return self._options["fillOpacity"]
+
+    @fill_opacity.setter
+    def fill_opacity(self, value: float):
+        self._options["fillOpacity"] = value
+        self.set_style()
+
+    @property
+    def fill_rule(self) -> str:
+        return self._options["fillRule"]
+
+    @fill_rule.setter
+    def fill_rule(self, value: str):
+        self._options["fillRule"] = value
+        self.set_style()
+
+
+class Polyline(Path):
+    def __init__(
+        self,
+        points: List[LatLng],
+        smooth_factor: float = 1.0,
+        no_clipping: bool = False,
+        stroke: bool = True,
+        color: str = "#3388ff",
+        opacity: float = 1.0,
+        weight: float = 3.0,
+        line_cap: str = "round",
+        line_join: str = "round",
+        dash_array: str = "",
+        dash_offset: int = 0,
+        fill: bool = False,
+        fill_color: str = "#3388ff",
+        fill_opacity: float = 0.2,
+        fill_rule: str = "evenodd",
+    ):
+        Path.__init__(
+            self,
+            stroke=stroke,
+            color=color,
+            opacity=opacity,
+            weight=weight,
+            line_cap=line_cap,
+            line_join=line_join,
+            dash_array=dash_array,
+            dash_offset=dash_offset,
+            fill=fill,
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            fill_rule=fill_rule,
+        )
+        self._options["noClipping"] = no_clipping
+        self._options["smoothFactor"] = smooth_factor
+        self._points: List[LatLng] = points
+
+    @property
+    def smooth_factor(self) -> float:
+        return self._options["smoothFactor"]
+
+    @smooth_factor.setter
+    def smooth_factor(self, value: float):
+        self._options["smoothFactor"] = value
+        self.set_style()
+
+    @property
+    def no_clipping(self) -> bool:
+        return self._options["noClipping"]
+
+    @no_clipping.setter
+    def no_clipping(self, value: bool):
+        self._options["noClipping"] = value
+        self.set_style()
+
+    @property
+    def points(self) -> List[LatLng]:
+        return self._points
+
+    @points.setter
+    def points(self, points: List[LatLng]):
+        self._points = points
+        if self._layer is not None:
+            self._layer.run_method("setLatLngs", self._points)
+
+    @property
+    async def center(self) -> LatLng | None:
+        if self._layer is not None:
+            center = await self._layer.run_method("getCenter", None)
+            return LatLng(center.lat, center.lng)
+        return None
+
+    @property
+    async def bounds(self) -> List[LatLng]:
+        if self._layer is not None:
+            bounds = await self._layer.run_method("getBounds", None)
+            return [LatLng(b.lat, b.lng) for b in bounds]
+        else:
+            return self._points
+
+    def add_to(self, leaflet: ui.leaflet) -> GenericLayer:
+        self.remove()
+        self._layer = leaflet.generic_layer(
+            name="polyline", args=[self._points, self._options]
+        )
+        return self._layer
+
+
+class Polygon(Polyline):
+    def __init__(
+        self,
+        points: List[LatLng],
+        smooth_factor: float = 1.0,
+        no_clipping: bool = False,
+        stroke: bool = True,
+        color: str = "#3388ff",
+        opacity: float = 1.0,
+        weight: float = 3.0,
+        line_cap: str = "round",
+        line_join: str = "round",
+        dash_array: str = "",
+        dash_offset: int = 0,
+        fill: bool = True,
+        fill_color: str = "#3388ff",
+        fill_opacity: float = 0.2,
+        fill_rule: str = "evenodd",
+    ):
+        Polyline.__init__(
+            self,
+            points=points,
+            smooth_factor=smooth_factor,
+            no_clipping=no_clipping,
+            stroke=stroke,
+            color=color,
+            opacity=opacity,
+            weight=weight,
+            line_cap=line_cap,
+            line_join=line_join,
+            dash_array=dash_array,
+            dash_offset=dash_offset,
+            fill=fill,
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            fill_rule=fill_rule,
+        )
+
+    def add_to(self, leaflet: ui.leaflet) -> GenericLayer:
+        self.remove()
+        self._layer = leaflet.generic_layer(
+            name="polygon", args=[self._points, self._options]
+        )
+        return self._layer
 
 
 class LeafletMap(ui.leaflet, Observer):
@@ -134,7 +367,7 @@ class LeafletMap(ui.leaflet, Observer):
         property_name: str,
         local_name: str,
         handler: ObserverHandler | None = None,
-        converter: ConverterFunction | None = None,
+        converter: ValueConverter | None = None,
     ) -> Self:
         match local_name:
             case "zoom":
@@ -149,6 +382,8 @@ class LeafletMap(ui.leaflet, Observer):
                     obs_list: ObservableList = polylines
                     obs_list.register(self._polylines_handler)
                 return self
+            case "selected_polylines":
+                ...
 
         Observer.bind(self, source, property_name, local_name, handler, converter)
         return self

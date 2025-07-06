@@ -5,14 +5,13 @@ from typing import Any, Dict, List, Mapping, Self
 from nicegui import events
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
-from nicemvvm.ValueConverter import ValueConverter
 from nicemvvm.observables.Observable import (
-    ConverterFunction,
     Observable,
     Observer,
     ObserverHandler,
 )
 from nicemvvm.observables.ObservableCollections import ObservableList
+from nicemvvm.ValueConverter import ValueConverter
 
 
 @dataclass
@@ -45,17 +44,19 @@ def to_dict(item: Any) -> Dict[str, Any]:
 
 
 class GridView(NiceGUIAgGrid, Observer):
-    def __init__(self,
-                 row_selection: str = "single",
-                 supress_auto_size: bool = False,
-                 supress_size_to_fit: bool = False,
-                 options: Dict | None = None):
+    def __init__(
+        self,
+        row_selection: str = "single",
+        supress_auto_size: bool = False,
+        supress_size_to_fit: bool = False,
+        options: Dict | None = None,
+    ):
         self._columns: List[GridViewColumn] = []
         self._items: List[Any] = []
         self._selected_item: Any | None = None
         self._selected_items: List[Any] = []
         self._row_id: str = ""
-        self._item_converter: ConverterFunction | None = None
+        self._item_converter: ValueConverter | None = None
 
         self._options = {
             "columnDefs": [],
@@ -70,27 +71,28 @@ class GridView(NiceGUIAgGrid, Observer):
 
         super().__init__(options=self._options, auto_size_columns=True)
 
-    def _item_list_handler(self, action: str,
-                           args: Dict[str, Any]) -> None:
+    def _item_list_handler(self, action: str, args: Dict[str, Any]) -> None:
         converter = self._item_converter
 
         match action:
             case "append" | "iadd":
                 item = args["value"]
                 if converter is not None:
-                    item = converter(item)
+                    item = converter.convert(item)
                 self._items.append(item)
 
             case "extend":
                 values = args["values"]
-                self._items.extend([
-                    item if converter is None else converter(item) for item in values
-                ])
+                self._items.extend(
+                    [item if converter is None else converter.convert(item) for item in values]
+                )
 
             case "insert":
                 item = args["value"]
                 index = args["index"]
-                self._items.insert(index, item if converter is None else converter(item))
+                self._items.insert(
+                    index, item if converter is None else converter.convert(item)
+                )
 
             case "remove" | "pop":
                 item = args["value"]
@@ -104,13 +106,16 @@ class GridView(NiceGUIAgGrid, Observer):
                 new_values = args["new_values"]
                 list_slice = args["slice"]
                 self._items[list_slice] = [
-                    item if converter is None else converter(item) for item in new_values
+                    item if converter is None else converter.convert(item)
+                    for item in new_values
                 ]
 
             case "set_item":
                 new_value = args["new_value"]
                 index = args["index"]
-                self._items[index] = new_value if converter is None else converter(new_value)
+                self._items[index] = (
+                    new_value if converter is None else converter.convert(new_value)
+                )
 
         self.update()
 
@@ -125,7 +130,9 @@ class GridView(NiceGUIAgGrid, Observer):
         match local_name:
             case "selected_item":
                 self.on("selectionChanged", self._selection_changed_handler)
-                Observer.bind(self, source, property_name, local_name, handler, converter)
+                Observer.bind(
+                    self, source, property_name, local_name, handler, converter
+                )
 
             # case "selected_items":
             #     self.on("selectionChanged", self._selection_changed_handler)
@@ -134,11 +141,15 @@ class GridView(NiceGUIAgGrid, Observer):
             case "items":
                 items = getattr(source, property_name)
                 if isinstance(items, ObservableList):
-                    obs_list:ObservableList = items
+                    obs_list: ObservableList = items
                     obs_list.register(self._item_list_handler)
                 self._item_converter = converter
-                self._items.extend([item if converter is None else converter.convert(item)
-                                    for item in items])
+                self._items.extend(
+                    [
+                        item if converter is None else converter.convert(item)
+                        for item in items
+                    ]
+                )
                 self.update()
 
             case _:
@@ -178,10 +189,16 @@ class GridView(NiceGUIAgGrid, Observer):
                 break
 
     async def _find_selected_rows(self, column: str) -> None:
-        identifiers = [r[column] for r in await self.get_selected_rows()]
+        identifiers = set(r[column] for r in await self.get_selected_rows())
         selected_items = []
-
-        self._outbound_handler("selected_items", selected_items)
+        count = 0
+        for item in self._items:
+            value = getattr(item, column)
+            if value in identifiers:
+                selected_items.append(item)
+                count += 1
+        if count:
+            self._outbound_handler("selected_items", selected_items)
 
     def _selection_changed_handler(self, event: events.GenericEventArguments) -> None:
         if event.args["source"] == "rowClicked":
@@ -216,6 +233,15 @@ class GridView(NiceGUIAgGrid, Observer):
             if row is not None:
                 await self.run_row_method(row, "setSelected", True)
 
+    async def _select_items(self, items: List[Any]) -> None:
+        column = self._row_id
+        if column:
+            for item in items:
+                row_id_value = str(getattr(item, column))
+                row = await self.run_grid_method("getRowNode", row_id_value)
+                if row is not None:
+                    await self.run_row_method(row, "setSelected", True)
+
     @property
     def selected_item(self) -> Any | None:
         return self._selected_item
@@ -229,3 +255,9 @@ class GridView(NiceGUIAgGrid, Observer):
     @property
     def selected_items(self) -> List[Any] | None:
         return self._selected_items
+
+    @selected_items.setter
+    def selected_items(self, items: List[Any] | None) -> None:
+        if self._selected_items != items:
+            self._selected_items = items
+            asyncio.create_task(self._select_items(items))

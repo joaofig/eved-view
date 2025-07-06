@@ -1,8 +1,10 @@
+import asyncio
 from typing import Any, Mapping
 
 from nicegui import ui
 
 from nicemvvm import nm
+from nicemvvm.controls.LeafletMap import LatLng
 from nicemvvm.observables.Observable import Observable
 
 
@@ -15,36 +17,49 @@ class MapView(ui.column):
             "w-full h-full"
         ) as splitter:
             with splitter.before:
-                self.m = (
+                self._map = (
                     nm.leaflet()
-                    .classes("h-full w-full")
-                    .bind(view_model, "zoom", "zoom")
-                    .bind(view_model, "center", "center")
-                    .bind(view_model, "polylines", "polylines")
+                        .classes("h-full w-full")
+                        .bind(view_model, "zoom", "zoom")
+                        .bind(view_model, "center", "center")
+                        .bind(view_model, "polylines", "polylines")
                 )
+                asyncio.create_task(self._setup_map())
 
             with splitter.after:
                 grid = (
-                    nm.gridview(row_selection="multiple",
-                                supress_auto_size=True,
-                                supress_size_to_fit=True)
+                    nm.gridview(
+                        row_selection="multiple",
+                        supress_auto_size=True,
+                        supress_size_to_fit=True,
+                    )
                     .classes("h_full h-full")
                     .bind(view_model, "polylines", "items")
                 )
                 grid.columns = [
                     nm.gridview_col(header="Trip", field="traj_id",
                                     filter=True, width=60, selection=True),
-                    nm.gridview_col(header="Vehicle", field="vehicle_id",
-                                    filter=True, width=60),
-                    nm.gridview_col(header="Trace", field="trace_name",
-                                    filter=True, width=60),
+                    nm.gridview_col(
+                        header="Vehicle", field="vehicle_id", filter=True, width=60
+                    ),
+                    nm.gridview_col(
+                        header="Trace", field="trace_name", filter=True, width=60
+                    ),
                     nm.gridview_col(header="km", field="km", filter=True, width=60),
                 ]
                 grid.row_id = "polyline_id"
 
             # Make sure the map is correctly resized
-            splitter.on_value_change(lambda _: self.m.invalidate_size(animate=True))
-            splitter.on("resize", lambda _: self.m.invalidate_size(animate=True))
+            splitter.on_value_change(lambda _: self._map.invalidate_size(animate=True))
+            splitter.on("resize", lambda _: self._map.invalidate_size(animate=True))
+
+    async def _setup_map(self):
+        await self._map.initialized()
+
+        self._map.fit_bounds(bounds=[
+            LatLng(42.2203052778, -83.8042902778),
+            LatLng(42.3258, -83.674),
+        ])
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         match action:
@@ -53,4 +68,4 @@ class MapView(ui.column):
                 value = args["value"]
 
                 if name == "bounds":
-                    self.m.fit_bounds(value)
+                    self._map.fit_bounds(value)

@@ -2,6 +2,7 @@ import functools
 from abc import ABC
 from typing import Any, Callable, Coroutine, Dict, Mapping, Self, Set
 
+from nicemvvm.ValueConverter import ValueConverter
 
 ObserverHandler = Callable[[str, Mapping[str, Any]], None] | Coroutine[Any, Any, None]
 ConverterFunction = Callable[[Any], Any]
@@ -49,7 +50,7 @@ class Observable(ABC):
 class Observer:
     def __init__(self, **kwargs) -> None:
         self._prop_map: Dict[str, str] = {}
-        self._conv_map: Dict[str, ConverterFunction] = {}
+        self._conv_map: Dict[str, ValueConverter] = {}
         self._prop_pam: Dict[str, str] = {}
         self._source_map: Dict[str, Observable] = {}
         super().__init__(**kwargs)
@@ -60,7 +61,7 @@ class Observer:
         property_name: str,
         local_name: str,
         handler: ObserverHandler | None = None,
-        converter: ConverterFunction | None = None,
+        converter: ValueConverter | None = None,
     ) -> Self:
         """
         Binds a property of an observable to a local property of this observable.
@@ -80,7 +81,7 @@ class Observer:
         value = getattr(source, property_name)
         converter = self._conv_map[property_name]
         if converter is not None:
-            value = converter(value)
+            value = converter.convert(value)
         setattr(self, local_name, value)
         return self
 
@@ -114,7 +115,7 @@ class Observer:
                 value = args["value"]
                 converter = self._conv_map[property_name]
                 if converter is not None:
-                    value = converter(value)
+                    value = converter.convert(value)
                 if value != getattr(self, local_name):
                     setattr(self, local_name, value)
 
