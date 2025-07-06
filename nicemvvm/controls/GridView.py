@@ -84,7 +84,10 @@ class GridView(NiceGUIAgGrid, Observer):
             case "extend":
                 values = args["values"]
                 self._items.extend(
-                    [item if converter is None else converter.convert(item) for item in values]
+                    [
+                        item if converter is None else converter.convert(item)
+                        for item in values
+                    ]
                 )
 
             case "insert":

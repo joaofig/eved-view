@@ -3,6 +3,7 @@ from typing import Any, Mapping
 
 from nicegui import ui
 
+from app.converters.map import MapPolylineValueConverter
 from nicemvvm import nm
 from nicemvvm.controls.LeafletMap import LatLng
 from nicemvvm.observables.Observable import Observable
@@ -19,10 +20,15 @@ class MapView(ui.column):
             with splitter.before:
                 self._map = (
                     nm.leaflet()
-                        .classes("h-full w-full")
-                        .bind(view_model, "zoom", "zoom")
-                        .bind(view_model, "center", "center")
-                        .bind(view_model, "polylines", "polylines")
+                    .classes("h-full w-full")
+                    .bind(view_model, "zoom", "zoom")
+                    .bind(view_model, "center", "center")
+                    .bind(
+                        view_model,
+                        "polylines",
+                        "polylines",
+                        converter=MapPolylineValueConverter(),
+                    )
                 )
                 asyncio.create_task(self._setup_map())
 
@@ -37,8 +43,13 @@ class MapView(ui.column):
                     .bind(view_model, "polylines", "items")
                 )
                 grid.columns = [
-                    nm.gridview_col(header="Trip", field="traj_id",
-                                    filter=True, width=60, selection=True),
+                    nm.gridview_col(
+                        header="Trip",
+                        field="traj_id",
+                        filter=True,
+                        width=60,
+                        selection=True,
+                    ),
                     nm.gridview_col(
                         header="Vehicle", field="vehicle_id", filter=True, width=60
                     ),
@@ -56,10 +67,12 @@ class MapView(ui.column):
     async def _setup_map(self):
         await self._map.initialized()
 
-        self._map.fit_bounds(bounds=[
-            LatLng(42.2203052778, -83.8042902778),
-            LatLng(42.3258, -83.674),
-        ])
+        self._map.fit_bounds(
+            bounds=[
+                LatLng(42.2203052778, -83.8042902778),
+                LatLng(42.3258, -83.674),
+            ]
+        )
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         match action:

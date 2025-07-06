@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Self, Tuple
+from typing import Any, Dict, List, Self
 
 from nicegui import ui
 from nicegui.elements.leaflet_layers import GenericLayer
@@ -27,6 +27,7 @@ class LatLng:
 class Path:
     def __init__(
         self,
+        layer_id: str,
         stroke: bool = True,
         color: str = "#3388ff",
         opacity: float = 1.0,
@@ -40,7 +41,7 @@ class Path:
         fill_opacity: float = 0.2,
         fill_rule: str = "evenodd",
     ):
-        self._m: ui.leaflet | None = None
+        self._map: ui.leaflet | None = None
         self._options = {
             "stroke": stroke,
             "color": color,
@@ -56,6 +57,7 @@ class Path:
             "fillRule": fill_rule,
         }
         self._layer: GenericLayer | None = None
+        self._layer_id = layer_id
 
     def to_dict(self):
         return self._options
@@ -71,6 +73,10 @@ class Path:
     def remove(self):
         if self._layer is not None:
             self._layer.run_method("remove", None)
+
+    @property
+    def layer_id(self) -> str:
+        return self._layer_id
 
     @property
     def stroke(self) -> bool:
@@ -184,6 +190,7 @@ class Path:
 class Polyline(Path):
     def __init__(
         self,
+        layer_id: str,
         points: List[LatLng],
         smooth_factor: float = 1.0,
         no_clipping: bool = False,
@@ -202,6 +209,7 @@ class Polyline(Path):
     ):
         Path.__init__(
             self,
+            layer_id=layer_id,
             stroke=stroke,
             color=color,
             opacity=opacity,
@@ -273,6 +281,7 @@ class Polyline(Path):
 class Polygon(Polyline):
     def __init__(
         self,
+        layer_id: str,
         points: List[LatLng],
         smooth_factor: float = 1.0,
         no_clipping: bool = False,
@@ -291,6 +300,7 @@ class Polygon(Polyline):
     ):
         Polyline.__init__(
             self,
+            layer_id=layer_id,
             points=points,
             smooth_factor=smooth_factor,
             no_clipping=no_clipping,
@@ -321,7 +331,9 @@ class LeafletMap(ui.leaflet, Observer):
         ui.leaflet.__init__(self)
         Observer.__init__(self)
 
-        self._polylines: Dict[str, Dict[str, Any]] = {}
+        self._polylines: Dict[str, Polyline] = {}
+        self._polyline_converter: ValueConverter | None = None
+        self._polygon_converter: ValueConverter | None = None
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]
@@ -332,34 +344,37 @@ class LeafletMap(ui.leaflet, Observer):
         self._outbound_handler("zoom", zoom)
 
     def _polylines_handler(self, action: str, args: Dict[str, Any]) -> None:
+        def to_polyline(v: Any) -> Polyline:
+            p: Polyline = (
+                value
+                if self._polyline_converter is None
+                else self._polyline_converter.convert(v)
+            )
+            return p
+
+        def add_polyline(v: Any) -> Polyline:
+            p: Polyline = to_polyline(v)
+            if p.layer_id not in self._polylines:
+                p.add_to(self)
+            return p
+
         match action:
             case "append":
-                polyline = args["value"].to_dict()
-                if polyline["id"] not in self._polylines:
-                    layer = self.generic_layer(**polyline["layer"])
-                    self._polylines[polyline["id"]] = {
-                        "layer": layer,
-                        "polyline": polyline,
-                    }
+                add_polyline(args["value"])
+
             case "extend":
-                for p in args["values"]:
-                    polyline = p.to_dict()
-                    if polyline["id"] not in self._polylines:
-                        layer = self.generic_layer(**polyline["layer"])
-                        self._polylines[polyline["id"]] = {
-                            "layer": layer,
-                            "polyline": polyline,
-                        }
+                for value in args["values"]:
+                    add_polyline(value)
+
             case "pop" | "remove":
-                polyline = args["value"].to_dict()
-                if polyline["id"] in self._polylines:
-                    layer = self._polylines[polyline["id"]]["layer"]
-                    self.run_map_method("removeLayer", layer)
-                    del self._polylines[polyline["id"]]
+                polyline = to_polyline(args["value"])
+                del self._polylines[polyline.layer_id]
+                polyline.remove()
+
             case "clear":
-                for layer in self._polylines.values():
-                    self.run_map_method("removeLayer", layer["layer"])
-                self._polylines = {}
+                for layer_id, polyline in self._polylines.items():
+                    polyline.remove()
+                self._polylines.clear()
 
     def bind(
         self,
@@ -381,6 +396,7 @@ class LeafletMap(ui.leaflet, Observer):
                 if isinstance(polylines, ObservableList):
                     obs_list: ObservableList = polylines
                     obs_list.register(self._polylines_handler)
+                self._polyline_converter = converter
                 return self
             case "selected_polylines":
                 ...
@@ -401,8 +417,3 @@ class LeafletMap(ui.leaflet, Observer):
             bounds_list = [[min_lat, min_lng], [max_lat, max_lng]]
             self.run_map_method("fitBounds", bounds_list, options)
         return self
-
-    def polyline(
-        self, points: List[Tuple[float, float]], props: Dict | None = None
-    ) -> GenericLayer:
-        return self.generic_layer(name="polyline", args=[points, props])

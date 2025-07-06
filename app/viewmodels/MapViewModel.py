@@ -3,15 +3,15 @@ from typing import Any, Dict, List, Tuple
 
 from app.models.TripModel import Trip, TripModel
 from nicemvvm.Command import Command
-from nicemvvm.ValueConverter import ValueConverter
 from nicemvvm.controls.LeafletMap import LatLng
 from nicemvvm.observables.Observable import Observable, Observer, notify_change
 from nicemvvm.observables.ObservableCollections import ObservableList
 from nicemvvm.ResourceLocator import ResourceLocator
+from nicemvvm.ValueConverter import ValueConverter
 
 
 @dataclass
-class MapPolyLine:
+class MapPolyline:
     polyline_id: str
     traj_id: int
     vehicle_id: int
@@ -57,8 +57,8 @@ class MapViewModel(Observable):
         self._trips: ObservableList = ObservableList(self._trip_model.load())
         self._selected_trip: Trip | None = None
         self._selected_trip_id: str = ""
-        self._selected_polylines: ObservableList[MapPolyLine] = ObservableList()
-        self._polylines: ObservableList[MapPolyLine] = ObservableList()
+        self._selected_polylines: ObservableList[MapPolyline] = ObservableList()
+        self._polylines: ObservableList[MapPolyline] = ObservableList()
         self._bounds: List[LatLng] = list()
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
@@ -87,14 +87,14 @@ class MapViewModel(Observable):
                     locations = []
                     color = "black"
 
-            poly = MapPolyLine(
+            poly = MapPolyline(
                 polyline_id=f"{trip.traj_id}_{trace_name}",
                 traj_id=trip.traj_id,
                 vehicle_id=trip.vehicle_id,
                 is_visible=True,
                 color=color,
                 weight=3.0,
-                opacity=1.0,
+                opacity=0.6,
                 trace_name=trace_name,
                 locations=locations,
                 km=trip.km,
@@ -148,11 +148,11 @@ class MapViewModel(Observable):
         self._selected_trip_id = trip_id
 
     @property
-    def polylines(self) -> ObservableList[MapPolyLine]:
+    def polylines(self) -> ObservableList[MapPolyline]:
         return self._polylines
 
     @property
-    def selected_polylines(self) -> ObservableList[MapPolyLine]:
+    def selected_polylines(self) -> ObservableList[MapPolyline]:
         return self._selected_polylines
 
     @property
