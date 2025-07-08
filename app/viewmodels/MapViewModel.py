@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from dataclasses import dataclass
+from typing import Any, List, Tuple
 
 from app.models.TripModel import Trip, TripModel
 from nicemvvm.Command import Command
@@ -10,40 +10,115 @@ from nicemvvm.ResourceLocator import ResourceLocator
 from nicemvvm.ValueConverter import ValueConverter
 
 
-@dataclass
-class MapPolyline:
-    polyline_id: str
-    traj_id: int
-    vehicle_id: int
-    is_visible: bool
-    color: str
-    weight: float
-    opacity: float
-    trace_name: str
-    km: float
-    locations: List[LatLng] = field(default_factory=list)
+class MapPolyline(Observable):
+    def __init__(
+        self,
+        polyline_id: str,
+        traj_id: int,
+        vehicle_id: int,
+        km: float,
+        is_visible: bool,
+        color: str,
+        weight: float,
+        opacity: float,
+        trace_name: str,
+        locations: List[LatLng],
+    ):
+        super().__init__()
+        self._polyline_id = polyline_id
+        self._traj_id = traj_id
+        self._vehicle_id = vehicle_id
+        self._km = km
+        self._is_visible = is_visible
+        self._color = color
+        self._weight = weight
+        self._opacity = opacity
+        self._trace_name = trace_name
+        self._locations = locations
 
-    def to_layer(self) -> Dict[str, Any]:
+    @property
+    def polyline_id(self) -> str:
+        return self._polyline_id
+
+    @property
+    def traj_id(self) -> int:
+        return self._traj_id
+
+    @property
+    def vehicle_id(self) -> int:
+        return self._vehicle_id
+
+    @property
+    def km(self):
+        return self._km
+
+    @property
+    def is_visible(self) -> bool:
+        return self._is_visible
+
+    @is_visible.setter
+    @notify_change
+    def is_visible(self, value: bool):
+        self._is_visible = value
+
+    @property
+    def color(self) -> str:
+        return self._color
+
+    @color.setter
+    @notify_change
+    def color(self, value: str):
+        self._color = value
+
+    @property
+    def weight(self) -> float:
+        return self._weight
+
+    @weight.setter
+    @notify_change
+    def weight(self, value: float):
+        self._weight = value
+
+    @property
+    def opacity(self) -> float:
+        return self._opacity
+
+    @opacity.setter
+    @notify_change
+    def opacity(self, value: float):
+        self._opacity = value
+
+    @property
+    def trace_name(self) -> str:
+        return self._trace_name
+
+    @trace_name.setter
+    @notify_change
+    def trace_name(self, value: str):
+        self._trace_name = value
+
+    @property
+    def locations(self) -> List[LatLng]:
+        return self._locations
+
+    @locations.setter
+    @notify_change
+    def locations(self, value: List[LatLng]):
+        self._locations = value
+
+    def to_dict(self):
         return {
-            "name": "polyline",
-            "args": [
-                [[p.lat, p.lng] for p in self.locations],
-                {"color": self.color, "weight": self.weight, "opacity": self.opacity},
-            ],
+            'polyline_id': self._polyline_id,
+            'traj_id': self._traj_id,
+            'vehicle_id': self._vehicle_id,
+            'is_visible': self._is_visible,
+            'color': self._color,
+            'weight': self._weight,
+            'opacity': self._opacity,
+            'trace_name': self._trace_name,
+            'locations': self._locations,
+            'km': self._km
         }
-
-    def to_dict(self) -> Dict[str, Any]:
-        d = {
-            "id": f"{self.traj_id}_{self.trace_name}",
-            "layer": self.to_layer(),
-            "data": {
-                "visible": self.is_visible,
-                "traj_id": self.traj_id,
-                "vehicle_id": self.vehicle_id,
-                "trace_name": self.trace_name,
-            },
-        }
-        return d
 
 
 class MapViewModel(Observable):
@@ -62,14 +137,11 @@ class MapViewModel(Observable):
         self._bounds: List[LatLng] = list()
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
-        n = len(
-            [
-                t
-                for t in self._polylines
-                if t.traj_id == trip.traj_id and t.trace_name == trace_name
-            ]
+        return any(
+            t
+            for t in self._polylines
+            if t.traj_id == trip.traj_id and t.trace_name == trace_name
         )
-        return n > 0
 
     def show_polyline(self, trip: Trip, trace_name: str) -> None:
         if not self._has_trace(trip, trace_name):

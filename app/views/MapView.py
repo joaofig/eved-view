@@ -3,7 +3,7 @@ from typing import Any, Mapping
 
 from nicegui import ui
 
-from app.converters.map import MapPolylineValueConverter
+from app.converters.map import MapPolylineValueConverter, MapPolylineGridConverter
 from nicemvvm import nm
 from nicemvvm.controls.LeafletMap import LatLng
 from nicemvvm.observables.Observable import Observable
@@ -40,7 +40,8 @@ class MapView(ui.column):
                         supress_size_to_fit=True,
                     )
                     .classes("h_full h-full")
-                    .bind(view_model, "polylines", "items")
+                    .bind(view_model, "polylines", "items",
+                          converter=MapPolylineGridConverter(),)
                 )
                 grid.columns = [
                     nm.gridview_col(

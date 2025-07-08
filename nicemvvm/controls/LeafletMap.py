@@ -24,7 +24,7 @@ class LatLng:
         return [self.lat, self.lng]
 
 
-class Path:
+class Path(Observer):
     def __init__(
         self,
         layer_id: str,
@@ -40,7 +40,9 @@ class Path:
         fill_color: str = "#3388ff",
         fill_opacity: float = 0.2,
         fill_rule: str = "evenodd",
+        **kwargs,
     ):
+        super().__init__(**kwargs)
         self._map: ui.leaflet | None = None
         self._options = {
             "stroke": stroke,
@@ -206,6 +208,7 @@ class Polyline(Path):
         fill_color: str = "#3388ff",
         fill_opacity: float = 0.2,
         fill_rule: str = "evenodd",
+        **kwargs,
     ):
         Path.__init__(
             self,
@@ -222,6 +225,7 @@ class Polyline(Path):
             fill_color=fill_color,
             fill_opacity=fill_opacity,
             fill_rule=fill_rule,
+            **kwargs,
         )
         self._options["noClipping"] = no_clipping
         self._options["smoothFactor"] = smooth_factor
@@ -297,6 +301,7 @@ class Polygon(Polyline):
         fill_color: str = "#3388ff",
         fill_opacity: float = 0.2,
         fill_rule: str = "evenodd",
+        **kwargs,
     ):
         Polyline.__init__(
             self,
@@ -316,6 +321,7 @@ class Polygon(Polyline):
             fill_color=fill_color,
             fill_opacity=fill_opacity,
             fill_rule=fill_rule,
+            **kwargs,
         )
 
     def add_to(self, leaflet: ui.leaflet) -> GenericLayer:
