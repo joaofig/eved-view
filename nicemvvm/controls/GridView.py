@@ -48,7 +48,6 @@ class GridView(NiceGUIAgGrid, Observer):
         self,
         row_selection: str = "single",
         supress_auto_size: bool = False,
-        supress_size_to_fit: bool = False,
         options: Dict | None = None,
     ):
         self._columns: List[GridViewColumn] = []
@@ -63,8 +62,7 @@ class GridView(NiceGUIAgGrid, Observer):
             "rowData": self._items,
             "rowSelection": row_selection,
             "loading": False,
-            "supressAutoSize": supress_auto_size,
-            "supressSizeToFit": supress_size_to_fit,
+            "suppressAutoSize": supress_auto_size,
         }
         if options:
             self._options.update(options)

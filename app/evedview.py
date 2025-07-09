@@ -8,7 +8,7 @@ from nicemvvm.ResourceLocator import ResourceLocator
 @ui.page("/")
 async def index():
     context.client.content.classes("p-0")
-
+    ui.page_title("eVED Viewer")
     MainView()
 
 

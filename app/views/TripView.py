@@ -9,7 +9,7 @@ class TripView(ui.column):
         super().__init__()
 
         self._grid = (
-            nm.gridview(supress_auto_size=True, supress_size_to_fit=True)
+            nm.gridview(supress_auto_size=True)
             .bind(view_model, property_name="trips", local_name="items")
             .bind(view_model, property_name="selected_trip", local_name="selected_item")
         )

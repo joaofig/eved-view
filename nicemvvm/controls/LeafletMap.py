@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Self
+from typing import Any, Dict, List, Self, Union
 
 from nicegui import ui
 from nicegui.elements.leaflet_layers import GenericLayer
@@ -333,8 +333,12 @@ class Polygon(Polyline):
 
 
 class LeafletMap(ui.leaflet, Observer):
-    def __init__(self):
-        ui.leaflet.__init__(self)
+    def __init__(self,
+                 draw_control: Union[bool, Dict] = False,
+                 hide_drawn_items: bool = False,):
+        ui.leaflet.__init__(self,
+                            draw_control=draw_control,
+                            hide_drawn_items=hide_drawn_items)
         Observer.__init__(self)
 
         self._polylines: Dict[str, Polyline] = {}
