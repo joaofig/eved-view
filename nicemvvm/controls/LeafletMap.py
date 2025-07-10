@@ -333,12 +333,14 @@ class Polygon(Polyline):
 
 
 class LeafletMap(ui.leaflet, Observer):
-    def __init__(self,
-                 draw_control: Union[bool, Dict] = False,
-                 hide_drawn_items: bool = False,):
-        ui.leaflet.__init__(self,
-                            draw_control=draw_control,
-                            hide_drawn_items=hide_drawn_items)
+    def __init__(
+        self,
+        draw_control: Union[bool, Dict] = False,
+        hide_drawn_items: bool = False,
+    ):
+        ui.leaflet.__init__(
+            self, draw_control=draw_control, hide_drawn_items=hide_drawn_items
+        )
         Observer.__init__(self)
 
         self._polylines: Dict[str, Polyline] = {}
@@ -408,8 +410,6 @@ class LeafletMap(ui.leaflet, Observer):
                     obs_list.register(self._polylines_handler)
                 self._polyline_converter = converter
                 return self
-            case "selected_polylines":
-                ...
 
         Observer.bind(self, source, property_name, local_name, handler, converter)
         return self

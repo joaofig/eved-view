@@ -35,7 +35,6 @@ class GridViewColumn:
             "width": self.width,
         }
 
-
 def to_dict(item: Any) -> Dict[str, Any]:
     if is_dataclass(item):
         return asdict(item)
@@ -51,9 +50,9 @@ class GridView(NiceGUIAgGrid, Observer):
         options: Dict | None = None,
     ):
         self._columns: List[GridViewColumn] = []
-        self._items: List[Any] = []
+        self._items: List[Dict[str, Any]] = []
         self._selected_item: Any | None = None
-        self._selected_items: List[Any] = []
+        self._selected_items: List[Dict[str, Any]] = []
         self._row_id: str = ""
         self._item_converter: ValueConverter | None = None
 
@@ -169,13 +168,13 @@ class GridView(NiceGUIAgGrid, Observer):
         self.update()
 
     @property
-    def items(self) -> List[Any]:
+    def items(self) -> List[Dict[str, Any]]:
         return self._items
 
     @items.setter
-    def items(self, items: List[Any]) -> None:
+    def items(self, items: List[Dict[str, Any]]) -> None:
         self._items = items
-        self._options["rowData"] = [to_dict(item) for item in items]
+        self._options["rowData"] = items
 
         if isinstance(items, ObservableList):
             source: ObservableList = items
@@ -184,7 +183,7 @@ class GridView(NiceGUIAgGrid, Observer):
     async def _find_selected_row(self, column: str) -> None:
         row = await self.get_selected_row()
         for item in self._items:
-            if getattr(item, column) == row[column]:
+            if item[column] == row[column]:
                 self._selected_item = item
                 self._outbound_handler("selected_item", item)
                 break
@@ -194,7 +193,7 @@ class GridView(NiceGUIAgGrid, Observer):
         selected_items = []
         count = 0
         for item in self._items:
-            value = getattr(item, column)
+            value = item[column]
             if value in identifiers:
                 selected_items.append(item)
                 count += 1
@@ -226,10 +225,10 @@ class GridView(NiceGUIAgGrid, Observer):
         self._set_row_id(row_id)
         self._row_id = row_id
 
-    async def _select_item(self, item: Any) -> None:
+    async def _select_item(self, item: Dict[str, Any]) -> None:
         column = self._row_id
-        if len(column) > 0:
-            row_id_value = str(getattr(item, column))
+        if len(column) > 0 and item and column in item:
+            row_id_value = str(item[column])
             row = await self.run_grid_method("getRowNode", row_id_value)
             if row is not None:
                 await self.run_row_method(row, "setSelected", True)

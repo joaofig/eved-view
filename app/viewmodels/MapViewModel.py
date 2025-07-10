@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any, List, Tuple
 
 from app.models.TripModel import Trip, TripModel
@@ -108,16 +107,16 @@ class MapPolyline(Observable):
 
     def to_dict(self):
         return {
-            'polyline_id': self._polyline_id,
-            'traj_id': self._traj_id,
-            'vehicle_id': self._vehicle_id,
-            'is_visible': self._is_visible,
-            'color': self._color,
-            'weight': self._weight,
-            'opacity': self._opacity,
-            'trace_name': self._trace_name,
-            'locations': self._locations,
-            'km': self._km
+            "polyline_id": self._polyline_id,
+            "traj_id": self._traj_id,
+            "vehicle_id": self._vehicle_id,
+            "is_visible": self._is_visible,
+            "color": self._color,
+            "weight": self._weight,
+            "opacity": self._opacity,
+            "trace_name": self._trace_name,
+            "locations": self._locations,
+            "km": self._km,
         }
 
 
@@ -129,10 +128,10 @@ class MapViewModel(Observable):
         self._center_text: str = "(0, 0)"
         self._locator = ResourceLocator()
         self._trip_model: TripModel = self._locator["TripModel"]
-        self._trips: ObservableList = ObservableList(self._trip_model.load())
+        self._trips: ObservableList[Trip] = ObservableList(self._trip_model.load())
         self._selected_trip: Trip | None = None
         self._selected_trip_id: str = ""
-        self._selected_polylines: ObservableList[MapPolyline] = ObservableList()
+        self._selected_polyline: MapPolyline | None = None
         self._polylines: ObservableList[MapPolyline] = ObservableList()
         self._bounds: List[LatLng] = list()
 
@@ -147,17 +146,17 @@ class MapViewModel(Observable):
         if not self._has_trace(trip, trace_name):
             match trace_name:
                 case "gps":
-                    color = "blue"
+                    color = "#0000FF"
                     locations = [LatLng(p.lat, p.lon) for p in trip.signals]
                 case "match":
-                    color = "red"
+                    color = "#FF0000"
                     locations = [LatLng(p.match_lat, p.match_lon) for p in trip.signals]
                 case "nodes":
-                    color = "gray"
+                    color = "#00FF00"
                     locations = [LatLng(n.lat, n.lon) for n in trip.nodes]
                 case _:
                     locations = []
-                    color = "black"
+                    color = "#000000"
 
             poly = MapPolyline(
                 polyline_id=f"{trip.traj_id}_{trace_name}",
@@ -172,7 +171,7 @@ class MapViewModel(Observable):
                 km=trip.km,
             )
             self._polylines.append(poly)
-            self._selected_polylines.append(poly)
+            # self.selected_polyline = poly
             self.bounds = locations
 
     @property
@@ -194,7 +193,7 @@ class MapViewModel(Observable):
         self._center = value
 
     @property
-    def trips(self) -> ObservableList:
+    def trips(self) -> ObservableList[Trip]:
         return self._trips
 
     @property
@@ -224,8 +223,13 @@ class MapViewModel(Observable):
         return self._polylines
 
     @property
-    def selected_polylines(self) -> ObservableList[MapPolyline]:
-        return self._selected_polylines
+    def selected_polyline(self) -> MapPolyline:
+        return self._selected_polyline
+
+    @selected_polyline.setter
+    @notify_change
+    def selected_polyline(self, polyline: MapPolyline):
+        self._selected_polyline = polyline
 
     @property
     def bounds(self) -> List[LatLng]:
@@ -238,8 +242,10 @@ class MapViewModel(Observable):
 
 
 class SelectedTripValueConverter(ValueConverter):
-    @staticmethod
-    def convert(x: Any) -> Any:
+    def __init__(self):
+        super().__init__()
+
+    def convert(self, x: Any) -> Any:
         return x is not None
 
 

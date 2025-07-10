@@ -3,24 +3,29 @@ from typing import Any, Mapping
 
 from nicegui import ui
 
-from app.converters.map import MapPolylineValueConverter, MapPolylineGridConverter
+from app.converters.map import MapPolylineGridConverter, MapPolylineMapConverter
 from app.views.PolylinePropertyView import PolylinePropertyView
 from nicemvvm import nm
-from nicemvvm.controls.GridView import GridViewColumn, GridView
+from nicemvvm.controls.GridView import GridView, GridViewColumn
 from nicemvvm.controls.LeafletMap import LatLng
 from nicemvvm.observables.Observable import Observable
 
 
 def create_grid(view_model: Observable) -> GridView:
+    polyline_converter = MapPolylineGridConverter()
     grid = (
         nm.gridview(
-            row_selection="multiple",
+            row_selection="single",
             supress_auto_size=True,
-            # supress_size_to_fit=True,
         )
         .classes("h_full h-full")
-        .bind(view_model, "polylines", "items",
-              converter=MapPolylineGridConverter(), )
+        .bind(view_model, "polylines", "items", converter=polyline_converter)
+        .bind(
+            view_model,
+            "selected_polyline",
+            "selected_item",
+            converter=polyline_converter,
+        )
     )
     grid.columns = [
         GridViewColumn(
@@ -28,14 +33,9 @@ def create_grid(view_model: Observable) -> GridView:
             field="traj_id",
             filter=True,
             width=60,
-            selection=True,
         ),
-        GridViewColumn(
-            header="Vehicle", field="vehicle_id", filter=True, width=60
-        ),
-        GridViewColumn(
-            header="Trace", field="trace_name", filter=True, width=60
-        ),
+        GridViewColumn(header="Vehicle", field="vehicle_id", filter=True, width=60),
+        GridViewColumn(header="Trace", field="trace_name", filter=True, width=60),
         GridViewColumn(header="km", field="km", filter=True, width=60),
     ]
     grid.row_id = "polyline_id"
@@ -54,7 +54,8 @@ async def setup_map(m: ui.leaflet) -> None:
 
 
 def create_map(view_model: Observable) -> ui.leaflet:
-    m = (nm.leaflet()
+    m = (
+        nm.leaflet()
             .classes("h-full w-full")
             .bind(view_model, "zoom", "zoom")
             .bind(view_model, "center", "center")
@@ -62,9 +63,9 @@ def create_map(view_model: Observable) -> ui.leaflet:
                 view_model,
                 "polylines",
                 "polylines",
-                converter=MapPolylineValueConverter(),
+                converter=MapPolylineMapConverter(),
             )
-        )
+    )
     asyncio.create_task(setup_map(m))
     return m
 
@@ -86,15 +87,21 @@ class MapView(ui.column):
                 self._map = create_map(view_model)
 
             with main_splitter.after:
-                with ui.splitter(horizontal=False, value=80).classes("w-full h-full") as property_splitter:
+                with ui.splitter(horizontal=False, value=80).classes(
+                    "w-full h-full"
+                ) as property_splitter:
                     with property_splitter.after:
                         self._property_view = create_property_view(view_model)
                     with property_splitter.before:
                         self._grid = create_grid(view_model)
 
             # Make sure the map is correctly resized
-            main_splitter.on_value_change(lambda _: self._map.invalidate_size(animate=True))
-            main_splitter.on("resize", lambda _: self._map.invalidate_size(animate=True))
+            main_splitter.on_value_change(
+                lambda _: self._map.invalidate_size(animate=True)
+            )
+            main_splitter.on(
+                "resize", lambda _: self._map.invalidate_size(animate=True)
+            )
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         match action:

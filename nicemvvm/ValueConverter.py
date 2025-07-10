@@ -2,10 +2,11 @@ from typing import Any
 
 
 class ValueConverter:
-    @staticmethod
-    def convert(value: Any) -> Any:
+    def __init__(self, context: Any = None, **kwargs: Any):
+        self._context = context
+
+    def convert(self, value: Any) -> Any:
         return value
 
-    @staticmethod
-    def reverse_convert(value: Any) -> Any:
+    def reverse_convert(self, value: Any) -> Any:
         return value

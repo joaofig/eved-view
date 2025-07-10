@@ -114,7 +114,7 @@ class Observer:
 
                 value = args["value"]
                 converter = self._conv_map[property_name]
-                if converter is not None:
+                if converter:
                     value = converter.convert(value)
                 if value != getattr(self, local_name):
                     setattr(self, local_name, value)
@@ -122,5 +122,8 @@ class Observer:
     def _outbound_handler(self, local_name: str, value: Any) -> None:
         if local_name in self._prop_pam:
             property_name = self._prop_pam[local_name]
+            converter = self._conv_map[property_name]
+            if converter:
+                value = converter.reverse_convert(value)
             source = self._source_map[local_name]
             setattr(source, property_name, value)
