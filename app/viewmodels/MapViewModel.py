@@ -223,12 +223,12 @@ class MapViewModel(Observable):
         return self._polylines
 
     @property
-    def selected_polyline(self) -> MapPolyline:
+    def selected_polyline(self) -> MapPolyline | None:
         return self._selected_polyline
 
     @selected_polyline.setter
     @notify_change
-    def selected_polyline(self, polyline: MapPolyline):
+    def selected_polyline(self, polyline: MapPolyline | None):
         self._selected_polyline = polyline
 
     @property

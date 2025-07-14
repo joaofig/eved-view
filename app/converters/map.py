@@ -1,9 +1,8 @@
 from typing import Any, Dict
 
-from app.viewmodels.MapViewModel import MapPolyline, MapViewModel
+from app.viewmodels.MapViewModel import MapPolyline
 from nicemvvm.ValueConverter import ValueConverter
 from nicemvvm.controls.LeafletMap import Polyline
-from nicemvvm.observables.Observable import Observable
 
 
 class MapPolylineGridConverter(ValueConverter):
@@ -46,5 +45,8 @@ class MapPolylineMapConverter(ValueConverter):
             color=map_polyline.color,
             weight=map_polyline.weight,
             opacity=map_polyline.opacity
-        )
+        ) \
+            .bind(map_polyline, "color", "color") \
+            .bind(map_polyline, "weight", "weight") \
+            .bind(map_polyline, "opacity", "opacity")
         return polyline
