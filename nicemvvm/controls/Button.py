@@ -22,7 +22,7 @@ class Button(ui.button, Observer):
             command.register(self._command_handler)
 
     def _command_handler(self, action: str, args: Mapping[str, Any]) -> None:
-        if action == "property":
+        if action == "property_changed":
             if args["name"] == "is_enabled":
                 enabled = args["value"]
                 if enabled:

@@ -16,8 +16,14 @@ def notify_change(func):
         old_value = getattr(this, name)
         if old_value != value and isinstance(this, Observable):
             observable: Observable = this
-            observable.notify("property", name=name, value=value)
-        return func(*args, **kwargs)
+            observable.notify(action="property_changing",
+                              name=name,
+                              new_value=value,
+                              old_value=old_value)
+            ret = func(*args, **kwargs)
+            observable.notify(action="property_changed", name=name, value=value)
+            return ret
+        return None
 
     return wrapper
 
@@ -44,7 +50,7 @@ class Observable(ABC):
         old_value = getattr(self, prop_name)
         if old_value is not value or old_value != value:
             setattr(self, prop_name, value)
-            self.notify("property", name=name, value=value)
+            self.notify("property_changed", name=name, value=value)
 
 
 class Observer:
@@ -87,12 +93,12 @@ class Observer:
 
     def unbind(
         self,
-        local_name: str,
+        property_name: str,
         source: Observable,
         handler: ObserverHandler | None = None,
     ) -> None:
-        if local_name in self._prop_map:
-            property_name = self._prop_pam[local_name]
+        if property_name in self._prop_map:
+            local_name = self._prop_map[property_name]
             source.unregister(handler or self._inbound_handler)
             del self._source_map[local_name]
             del self._prop_pam[local_name]
@@ -107,7 +113,7 @@ class Observer:
         :param args: The arguments to pass to the action.
         :return: None
         """
-        if action == "property":
+        if action == "property_changed":
             property_name = args["name"]
             if property_name in self._prop_map:
                 local_name = self._prop_map[property_name]

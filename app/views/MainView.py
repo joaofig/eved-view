@@ -2,7 +2,8 @@ from typing import Any
 
 from nicegui import ui
 
-from app.viewmodels.MapViewModel import AddToMapCommand, MapViewModel
+from app.commands.map import AddToMapCommand
+from app.viewmodels.MapViewModel import MapViewModel
 from app.views.MapView import MapView
 from app.views.TripView import TripView
 from nicemvvm import nm
@@ -10,8 +11,7 @@ from nicemvvm.ValueConverter import ValueConverter
 
 
 class LatLngTextConverter(ValueConverter):
-    @staticmethod
-    def convert(v: Any) -> Any:
+    def convert(self, v: Any) -> Any:
         return f"({v[0]}, {v[1]})"
 
 
@@ -30,8 +30,8 @@ class MainView:
                     "text",
                     converter=LatLngTextConverter(),
                 )
-                ui.label("Zoom:")
-                nm.label().bind(view_model, "zoom", "text")
+                # ui.label("Zoom:")
+                # nm.label().bind(view_model, "zoom", "text")
                 # ui.label("Selected Trip ID:")
                 # nm.label().bind(view_model, "selected_trip_id", "text")
 

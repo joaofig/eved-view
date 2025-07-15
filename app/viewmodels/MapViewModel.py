@@ -175,6 +175,10 @@ class MapViewModel(Observable):
             self.bounds = locations
 
     @property
+    def remove_from_map_command(self) -> 'RemoveFromMapCommand':
+        return RemoveFromMapCommand(self)
+
+    @property
     def zoom(self) -> int:
         return self._zoom
 
@@ -249,24 +253,19 @@ class SelectedTripValueConverter(ValueConverter):
         return x is not None
 
 
-class AddToMapCommand(Command, Observer):
-    def __init__(self, view_model: MapViewModel, trace_name: str, **kwargs):
+class RemoveFromMapCommand(Command, Observer):
+    def __init__(self, view_model: MapViewModel, **kwargs):
+        super().__init__(**kwargs)
         self._view_model = view_model
-        self._trace_name = trace_name
-        super().__init__(is_enabled=False, **kwargs)
         self.bind(
             view_model,
-            property_name="selected_trip",
+            property_name="selected_polyline",
             local_name="is_enabled",
             converter=SelectedTripValueConverter(),
         )
 
     def run(self, arg: Any = None) -> Any:
-        trip = self._view_model.selected_trip
-        if trip is not None:
-            if len(trip.signals) == 0:
-                trip.load_signals()
-            if len(trip.nodes) == 0:
-                trip.load_nodes()
-            self._view_model.show_polyline(trip, self._trace_name)
-        return None
+        map_polyline = self._view_model.selected_polyline
+        if map_polyline is not None:
+            self._view_model.polylines.remove(map_polyline)
+            self._view_model.selected_polyline = None

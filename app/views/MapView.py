@@ -105,7 +105,7 @@ class MapView(ui.column):
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         match action:
-            case "property":
+            case "property_changed":
                 name = args["name"]
                 value = args["value"]
 

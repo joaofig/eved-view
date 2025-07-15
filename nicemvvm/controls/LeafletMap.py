@@ -368,6 +368,7 @@ class LeafletMap(ui.leaflet, Observer):
             p: Polyline = to_polyline(v)
             if p.layer_id not in self._polylines:
                 p.add_to(self)
+                self._polylines[p.layer_id] = p
             return p
 
         match action:
@@ -380,12 +381,13 @@ class LeafletMap(ui.leaflet, Observer):
 
             case "pop" | "remove":
                 polyline = to_polyline(args["value"])
+                layer = self._polylines[polyline.layer_id]
+                layer.remove()
                 del self._polylines[polyline.layer_id]
-                polyline.remove()
 
             case "clear":
-                for layer_id, polyline in self._polylines.items():
-                    polyline.remove()
+                for layer_id, layer in self._polylines.items():
+                    layer.remove()
                 self._polylines.clear()
 
     def bind(
