@@ -23,43 +23,21 @@ class MainView:
             with splitter.before:
                 TripView(view_model)
 
-                ui.label("Center:")
-                nm.label().bind(
-                    view_model,
-                    "center",
-                    "text",
-                    converter=LatLngTextConverter(),
-                )
-                # ui.label("Zoom:")
-                # nm.label().bind(view_model, "zoom", "text")
-                # ui.label("Selected Trip ID:")
-                # nm.label().bind(view_model, "selected_trip_id", "text")
-
                 with ui.row():
-                    (
-                        nm.button(
-                            "Add GPS",
-                            command=AddToMapCommand(view_model, trace_name="gps"),
-                        )
-                        .props("size=sm no-caps")
-                        .disable()
-                    )
-                    (
-                        nm.button(
-                            "Add Match",
-                            command=AddToMapCommand(view_model, trace_name="match"),
-                        )
-                        .props("size=sm no-caps")
-                        .disable()
-                    )
-                    (
-                        nm.button(
-                            "Add Nodes",
-                            command=AddToMapCommand(view_model, trace_name="nodes"),
-                        )
-                        .props("size=sm no-caps")
-                        .disable()
-                    )
+                    nm.button(
+                        "Add GPS",
+                        command=AddToMapCommand(view_model, trace_name="gps"),
+                    ).props("size=sm no-caps").disable()
+
+                    nm.button(
+                        "Add Match",
+                        command=AddToMapCommand(view_model, trace_name="match"),
+                    ).props("size=sm no-caps").disable()
+
+                    nm.button(
+                        "Add Nodes",
+                        command=AddToMapCommand(view_model, trace_name="nodes"),
+                    ).props("size=sm no-caps").disable()
 
             with splitter.after:
                 MapView(view_model)

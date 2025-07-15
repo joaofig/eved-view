@@ -2,6 +2,7 @@ import asyncio
 from typing import Any, Mapping
 
 from nicegui import ui
+from nicegui.events import GenericEventArguments
 
 from app.converters.map import MapPolylineGridConverter, MapPolylineMapConverter
 from app.views.PolylinePropertyView import PolylinePropertyView
@@ -54,8 +55,20 @@ async def setup_map(m: ui.leaflet) -> None:
 
 
 def create_map(view_model: Observable) -> ui.leaflet:
+    draw_control = {
+        "position": "topleft",
+        "draw": {
+            "polygon": True,
+            "polyline": False,
+            "rectangle": False,
+            "circle": False,
+            "marker": False,
+            "circlemarker": False,
+        },
+        "edit": False
+    }
     m = (
-        nm.leaflet()
+        nm.leaflet(draw_control=draw_control, hide_drawn_items=True)
             .classes("h-full w-full")
             .bind(view_model, "zoom", "zoom")
             .bind(view_model, "center", "center")
@@ -84,16 +97,24 @@ class MapView(ui.column):
             "w-full h-full"
         ) as main_splitter:
             with main_splitter.before:
-                self._map = create_map(view_model)
+                self._map = create_map(view_model) \
+                    .on("draw:created", self._handle_draw)
 
             with main_splitter.after:
-                with ui.splitter(horizontal=False, value=80).classes(
-                    "w-full h-full"
-                ) as property_splitter:
-                    with property_splitter.after:
-                        self._property_view = create_property_view(view_model)
-                    with property_splitter.before:
-                        self._grid = create_grid(view_model)
+                # Property view
+                with ui.grid(columns="auto 1fr").classes("w-full h-full gap-0"):
+                    with ui.column().classes("h-full"):
+                        with ui.tabs().props('vertical').classes('w-full') as tabs:
+                            route_tab = ui.tab(name="Routes", icon="route")
+                            polygon_tab = ui.tab(name="Areas", icon="pentagon")
+                    with ui.column().classes("h-full") as content_column:
+                        with ui.splitter(horizontal=False, value=80).classes(
+                            "w-full h-full"
+                        ) as property_splitter:
+                            with property_splitter.after:
+                                self._property_view = create_property_view(view_model)
+                            with property_splitter.before:
+                                self._grid = create_grid(view_model)
 
             # Make sure the map is correctly resized
             main_splitter.on_value_change(
@@ -102,6 +123,16 @@ class MapView(ui.column):
             main_splitter.on(
                 "resize", lambda _: self._map.invalidate_size(animate=True)
             )
+
+    def _handle_draw(self, event: GenericEventArguments) -> None:
+        layer_type = event.args["layerType"]
+        layer = event.args["layer"]
+        if layer_type == "polygon":
+            ui.notify("Polygon!")
+        # ui.notify(f"Draw event: {event.args}")
+        # args:
+        # layerType
+        # layer: options, _bounds, _latlngs, editing
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         match action:

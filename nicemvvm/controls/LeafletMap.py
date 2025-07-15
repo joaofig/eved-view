@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Dict, List, Self, Union
 
 from nicegui import ui
@@ -330,6 +331,18 @@ class Polygon(Polyline):
             name="polygon", args=[self._points, self._options]
         )
         return self._layer
+
+
+class ControlPosition(Enum):
+    TOPLEFT = "topleft"
+    TOPRIGHT = "topright"
+    BOTTOMLEFT = "bottomleft"
+    BOTTOMRIGHT = "bottomright"
+
+
+@dataclass
+class DrawControl:
+    position: ControlPosition = ControlPosition.TOPLEFT
 
 
 class LeafletMap(ui.leaflet, Observer):
