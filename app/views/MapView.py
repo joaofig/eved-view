@@ -4,15 +4,16 @@ from typing import Any, Mapping
 from nicegui import ui
 from nicegui.events import GenericEventArguments
 
-from app.converters.map import MapPolylineGridConverter, MapPolylineMapConverter
+from app.converters.map import MapPolylineGridConverter, MapPolylineMapConverter, MapPolygonMapConverter
 from app.views.PolylinePropertyView import PolylinePropertyView
 from nicemvvm import nm
+from nicemvvm.Command import Command
 from nicemvvm.controls.GridView import GridView, GridViewColumn
 from nicemvvm.controls.LeafletMap import LatLng
-from nicemvvm.observables.Observable import Observable
+from nicemvvm.observables.Observable import Observable, Observer
 
 
-def create_grid(view_model: Observable) -> GridView:
+def create_polyline_grid(view_model: Observable) -> GridView:
     polyline_converter = MapPolylineGridConverter()
     grid = (
         nm.gridview(
@@ -78,6 +79,7 @@ def create_map(view_model: Observable) -> ui.leaflet:
                 "polylines",
                 converter=MapPolylineMapConverter(),
             )
+            .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
     )
     asyncio.create_task(setup_map(m))
     return m
@@ -88,25 +90,28 @@ def create_property_view(view_model: Observable) -> PolylinePropertyView:
     return view
 
 
-class MapView(ui.column):
+class MapView(ui.column, Observer):
+    add_area_to_map: Command|None = None
+
     def __init__(self, view_model: Observable):
         super().__init__()
         view_model.register(self._listener)
+        self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
 
         with ui.splitter(horizontal=True, value=80).classes(
             "w-full h-full"
         ) as main_splitter:
             with main_splitter.before:
-                self._map = create_map(view_model) \
-                    .on("draw:created", self._handle_draw)
+                self._map = create_map(view_model)
+                self._map.on("draw:created", self._handle_draw)
 
             with main_splitter.after:
                 # Property view
                 with ui.grid(columns="auto 1fr").classes("w-full h-full gap-0"):
                     with ui.column().classes("h-full"):
                         with ui.tabs().props('vertical').classes('w-full') as tabs:
-                            route_tab = ui.tab(name="Routes", icon="route")
-                            polygon_tab = ui.tab(name="Areas", icon="pentagon")
+                            routes_tab = ui.tab(name="routes", label="Routes", icon="route").props("no-caps")
+                            areas_tab = ui.tab(name="areas", label="Areas", icon="pentagon").props("no-caps")
                     with ui.column().classes("h-full") as content_column:
                         with ui.splitter(horizontal=False, value=80).classes(
                             "w-full h-full"
@@ -114,7 +119,7 @@ class MapView(ui.column):
                             with property_splitter.after:
                                 self._property_view = create_property_view(view_model)
                             with property_splitter.before:
-                                self._grid = create_grid(view_model)
+                                self._grid = create_polyline_grid(view_model)
 
             # Make sure the map is correctly resized
             main_splitter.on_value_change(
@@ -128,7 +133,8 @@ class MapView(ui.column):
         layer_type = event.args["layerType"]
         layer = event.args["layer"]
         if layer_type == "polygon":
-            ui.notify("Polygon!")
+            self.add_area_to_map.execute(layer)
+            # ui.notify("Polygon!")
         # ui.notify(f"Draw event: {event.args}")
         # args:
         # layerType

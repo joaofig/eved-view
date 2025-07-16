@@ -2,7 +2,7 @@ from typing import Any
 
 from nicegui import ui
 
-from app.commands.map import AddToMapCommand
+from app.commands.map import AddRouteToMapCommand
 from app.viewmodels.MapViewModel import MapViewModel
 from app.views.MapView import MapView
 from app.views.TripView import TripView
@@ -26,17 +26,17 @@ class MainView:
                 with ui.row():
                     nm.button(
                         "Add GPS",
-                        command=AddToMapCommand(view_model, trace_name="gps"),
+                        command=AddRouteToMapCommand(view_model, trace_name="gps"),
                     ).props("size=sm no-caps").disable()
 
                     nm.button(
                         "Add Match",
-                        command=AddToMapCommand(view_model, trace_name="match"),
+                        command=AddRouteToMapCommand(view_model, trace_name="match"),
                     ).props("size=sm no-caps").disable()
 
                     nm.button(
                         "Add Nodes",
-                        command=AddToMapCommand(view_model, trace_name="nodes"),
+                        command=AddRouteToMapCommand(view_model, trace_name="nodes"),
                     ).props("size=sm no-caps").disable()
 
             with splitter.after:

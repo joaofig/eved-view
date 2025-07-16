@@ -18,7 +18,7 @@ class Button(ui.button, Observer):
 
         self._command: Command | None = command
         if command is not None:
-            self.on("click", command.run)
+            self.on("click", command.execute)
             command.register(self._command_handler)
 
     def _command_handler(self, action: str, args: Mapping[str, Any]) -> None:
@@ -38,6 +38,6 @@ class Button(ui.button, Observer):
     def command(self, command: Command) -> None:
         if self._command != command:
             self._command = command
-            self.on("click", command.run)
+            self.on("click", command.execute)
 
             command.register(self._command_handler)

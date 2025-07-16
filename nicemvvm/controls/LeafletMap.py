@@ -27,21 +27,21 @@ class LatLng:
 
 class Path(Observer):
     def __init__(
-        self,
-        layer_id: str,
-        stroke: bool = True,
-        color: str = "#3388ff",
-        opacity: float = 1.0,
-        weight: float = 3.0,
-        line_cap: str = "round",
-        line_join: str = "round",
-        dash_array: str = "",
-        dash_offset: int = 0,
-        fill: bool = False,
-        fill_color: str = "#3388ff",
-        fill_opacity: float = 0.2,
-        fill_rule: str = "evenodd",
-        **kwargs,
+            self,
+            layer_id: str,
+            stroke: bool = True,
+            color: str = "#3388ff",
+            opacity: float = 1.0,
+            weight: float = 3.0,
+            line_cap: str = "round",
+            line_join: str = "round",
+            dash_array: str = "",
+            dash_offset: int = 0,
+            fill: bool = False,
+            fill_color: str = "#3388ff",
+            fill_opacity: float = 0.2,
+            fill_rule: str = "evenodd",
+            **kwargs,
     ):
         super().__init__(**kwargs)
         self._map: ui.leaflet | None = None
@@ -192,24 +192,24 @@ class Path(Observer):
 
 class Polyline(Path):
     def __init__(
-        self,
-        layer_id: str,
-        points: List[LatLng],
-        smooth_factor: float = 1.0,
-        no_clipping: bool = False,
-        stroke: bool = True,
-        color: str = "#3388ff",
-        opacity: float = 1.0,
-        weight: float = 3.0,
-        line_cap: str = "round",
-        line_join: str = "round",
-        dash_array: str = "",
-        dash_offset: int = 0,
-        fill: bool = False,
-        fill_color: str = "#3388ff",
-        fill_opacity: float = 0.2,
-        fill_rule: str = "evenodd",
-        **kwargs,
+            self,
+            layer_id: str,
+            points: List[LatLng],
+            smooth_factor: float = 1.0,
+            no_clipping: bool = False,
+            stroke: bool = True,
+            color: str = "#3388ff",
+            opacity: float = 1.0,
+            weight: float = 3.0,
+            line_cap: str = "round",
+            line_join: str = "round",
+            dash_array: str = "",
+            dash_offset: int = 0,
+            fill: bool = False,
+            fill_color: str = "#3388ff",
+            fill_opacity: float = 0.2,
+            fill_rule: str = "evenodd",
+            **kwargs,
     ):
         Path.__init__(
             self,
@@ -285,24 +285,24 @@ class Polyline(Path):
 
 class Polygon(Polyline):
     def __init__(
-        self,
-        layer_id: str,
-        points: List[LatLng],
-        smooth_factor: float = 1.0,
-        no_clipping: bool = False,
-        stroke: bool = True,
-        color: str = "#3388ff",
-        opacity: float = 1.0,
-        weight: float = 3.0,
-        line_cap: str = "round",
-        line_join: str = "round",
-        dash_array: str = "",
-        dash_offset: int = 0,
-        fill: bool = True,
-        fill_color: str = "#3388ff",
-        fill_opacity: float = 0.2,
-        fill_rule: str = "evenodd",
-        **kwargs,
+            self,
+            layer_id: str,
+            points: List[LatLng],
+            smooth_factor: float = 1.0,
+            no_clipping: bool = False,
+            stroke: bool = True,
+            color: str = "#3388ff",
+            opacity: float = 1.0,
+            weight: float = 3.0,
+            line_cap: str = "round",
+            line_join: str = "round",
+            dash_array: str = "",
+            dash_offset: int = 0,
+            fill: bool = True,
+            fill_color: str = "#3388ff",
+            fill_opacity: float = 0.2,
+            fill_rule: str = "evenodd",
+            **kwargs,
     ):
         Polyline.__init__(
             self,
@@ -347,9 +347,9 @@ class DrawControl:
 
 class LeafletMap(ui.leaflet, Observer):
     def __init__(
-        self,
-        draw_control: Union[bool, Dict] = False,
-        hide_drawn_items: bool = False,
+            self,
+            draw_control: Union[bool, Dict] = False,
+            hide_drawn_items: bool = False,
     ):
         ui.leaflet.__init__(
             self, draw_control=draw_control, hide_drawn_items=hide_drawn_items
@@ -358,6 +358,7 @@ class LeafletMap(ui.leaflet, Observer):
 
         self._polylines: Dict[str, Polyline] = {}
         self._polyline_converter: ValueConverter | None = None
+        self._polygons: Dict[str, Polygon] = {}
         self._polygon_converter: ValueConverter | None = None
 
     def _on_map_move(self, e: GenericEventArguments):
@@ -367,6 +368,41 @@ class LeafletMap(ui.leaflet, Observer):
     def _on_map_zoom(self, e: GenericEventArguments):
         zoom = e.args["zoom"]
         self._outbound_handler("zoom", zoom)
+
+    def _polygons_handler(self, action: str, args: Dict[str, Any]) -> None:
+        def to_polygon(v: Any) -> Polygon:
+            p: Polyline = (
+                value
+                if self._polygon_converter is None
+                else self._polygon_converter.convert(v)
+            )
+            return p
+
+        def add_polygon(v: Any) -> Polygon:
+            p: Polygon = to_polygon(v)
+            if p.layer_id not in self._polygons:
+                p.add_to(self)
+                self._polygons[p.layer_id] = p
+            return p
+
+        match action:
+            case "append":
+                add_polygon(args["value"])
+
+            case "extend":
+                for value in args["values"]:
+                    add_polygon(value)
+
+            case "pop" | "remove":
+                polygon = to_polygon(args["value"])
+                layer = self._polylines[polygon.layer_id]
+                layer.remove()
+                del self._polylines[polygon.layer_id]
+
+            case "clear":
+                for layer_id, layer in self._polygons.items():
+                    layer.remove()
+                self._polygons.clear()
 
     def _polylines_handler(self, action: str, args: Dict[str, Any]) -> None:
         def to_polyline(v: Any) -> Polyline:
@@ -404,12 +440,12 @@ class LeafletMap(ui.leaflet, Observer):
                 self._polylines.clear()
 
     def bind(
-        self,
-        source: Observable,
-        property_name: str,
-        local_name: str,
-        handler: ObserverHandler | None = None,
-        converter: ValueConverter | None = None,
+            self,
+            source: Observable,
+            property_name: str,
+            local_name: str,
+            handler: ObserverHandler | None = None,
+            converter: ValueConverter | None = None,
     ) -> Self:
         match local_name:
             case "zoom":
@@ -424,6 +460,13 @@ class LeafletMap(ui.leaflet, Observer):
                     obs_list: ObservableList = polylines
                     obs_list.register(self._polylines_handler)
                 self._polyline_converter = converter
+                return self
+            case "polygons":
+                polygons = getattr(source, property_name)
+                if isinstance(polygons, ObservableList):
+                    obs_list: ObservableList = polygons
+                    obs_list.register(self._polygons_handler)
+                self._polygon_converter = converter
                 return self
 
         Observer.bind(self, source, property_name, local_name, handler, converter)

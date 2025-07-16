@@ -1,6 +1,6 @@
 from nicegui import ui
 
-from app.viewmodels.MapViewModel import RemoveFromMapCommand
+from app.viewmodels.MapViewModel import RemoveRouteCommand
 from nicemvvm.controls.Button import Button
 from nicemvvm.controls.ColorInput import ColorInput
 from nicemvvm.controls.NumberInput import NumberInput
@@ -11,7 +11,7 @@ class PolylinePropertyView(ui.column, Observer, Observable):
     def __init__(self, view_model: Observable|None = None):
         super().__init__()
         self._observable: Observable|None = None
-        self._remove_command: RemoveFromMapCommand|None = None  # Per item data source
+        self._remove_command: RemoveRouteCommand | None = None  # Per item data source
 
         ui.add_css("""
         .custom-scroll-area .q-scrollarea__content {
@@ -58,7 +58,7 @@ class PolylinePropertyView(ui.column, Observer, Observable):
         self._remove_button.disable()
 
         self.bind(view_model, "selected_polyline", "observable")
-        self.bind(view_model, "remove_from_map_command", "remove_command")
+        self.bind(view_model, "remove_route_command", "remove_command")
 
     @property
     def observable(self) -> Observable | None:
@@ -90,11 +90,11 @@ class PolylinePropertyView(ui.column, Observer, Observable):
             self._remove_button.enable()
 
     @property
-    def remove_command(self) -> RemoveFromMapCommand:
+    def remove_command(self) -> RemoveRouteCommand:
         return self._remove_command
 
     @remove_command.setter
     @notify_change
-    def remove_command(self, remove_command: RemoveFromMapCommand):
+    def remove_command(self, remove_command: RemoveRouteCommand):
         self._remove_command = remove_command
         self._remove_button.command = remove_command

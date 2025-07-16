@@ -1,8 +1,8 @@
 from typing import Any, Dict
 
-from app.viewmodels.MapViewModel import MapPolyline
+from app.viewmodels.MapViewModel import MapPolyline, MapPolygon
 from nicemvvm.ValueConverter import ValueConverter
-from nicemvvm.controls.LeafletMap import Polyline
+from nicemvvm.controls.LeafletMap import Polyline, Polygon
 
 
 class MapPolylineGridConverter(ValueConverter):
@@ -40,7 +40,7 @@ class MapPolylineMapConverter(ValueConverter):
 
     def convert(self, map_polyline: MapPolyline) -> Polyline:
         polyline = Polyline(
-            layer_id=map_polyline.polyline_id,
+            layer_id=map_polyline.shape_id,
             points=map_polyline.locations,
             color=map_polyline.color,
             weight=map_polyline.weight,
@@ -50,3 +50,23 @@ class MapPolylineMapConverter(ValueConverter):
             .bind(map_polyline, "weight", "weight") \
             .bind(map_polyline, "opacity", "opacity")
         return polyline
+
+
+
+
+class MapPolygonMapConverter(ValueConverter):
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+
+    def convert(self, map_polygon: MapPolygon) -> Polygon:
+        polygon = Polygon(
+            layer_id=map_polygon.shape_id,
+            points=map_polygon.locations,
+            color=map_polygon.color,
+            weight=map_polygon.weight,
+            opacity=map_polygon.opacity
+        ) \
+            .bind(map_polygon, "color", "color") \
+            .bind(map_polygon, "weight", "weight") \
+            .bind(map_polygon, "opacity", "opacity")
+        return polygon

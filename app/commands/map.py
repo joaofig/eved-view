@@ -2,10 +2,10 @@ from typing import Any
 
 from app.viewmodels.MapViewModel import MapViewModel, SelectedTripValueConverter
 from nicemvvm.Command import Command
-from nicemvvm.observables.Observable import Observer, Observable
+from nicemvvm.observables.Observable import Observer
 
 
-class AddToMapCommand(Command, Observer):
+class AddRouteToMapCommand(Command, Observer):
     def __init__(self, view_model: MapViewModel, trace_name: str, **kwargs):
         self._view_model = view_model
         self._trace_name = trace_name
@@ -17,7 +17,7 @@ class AddToMapCommand(Command, Observer):
             converter=SelectedTripValueConverter(),
         )
 
-    def run(self, arg: Any = None) -> Any:
+    def execute(self, arg: Any = None) -> Any:
         trip = self._view_model.selected_trip
         if trip is not None:
             if len(trip.signals) == 0:

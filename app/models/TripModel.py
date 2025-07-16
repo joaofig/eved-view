@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Dict, List
 
 from app.repositories.trip import load_all_trips, load_nodes, load_signals
-from nicemvvm.ValueConverter import ValueConverter
 
 
 @dataclass

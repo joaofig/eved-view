@@ -1,4 +1,6 @@
-from typing import Any, List, Tuple
+import uuid
+
+from typing import Any, List, Tuple, Dict
 
 from app.models.TripModel import Trip, TripModel
 from nicemvvm.Command import Command
@@ -9,47 +11,20 @@ from nicemvvm.ResourceLocator import ResourceLocator
 from nicemvvm.ValueConverter import ValueConverter
 
 
-class MapPolyline(Observable):
-    def __init__(
-        self,
-        polyline_id: str,
-        traj_id: int,
-        vehicle_id: int,
-        km: float,
-        is_visible: bool,
-        color: str,
-        weight: float,
-        opacity: float,
-        trace_name: str,
-        locations: List[LatLng],
-    ):
+class MapShape(Observable):
+    def __init__(self, shape_id: str, is_visible: bool, color: str, weight: float,
+                 opacity: float, locations: List[LatLng],):
         super().__init__()
-        self._polyline_id = polyline_id
-        self._traj_id = traj_id
-        self._vehicle_id = vehicle_id
-        self._km = km
+        self._shape_id = shape_id
         self._is_visible = is_visible
         self._color = color
         self._weight = weight
         self._opacity = opacity
-        self._trace_name = trace_name
         self._locations = locations
 
     @property
-    def polyline_id(self) -> str:
-        return self._polyline_id
-
-    @property
-    def traj_id(self) -> int:
-        return self._traj_id
-
-    @property
-    def vehicle_id(self) -> int:
-        return self._vehicle_id
-
-    @property
-    def km(self):
-        return self._km
+    def shape_id(self) -> str:
+        return self._shape_id
 
     @property
     def is_visible(self) -> bool:
@@ -88,15 +63,6 @@ class MapPolyline(Observable):
         self._opacity = value
 
     @property
-    def trace_name(self) -> str:
-        return self._trace_name
-
-    @trace_name.setter
-    @notify_change
-    def trace_name(self, value: str):
-        self._trace_name = value
-
-    @property
     def locations(self) -> List[LatLng]:
         return self._locations
 
@@ -105,9 +71,51 @@ class MapPolyline(Observable):
     def locations(self, value: List[LatLng]):
         self._locations = value
 
+
+class MapPolyline(MapShape):
+    def __init__(
+        self,
+        shape_id: str,
+        traj_id: int,
+        vehicle_id: int,
+        km: float,
+        is_visible: bool,
+        color: str,
+        weight: float,
+        opacity: float,
+        trace_name: str,
+        locations: List[LatLng],
+    ):
+        super().__init__(shape_id, is_visible, color, weight, opacity, locations)
+        self._traj_id = traj_id
+        self._vehicle_id = vehicle_id
+        self._km = km
+        self._trace_name = trace_name
+
+    @property
+    def traj_id(self) -> int:
+        return self._traj_id
+
+    @property
+    def vehicle_id(self) -> int:
+        return self._vehicle_id
+
+    @property
+    def km(self):
+        return self._km
+
+    @property
+    def trace_name(self) -> str:
+        return self._trace_name
+
+    @trace_name.setter
+    @notify_change
+    def trace_name(self, value: str):
+        self._trace_name = value
+
     def to_dict(self):
         return {
-            "polyline_id": self._polyline_id,
+            "polyline_id": self._shape_id,
             "traj_id": self._traj_id,
             "vehicle_id": self._vehicle_id,
             "is_visible": self._is_visible,
@@ -118,6 +126,28 @@ class MapPolyline(Observable):
             "locations": self._locations,
             "km": self._km,
         }
+
+
+class MapPolygon(MapShape):
+    def __init__(self, shape_id: str, is_visible: bool, color: str,
+                 weight: float, opacity: float, locations: List[LatLng]):
+        super().__init__(
+            shape_id=shape_id,
+            is_visible=is_visible,
+            color=color,
+            weight=weight,
+            opacity=opacity,
+            locations=locations)
+
+    def to_dict(self):
+        return {
+            "polygon_id": self._shape_id,
+            "is_visible": self._is_visible,
+            "color": self._color,
+            "weight": self._weight,
+            "opacity": self._opacity,
+        }
+
 
 
 class MapViewModel(Observable):
@@ -133,6 +163,8 @@ class MapViewModel(Observable):
         self._selected_trip_id: str = ""
         self._selected_polyline: MapPolyline | None = None
         self._polylines: ObservableList[MapPolyline] = ObservableList()
+        self._selected_polygons: MapPolygon | None = None
+        self._polygons: ObservableList[MapPolygon] = ObservableList()
         self._bounds: List[LatLng] = list()
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
@@ -141,6 +173,21 @@ class MapViewModel(Observable):
             for t in self._polylines
             if t.traj_id == trip.traj_id and t.trace_name == trace_name
         )
+
+    def show_draw_polygon(self, draw_polygon: Dict) -> None:
+        options = draw_polygon["options"]
+        locations = [LatLng(l["lat"], l["lng"]) for l in draw_polygon["_latlngs"][0]]
+        poly = MapPolygon(
+            shape_id=str(uuid.uuid4()),
+            is_visible=True,
+            color=options["color"],
+            weight=options["weight"],
+            opacity=options["opacity"],
+            locations=locations
+        )
+        self._polygons.append(poly)
+        self.bounds = locations
+        return None
 
     def show_polyline(self, trip: Trip, trace_name: str) -> None:
         if not self._has_trace(trip, trace_name):
@@ -159,7 +206,7 @@ class MapViewModel(Observable):
                     color = "#000000"
 
             poly = MapPolyline(
-                polyline_id=f"{trip.traj_id}_{trace_name}",
+                shape_id=f"{trip.traj_id}_{trace_name}",
                 traj_id=trip.traj_id,
                 vehicle_id=trip.vehicle_id,
                 is_visible=True,
@@ -175,8 +222,12 @@ class MapViewModel(Observable):
             self.bounds = locations
 
     @property
-    def remove_from_map_command(self) -> 'RemoveFromMapCommand':
-        return RemoveFromMapCommand(self)
+    def remove_route_command(self) -> 'RemoveRouteCommand':
+        return RemoveRouteCommand(self)
+
+    @property
+    def add_area_to_map_command(self) -> 'AddAreaToMapCommand':
+        return AddAreaToMapCommand(self)
 
     @property
     def zoom(self) -> int:
@@ -236,6 +287,10 @@ class MapViewModel(Observable):
         self._selected_polyline = polyline
 
     @property
+    def polygons(self) -> ObservableList[MapPolygon]:
+        return self._polygons
+
+    @property
     def bounds(self) -> List[LatLng]:
         return self._bounds
 
@@ -253,7 +308,7 @@ class SelectedTripValueConverter(ValueConverter):
         return x is not None
 
 
-class RemoveFromMapCommand(Command, Observer):
+class RemoveRouteCommand(Command, Observer):
     def __init__(self, view_model: MapViewModel, **kwargs):
         super().__init__(**kwargs)
         self._view_model = view_model
@@ -264,8 +319,20 @@ class RemoveFromMapCommand(Command, Observer):
             converter=SelectedTripValueConverter(),
         )
 
-    def run(self, arg: Any = None) -> Any:
+    def execute(self, arg: Any = None) -> Any:
         map_polyline = self._view_model.selected_polyline
         if map_polyline is not None:
             self._view_model.polylines.remove(map_polyline)
             self._view_model.selected_polyline = None
+
+
+class AddAreaToMapCommand(Command):
+    def __init__(self, view_model: MapViewModel, **kwargs):
+        super().__init__(**kwargs)
+        self._view_model = view_model
+
+    def execute(self, arg: Any = None) -> Any:
+        if isinstance(arg, Dict):
+            draw_polygon: Dict = arg
+            self._view_model.show_draw_polygon(draw_polygon)
+        return None
