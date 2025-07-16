@@ -2,7 +2,8 @@ from typing import Any, Dict
 
 from app.viewmodels.MapViewModel import MapPolyline, MapPolygon
 from nicemvvm.ValueConverter import ValueConverter
-from nicemvvm.controls.LeafletMap import Polyline, Polygon
+from nicemvvm.controls.leaflet.polygon import Polygon
+from nicemvvm.controls.leaflet.polyline import Polyline
 
 
 class MapPolylineGridConverter(ValueConverter):

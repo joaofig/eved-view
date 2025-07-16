@@ -4,7 +4,7 @@ from typing import Any, List, Tuple, Dict
 
 from app.models.TripModel import Trip, TripModel
 from nicemvvm.Command import Command
-from nicemvvm.controls.LeafletMap import LatLng
+from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.Observable import Observable, Observer, notify_change
 from nicemvvm.observables.ObservableCollections import ObservableList
 from nicemvvm.ResourceLocator import ResourceLocator
@@ -176,7 +176,7 @@ class MapViewModel(Observable):
 
     def show_draw_polygon(self, draw_polygon: Dict) -> None:
         options = draw_polygon["options"]
-        locations = [LatLng(l["lat"], l["lng"]) for l in draw_polygon["_latlngs"][0]]
+        locations = [LatLng(ll["lat"], ll["lng"]) for ll in draw_polygon["_latlngs"][0]]
         poly = MapPolygon(
             shape_id=str(uuid.uuid4()),
             is_visible=True,

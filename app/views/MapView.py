@@ -9,7 +9,7 @@ from app.views.PolylinePropertyView import PolylinePropertyView
 from nicemvvm import nm
 from nicemvvm.Command import Command
 from nicemvvm.controls.GridView import GridView, GridViewColumn
-from nicemvvm.controls.LeafletMap import LatLng
+from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.Observable import Observable, Observer
 
 
