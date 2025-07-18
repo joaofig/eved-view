@@ -3,12 +3,12 @@ from typing import Union, Dict, Any, Self, List
 from nicegui import ui
 from nicegui.events import GenericEventArguments
 
-from nicemvvm.ValueConverter import ValueConverter
+from nicemvvm.converter import ValueConverter
 from nicemvvm.controls.leaflet.polygon import Polygon
 from nicemvvm.controls.leaflet.polyline import Polyline
 from nicemvvm.controls.leaflet.types import LatLng
-from nicemvvm.observables.Observable import Observer, Observable, ObserverHandler
-from nicemvvm.observables.ObservableCollections import ObservableList
+from nicemvvm.observables.observability import Observer, Observable, ObserverHandler
+from nicemvvm.observables.collections import ObservableList
 
 
 class LeafletMap(ui.leaflet, Observer):

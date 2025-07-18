@@ -5,13 +5,13 @@ from typing import Any, Dict, List, Mapping, Self
 from nicegui import events
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
-from nicemvvm.observables.Observable import (
+from nicemvvm.observables.observability import (
     Observable,
     Observer,
     ObserverHandler,
 )
-from nicemvvm.observables.ObservableCollections import ObservableList
-from nicemvvm.ValueConverter import ValueConverter
+from nicemvvm.observables.collections import ObservableList
+from nicemvvm.converter import ValueConverter
 
 
 @dataclass

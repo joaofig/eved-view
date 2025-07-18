@@ -1,17 +1,17 @@
 from nicegui import ui
 
-from app.viewmodels.MapViewModel import RemoveRouteCommand
-from nicemvvm.controls.Button import Button
-from nicemvvm.controls.ColorInput import ColorInput
-from nicemvvm.controls.NumberInput import NumberInput
-from nicemvvm.observables.Observable import Observable, notify_change, Observer
+from app.viewmodels.map import RemoveRouteCommand
+from nicemvvm.controls.button import Button
+from nicemvvm.controls.color_input import ColorInput
+from nicemvvm.controls.number_input import NumberInput
+from nicemvvm.observables.observability import Observable, Observer, notify_change
 
 
-class PolygonPropertyView(ui.column, Observer, Observable):
-    def __init__(self, view_model: Observable | None = None, **kwargs):
-        super().__init__(**kwargs)
+class PolylinePropertyView(ui.column, Observer, Observable):
+    def __init__(self, view_model: Observable | None = None):
+        super().__init__()
         self._observable: Observable | None = None
-        self._remove_command: RemoveRouteCommand | None = None
+        self._remove_command: RemoveRouteCommand | None = None  # Per item data source
 
         with self.classes("gap-0"):
             with ui.row().classes("w-full p-0 m-0"):
@@ -81,11 +81,11 @@ class PolygonPropertyView(ui.column, Observer, Observable):
             self._remove_button.enable()
 
     @property
-    def remove_command(self) -> RemoveRouteCommand | None:
+    def remove_command(self) -> RemoveRouteCommand:
         return self._remove_command
 
     @remove_command.setter
     @notify_change
-    def remove_command(self, remove_command: RemoveRouteCommand | None):
+    def remove_command(self, remove_command: RemoveRouteCommand):
         self._remove_command = remove_command
         self._remove_button.command = remove_command

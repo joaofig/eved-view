@@ -1,7 +1,7 @@
 from nicegui import ui
 from nicegui.elements.leaflet_layers import GenericLayer
 
-from nicemvvm.observables.Observable import Observer
+from nicemvvm.observables.observability import Observer
 
 
 class Path(Observer):

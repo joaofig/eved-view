@@ -2,201 +2,16 @@ import uuid
 
 from typing import Any, List, Tuple, Dict
 
-from app.models.TripModel import Trip, TripModel
-from nicemvvm.Command import Command
+from app.models.trip import Trip, TripModel
+from app.viewmodels.circle import MapCircle
+from app.viewmodels.polygon import MapPolygon
+from app.viewmodels.polyline import MapPolyline
+from nicemvvm.command import Command
 from nicemvvm.controls.leaflet.types import LatLng
-from nicemvvm.observables.Observable import Observable, Observer, notify_change
-from nicemvvm.observables.ObservableCollections import ObservableList
+from nicemvvm.observables.observability import Observable, Observer, notify_change
+from nicemvvm.observables.collections import ObservableList
 from nicemvvm.ResourceLocator import ResourceLocator
-from nicemvvm.ValueConverter import ValueConverter
-
-
-class MapShape(Observable):
-    def __init__(
-        self,
-        shape_id: str,
-        color: str,
-        weight: float,
-        opacity: float,
-        fill: bool,
-        fill_color: str,
-        fill_opacity: float,
-        locations: List[LatLng],
-    ):
-        super().__init__()
-        self._shape_id = shape_id
-        self._color = color
-        self._weight = weight
-        self._opacity = opacity
-        self._fill = fill
-        self._fill_color = fill_color
-        self._fill_opacity = fill_opacity
-        self._locations = locations
-
-    @property
-    def shape_id(self) -> str:
-        return self._shape_id
-
-    @property
-    def color(self) -> str:
-        return self._color
-
-    @color.setter
-    @notify_change
-    def color(self, value: str):
-        self._color = value
-
-    @property
-    def weight(self) -> float:
-        return self._weight
-
-    @weight.setter
-    @notify_change
-    def weight(self, value: float):
-        self._weight = value
-
-    @property
-    def opacity(self) -> float:
-        return self._opacity
-
-    @opacity.setter
-    @notify_change
-    def opacity(self, value: float):
-        self._opacity = value
-
-    @property
-    def fill(self) -> bool:
-        return self._fill
-
-    @fill.setter
-    @notify_change
-    def fill(self, value: bool):
-        self._fill = value
-
-    @property
-    def fill_color(self) -> str:
-        return self._fill_color
-
-    @fill_color.setter
-    @notify_change
-    def fill_color(self, value: str):
-        self._fill_color = value
-
-    @property
-    def fill_opacity(self) -> float:
-        return self._fill_opacity
-
-    @fill_opacity.setter
-    @notify_change
-    def fill_opacity(self, value: float):
-        self._fill_opacity = value
-
-    @property
-    def locations(self) -> List[LatLng]:
-        return self._locations
-
-    @locations.setter
-    @notify_change
-    def locations(self, value: List[LatLng]):
-        self._locations = value
-
-
-class MapPolyline(MapShape):
-    def __init__(
-        self,
-        shape_id: str,
-        traj_id: int,
-        vehicle_id: int,
-        km: float,
-        color: str,
-        weight: float,
-        opacity: float,
-        trace_name: str,
-        locations: List[LatLng],
-    ):
-        super().__init__(
-            shape_id,
-            color=color,
-            weight=weight,
-            opacity=opacity,
-            fill=False,
-            fill_color=color,
-            fill_opacity=opacity,
-            locations=locations,
-        )
-        self._traj_id = traj_id
-        self._vehicle_id = vehicle_id
-        self._km = km
-        self._trace_name = trace_name
-
-    @property
-    def traj_id(self) -> int:
-        return self._traj_id
-
-    @property
-    def vehicle_id(self) -> int:
-        return self._vehicle_id
-
-    @property
-    def km(self):
-        return self._km
-
-    @property
-    def trace_name(self) -> str:
-        return self._trace_name
-
-    @trace_name.setter
-    @notify_change
-    def trace_name(self, value: str):
-        self._trace_name = value
-
-    def to_dict(self):
-        return {
-            "polyline_id": self._shape_id,
-            "traj_id": self._traj_id,
-            "vehicle_id": self._vehicle_id,
-            "color": self._color,
-            "weight": self._weight,
-            "opacity": self._opacity,
-            "trace_name": self._trace_name,
-            "locations": self._locations,
-            "km": self._km,
-        }
-
-
-class MapPolygon(MapShape):
-    def __init__(
-        self,
-        shape_id: str,
-        color: str,
-        weight: float,
-        opacity: float,
-        locations: List[LatLng],
-        fill: bool = True,
-        fill_color: str = "",
-        fill_opacity: float = 0.2,
-    ):
-        super().__init__(
-            shape_id=shape_id,
-            color=color,
-            weight=weight,
-            opacity=opacity,
-            fill=fill,
-            fill_color=color if not fill_color else fill_color,
-            fill_opacity=fill_opacity,
-            locations=locations,
-        )
-
-    def to_dict(self):
-        return {
-            "polygon_id": self._shape_id,
-            "color": self._color,
-            "weight": self._weight,
-            "opacity": self._opacity,
-            "fill": self._fill,
-            "fill_color": self._fill_color,
-            "fill_opacity": self._fill_opacity,
-        }
+from nicemvvm.converter import ValueConverter
 
 
 class MapViewModel(Observable):
@@ -209,11 +24,12 @@ class MapViewModel(Observable):
         self._trip_model: TripModel = self._locator["TripModel"]
         self._trips: ObservableList[Trip] = ObservableList(self._trip_model.load())
         self._selected_trip: Trip | None = None
-        self._selected_trip_id: str = ""
         self._selected_polyline: MapPolyline | None = None
         self._polylines: ObservableList[MapPolyline] = ObservableList()
-        self._selected_polygons: MapPolygon | None = None
+        self._selected_polygon: MapPolygon | None = None
         self._polygons: ObservableList[MapPolygon] = ObservableList()
+        self._selected_circle: MapCircle | None = None
+        self._circles: ObservableList[MapCircle] = ObservableList()
         self._bounds: List[LatLng] = list()
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
@@ -223,7 +39,11 @@ class MapViewModel(Observable):
             if t.traj_id == trip.traj_id and t.trace_name == trace_name
         )
 
-    def show_draw_polygon(self, draw_polygon: Dict) -> None:
+    def show_circle(self, circle: Dict) -> None:
+        options = circle["options"]
+        return None
+
+    def show_polygon(self, draw_polygon: Dict) -> None:
         options = draw_polygon["options"]
         locations = [LatLng(ll["lat"], ll["lng"]) for ll in draw_polygon["_latlngs"][0]]
         poly = MapPolygon(
@@ -309,19 +129,6 @@ class MapViewModel(Observable):
     @notify_change
     def selected_trip(self, trip: Trip | None) -> None:
         self._selected_trip = trip
-        if trip is not None:
-            self.selected_trip_id = str(trip.traj_id)
-        else:
-            self.selected_trip_id = ""
-
-    @property
-    def selected_trip_id(self) -> str:
-        return self._selected_trip_id
-
-    @selected_trip_id.setter
-    @notify_change
-    def selected_trip_id(self, trip_id: str) -> None:
-        self._selected_trip_id = trip_id
 
     @property
     def polylines(self) -> ObservableList[MapPolyline]:
@@ -339,6 +146,28 @@ class MapViewModel(Observable):
     @property
     def polygons(self) -> ObservableList[MapPolygon]:
         return self._polygons
+
+    @property
+    def selected_polygon(self) -> MapPolygon | None:
+        return self._selected_polygon
+
+    @selected_polygon.setter
+    @notify_change
+    def selected_polygon(self, polygon: MapPolygon | None):
+        self._selected_polygon = polygon
+
+    @property
+    def circles(self) -> ObservableList[MapCircle]:
+        return self._circles
+
+    @property
+    def selected_circle(self) -> MapCircle | None:
+        return self._selected_circle
+
+    @selected_circle.setter
+    @notify_change
+    def selected_circle(self, circle: MapCircle | None):
+        self._selected_circle = circle
 
     @property
     def bounds(self) -> List[LatLng]:
@@ -384,5 +213,5 @@ class AddAreaToMapCommand(Command):
     def execute(self, arg: Any = None) -> Any:
         if isinstance(arg, Dict):
             draw_polygon: Dict = arg
-            self._view_model.show_draw_polygon(draw_polygon)
+            self._view_model.show_polygon(draw_polygon)
         return None

@@ -1,17 +1,17 @@
 from nicegui import ui
 
-from app.viewmodels.MapViewModel import RemoveRouteCommand
-from nicemvvm.controls.Button import Button
-from nicemvvm.controls.ColorInput import ColorInput
-from nicemvvm.controls.NumberInput import NumberInput
-from nicemvvm.observables.Observable import Observable, Observer, notify_change
+from app.viewmodels.map import RemoveRouteCommand
+from nicemvvm.controls.button import Button
+from nicemvvm.controls.color_input import ColorInput
+from nicemvvm.controls.number_input import NumberInput
+from nicemvvm.observables.observability import Observable, notify_change, Observer
 
 
-class PolylinePropertyView(ui.column, Observer, Observable):
-    def __init__(self, view_model: Observable | None = None):
-        super().__init__()
+class PolygonPropertyView(ui.column, Observer, Observable):
+    def __init__(self, view_model: Observable | None = None, **kwargs):
+        super().__init__(**kwargs)
         self._observable: Observable | None = None
-        self._remove_command: RemoveRouteCommand | None = None  # Per item data source
+        self._remove_command: RemoveRouteCommand | None = None
 
         with self.classes("gap-0"):
             with ui.row().classes("w-full p-0 m-0"):
@@ -43,6 +43,19 @@ class PolylinePropertyView(ui.column, Observer, Observable):
                         label="Color", value="#3388ff", preview=True
                     ).classes("w-full edit-view-field")
 
+                    self._fill_opacity_input = NumberInput(
+                        label="Fill Opacity",
+                        value=0.2,
+                        min=0.0,
+                        max=1.0,
+                        step=0.1,
+                        precision=2,
+                    ).classes("w-full edit-view-field")
+
+                    self._fill_color_input = ColorInput(
+                        label="Fill Color", value="#3388ff", preview=True
+                    ).classes("w-full edit-view-field")
+
         self._weight_input.disable()
         self._opacity_input.disable()
         self._color_input.disable()
@@ -64,9 +77,14 @@ class PolylinePropertyView(ui.column, Observer, Observable):
                 self._opacity_input.unbind("opacity", self._observable)
                 self._color_input.unbind("color", self._observable)
 
+                self._fill_opacity_input.unbind("fill_opacity", self._observable)
+                self._fill_color_input.unbind("fill_color", self._observable)
+
             self._weight_input.disable()
             self._opacity_input.disable()
             self._color_input.disable()
+            self._fill_opacity_input.disable()
+            self._fill_color_input.disable()
             self._remove_button.disable()
 
         self._observable = observable
@@ -75,17 +93,22 @@ class PolylinePropertyView(ui.column, Observer, Observable):
             self._opacity_input.bind(observable, "opacity", "value")
             self._color_input.bind(observable, "color", "value")
 
+            self._fill_opacity_input.bind(observable, "fill_opacity", "value")
+            self._fill_color_input.bind(observable, "fill_color", "value")
+
             self._weight_input.enable()
             self._opacity_input.enable()
             self._color_input.enable()
+            self._fill_opacity_input.enable()
+            self._fill_color_input.enable()
             self._remove_button.enable()
 
     @property
-    def remove_command(self) -> RemoveRouteCommand:
+    def remove_command(self) -> RemoveRouteCommand | None:
         return self._remove_command
 
     @remove_command.setter
     @notify_change
-    def remove_command(self, remove_command: RemoveRouteCommand):
+    def remove_command(self, remove_command: RemoveRouteCommand | None):
         self._remove_command = remove_command
         self._remove_button.command = remove_command

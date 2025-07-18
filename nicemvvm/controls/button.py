@@ -2,8 +2,8 @@ from typing import Any, Mapping
 
 from nicegui import ui
 
-from nicemvvm.Command import Command
-from nicemvvm.observables.Observable import Observer
+from nicemvvm.command import Command
+from nicemvvm.observables.observability import Observer
 
 
 class Button(ui.button, Observer):

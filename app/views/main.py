@@ -3,11 +3,11 @@ from typing import Any
 from nicegui import ui
 
 from app.commands.map import AddRouteToMapCommand
-from app.viewmodels.MapViewModel import MapViewModel
-from app.views.MapView import MapView
-from app.views.TripView import TripView
+from app.viewmodels.map import MapViewModel
+from app.views.map import MapView
+from app.views.trip import TripView
 from nicemvvm import nm
-from nicemvvm.ValueConverter import ValueConverter
+from nicemvvm.converter import ValueConverter
 
 
 class LatLngTextConverter(ValueConverter):

@@ -1,6 +1,6 @@
 from typing import Any, Iterable, SupportsIndex
 
-from nicemvvm.observables.Observable import Observable
+from nicemvvm.observables.observability import Observable
 
 
 class ObservableList(Observable, list):

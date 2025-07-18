@@ -1,0 +1,68 @@
+from typing import List
+
+from app.viewmodels.shape import MapShape
+from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.observables.observability import notify_change
+
+
+class MapPolyline(MapShape):
+    def __init__(
+        self,
+        shape_id: str,
+        traj_id: int,
+        vehicle_id: int,
+        km: float,
+        color: str,
+        weight: float,
+        opacity: float,
+        trace_name: str,
+        locations: List[LatLng],
+    ):
+        super().__init__(
+            shape_id,
+            color=color,
+            weight=weight,
+            opacity=opacity,
+            fill=False,
+            fill_color=color,
+            fill_opacity=opacity,
+            locations=locations,
+        )
+        self._traj_id = traj_id
+        self._vehicle_id = vehicle_id
+        self._km = km
+        self._trace_name = trace_name
+
+    @property
+    def traj_id(self) -> int:
+        return self._traj_id
+
+    @property
+    def vehicle_id(self) -> int:
+        return self._vehicle_id
+
+    @property
+    def km(self):
+        return self._km
+
+    @property
+    def trace_name(self) -> str:
+        return self._trace_name
+
+    @trace_name.setter
+    @notify_change
+    def trace_name(self, value: str):
+        self._trace_name = value
+
+    def to_dict(self):
+        return {
+            "polyline_id": self._shape_id,
+            "traj_id": self._traj_id,
+            "vehicle_id": self._vehicle_id,
+            "color": self._color,
+            "weight": self._weight,
+            "opacity": self._opacity,
+            "trace_name": self._trace_name,
+            "locations": self._locations,
+            "km": self._km,
+        }

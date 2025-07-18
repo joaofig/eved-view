@@ -1,8 +1,8 @@
 from typing import Any
 
-from app.viewmodels.MapViewModel import MapViewModel, SelectedTripValueConverter
-from nicemvvm.Command import Command
-from nicemvvm.observables.Observable import Observer
+from app.viewmodels.map import MapViewModel, SelectedTripValueConverter
+from nicemvvm.command import Command
+from nicemvvm.observables.observability import Observer
 
 
 class AddRouteToMapCommand(Command, Observer):

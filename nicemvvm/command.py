@@ -1,6 +1,6 @@
 from typing import Any
 
-from nicemvvm.observables.Observable import Observable, notify_change
+from nicemvvm.observables.observability import Observable, notify_change
 
 
 class Command(Observable):

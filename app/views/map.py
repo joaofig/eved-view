@@ -10,12 +10,12 @@ from app.converters.map import (
     MapPolygonMapConverter,
 )
 from app.geo.geomath import circle_to_polygon
-from app.views.PolylinePropertyView import PolylinePropertyView
+from app.views.polyline import PolylinePropertyView
 from nicemvvm import nm
-from nicemvvm.Command import Command
-from nicemvvm.controls.GridView import GridView, GridViewColumn
+from nicemvvm.command import Command
+from nicemvvm.controls.grid_view import GridView, GridViewColumn
 from nicemvvm.controls.leaflet.types import LatLng
-from nicemvvm.observables.Observable import Observable, Observer
+from nicemvvm.observables.observability import Observable, Observer
 
 
 def create_polyline_grid(view_model: Observable) -> GridView:

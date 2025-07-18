@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
-from app.viewmodels.MapViewModel import MapPolyline, MapPolygon
-from nicemvvm.ValueConverter import ValueConverter
+from app.viewmodels.map import MapPolyline, MapPolygon
+from nicemvvm.converter import ValueConverter
 from nicemvvm.controls.leaflet.polygon import Polygon
 from nicemvvm.controls.leaflet.polyline import Polyline
 

@@ -2,7 +2,7 @@ import functools
 from abc import ABC
 from typing import Any, Callable, Coroutine, Dict, Mapping, Self, Set
 
-from nicemvvm.ValueConverter import ValueConverter
+from nicemvvm.converter import ValueConverter
 
 ObserverHandler = Callable[[str, Mapping[str, Any]], None] | Coroutine[Any, Any, None]
 ConverterFunction = Callable[[Any], Any]

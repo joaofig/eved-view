@@ -2,7 +2,7 @@ from nicegui import ui
 
 from app.converters.trip import TripToDictConverter
 from nicemvvm import nm
-from nicemvvm.observables.Observable import Observable
+from nicemvvm.observables.observability import Observable
 
 
 class TripView(ui.column):
