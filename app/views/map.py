@@ -9,7 +9,6 @@ from app.converters.map import (
     MapPolylineMapConverter,
     MapPolygonMapConverter, MapCircleMapConverter,
 )
-from app.geo.geomath import circle_to_polygon
 from app.views.polyline import PolylinePropertyView
 from nicemvvm import nm
 from nicemvvm.command import Command
@@ -78,7 +77,7 @@ def create_map(view_model: Observable) -> ui.leaflet:
         .classes("h-full w-full")
         .bind(view_model, "zoom", "zoom")
         .bind(view_model, "center", "center")
-        .bind(view_model,"polylines", "polylines", converter=MapPolylineMapConverter())
+        .bind(view_model, "polylines", "polylines", converter=MapPolylineMapConverter())
         .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
         .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
     )

@@ -2,8 +2,8 @@ from nicegui import ui
 
 from app.viewmodels.map import RemoveRouteCommand
 from nicemvvm.controls.button import Button
-from nicemvvm.controls.color_input import ColorInput
-from nicemvvm.controls.number_input import NumberInput
+from nicemvvm.controls.inputs.color import ColorInput
+from nicemvvm.controls.inputs.number import NumberInput
 from nicemvvm.observables.observability import Observable, notify_change, Observer
 
 
