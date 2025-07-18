@@ -35,6 +35,7 @@ class GridViewColumn:
             "width": self.width,
         }
 
+
 def to_dict(item: Any) -> Dict[str, Any]:
     if is_dataclass(item):
         return asdict(item)

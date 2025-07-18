@@ -12,28 +12,30 @@ from nicemvvm.ValueConverter import ValueConverter
 
 
 class MapShape(Observable):
-    def __init__(self, shape_id: str, is_visible: bool, color: str, weight: float,
-                 opacity: float, locations: List[LatLng],):
+    def __init__(
+        self,
+        shape_id: str,
+        color: str,
+        weight: float,
+        opacity: float,
+        fill: bool,
+        fill_color: str,
+        fill_opacity: float,
+        locations: List[LatLng],
+    ):
         super().__init__()
         self._shape_id = shape_id
-        self._is_visible = is_visible
         self._color = color
         self._weight = weight
         self._opacity = opacity
+        self._fill = fill
+        self._fill_color = fill_color
+        self._fill_opacity = fill_opacity
         self._locations = locations
 
     @property
     def shape_id(self) -> str:
         return self._shape_id
-
-    @property
-    def is_visible(self) -> bool:
-        return self._is_visible
-
-    @is_visible.setter
-    @notify_change
-    def is_visible(self, value: bool):
-        self._is_visible = value
 
     @property
     def color(self) -> str:
@@ -63,6 +65,33 @@ class MapShape(Observable):
         self._opacity = value
 
     @property
+    def fill(self) -> bool:
+        return self._fill
+
+    @fill.setter
+    @notify_change
+    def fill(self, value: bool):
+        self._fill = value
+
+    @property
+    def fill_color(self) -> str:
+        return self._fill_color
+
+    @fill_color.setter
+    @notify_change
+    def fill_color(self, value: str):
+        self._fill_color = value
+
+    @property
+    def fill_opacity(self) -> float:
+        return self._fill_opacity
+
+    @fill_opacity.setter
+    @notify_change
+    def fill_opacity(self, value: float):
+        self._fill_opacity = value
+
+    @property
     def locations(self) -> List[LatLng]:
         return self._locations
 
@@ -79,14 +108,22 @@ class MapPolyline(MapShape):
         traj_id: int,
         vehicle_id: int,
         km: float,
-        is_visible: bool,
         color: str,
         weight: float,
         opacity: float,
         trace_name: str,
         locations: List[LatLng],
     ):
-        super().__init__(shape_id, is_visible, color, weight, opacity, locations)
+        super().__init__(
+            shape_id,
+            color=color,
+            weight=weight,
+            opacity=opacity,
+            fill=False,
+            fill_color=color,
+            fill_opacity=opacity,
+            locations=locations,
+        )
         self._traj_id = traj_id
         self._vehicle_id = vehicle_id
         self._km = km
@@ -118,7 +155,6 @@ class MapPolyline(MapShape):
             "polyline_id": self._shape_id,
             "traj_id": self._traj_id,
             "vehicle_id": self._vehicle_id,
-            "is_visible": self._is_visible,
             "color": self._color,
             "weight": self._weight,
             "opacity": self._opacity,
@@ -129,25 +165,38 @@ class MapPolyline(MapShape):
 
 
 class MapPolygon(MapShape):
-    def __init__(self, shape_id: str, is_visible: bool, color: str,
-                 weight: float, opacity: float, locations: List[LatLng]):
+    def __init__(
+        self,
+        shape_id: str,
+        color: str,
+        weight: float,
+        opacity: float,
+        locations: List[LatLng],
+        fill: bool = True,
+        fill_color: str = "",
+        fill_opacity: float = 0.2,
+    ):
         super().__init__(
             shape_id=shape_id,
-            is_visible=is_visible,
             color=color,
             weight=weight,
             opacity=opacity,
-            locations=locations)
+            fill=fill,
+            fill_color=color if not fill_color else fill_color,
+            fill_opacity=fill_opacity,
+            locations=locations,
+        )
 
     def to_dict(self):
         return {
             "polygon_id": self._shape_id,
-            "is_visible": self._is_visible,
             "color": self._color,
             "weight": self._weight,
             "opacity": self._opacity,
+            "fill": self._fill,
+            "fill_color": self._fill_color,
+            "fill_opacity": self._fill_opacity,
         }
-
 
 
 class MapViewModel(Observable):
@@ -179,11 +228,13 @@ class MapViewModel(Observable):
         locations = [LatLng(ll["lat"], ll["lng"]) for ll in draw_polygon["_latlngs"][0]]
         poly = MapPolygon(
             shape_id=str(uuid.uuid4()),
-            is_visible=True,
             color=options["color"],
             weight=options["weight"],
             opacity=options["opacity"],
-            locations=locations
+            fill=options["fill"],
+            fill_color=options["fillColor"],
+            fill_opacity=options["fillOpacity"],
+            locations=locations,
         )
         self._polygons.append(poly)
         self.bounds = locations
@@ -209,7 +260,6 @@ class MapViewModel(Observable):
                 shape_id=f"{trip.traj_id}_{trace_name}",
                 traj_id=trip.traj_id,
                 vehicle_id=trip.vehicle_id,
-                is_visible=True,
                 color=color,
                 weight=3.0,
                 opacity=0.6,
@@ -222,11 +272,11 @@ class MapViewModel(Observable):
             self.bounds = locations
 
     @property
-    def remove_route_command(self) -> 'RemoveRouteCommand':
+    def remove_route_command(self) -> "RemoveRouteCommand":
         return RemoveRouteCommand(self)
 
     @property
-    def add_area_to_map_command(self) -> 'AddAreaToMapCommand':
+    def add_area_to_map_command(self) -> "AddAreaToMapCommand":
         return AddAreaToMapCommand(self)
 
     @property

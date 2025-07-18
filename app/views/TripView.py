@@ -11,7 +11,12 @@ class TripView(ui.column):
 
         self._grid = (
             nm.gridview(supress_auto_size=True)
-            .bind(view_model, property_name="trips", local_name="items", converter=TripToDictConverter())
+            .bind(
+                view_model,
+                property_name="trips",
+                local_name="items",
+                converter=TripToDictConverter(),
+            )
             .bind(
                 view_model,
                 property_name="selected_trip",

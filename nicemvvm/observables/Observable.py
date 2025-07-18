@@ -16,10 +16,12 @@ def notify_change(func):
         old_value = getattr(this, name)
         if old_value != value and isinstance(this, Observable):
             observable: Observable = this
-            observable.notify(action="property_changing",
-                              name=name,
-                              new_value=value,
-                              old_value=old_value)
+            observable.notify(
+                action="property_changing",
+                name=name,
+                new_value=value,
+                old_value=old_value,
+            )
             ret = func(*args, **kwargs)
             observable.notify(action="property_changed", name=name, value=value)
             return ret

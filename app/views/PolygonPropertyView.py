@@ -4,14 +4,14 @@ from app.viewmodels.MapViewModel import RemoveRouteCommand
 from nicemvvm.controls.Button import Button
 from nicemvvm.controls.ColorInput import ColorInput
 from nicemvvm.controls.NumberInput import NumberInput
-from nicemvvm.observables.Observable import Observable, Observer, notify_change
+from nicemvvm.observables.Observable import Observable, notify_change, Observer
 
 
-class PolylinePropertyView(ui.column, Observer, Observable):
-    def __init__(self, view_model: Observable | None = None):
-        super().__init__()
+class PolygonPropertyView(ui.column, Observer, Observable):
+    def __init__(self, view_model: Observable | None = None, **kwargs):
+        super().__init__(**kwargs)
         self._observable: Observable | None = None
-        self._remove_command: RemoveRouteCommand | None = None  # Per item data source
+        self._remove_command: RemoveRouteCommand | None = None
 
         with self.classes("gap-0"):
             with ui.row().classes("w-full p-0 m-0"):
@@ -81,11 +81,11 @@ class PolylinePropertyView(ui.column, Observer, Observable):
             self._remove_button.enable()
 
     @property
-    def remove_command(self) -> RemoveRouteCommand:
+    def remove_command(self) -> RemoveRouteCommand | None:
         return self._remove_command
 
     @remove_command.setter
     @notify_change
-    def remove_command(self, remove_command: RemoveRouteCommand):
+    def remove_command(self, remove_command: RemoveRouteCommand | None):
         self._remove_command = remove_command
         self._remove_button.command = remove_command

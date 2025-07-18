@@ -13,9 +13,9 @@ from nicemvvm.observables.ObservableCollections import ObservableList
 
 class LeafletMap(ui.leaflet, Observer):
     def __init__(
-            self,
-            draw_control: Union[bool, Dict] = False,
-            hide_drawn_items: bool = False,
+        self,
+        draw_control: Union[bool, Dict] = False,
+        hide_drawn_items: bool = False,
     ):
         ui.leaflet.__init__(
             self, draw_control=draw_control, hide_drawn_items=hide_drawn_items
@@ -106,12 +106,12 @@ class LeafletMap(ui.leaflet, Observer):
                 self._polylines.clear()
 
     def bind(
-            self,
-            source: Observable,
-            property_name: str,
-            local_name: str,
-            handler: ObserverHandler | None = None,
-            converter: ValueConverter | None = None,
+        self,
+        source: Observable,
+        property_name: str,
+        local_name: str,
+        handler: ObserverHandler | None = None,
+        converter: ValueConverter | None = None,
     ) -> Self:
         match local_name:
             case "zoom":

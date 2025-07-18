@@ -6,21 +6,21 @@ from nicemvvm.observables.Observable import Observer
 
 class Path(Observer):
     def __init__(
-            self,
-            layer_id: str,
-            stroke: bool = True,
-            color: str = "#3388ff",
-            opacity: float = 1.0,
-            weight: float = 3.0,
-            line_cap: str = "round",
-            line_join: str = "round",
-            dash_array: str = "",
-            dash_offset: int = 0,
-            fill: bool = False,
-            fill_color: str = "#3388ff",
-            fill_opacity: float = 0.2,
-            fill_rule: str = "evenodd",
-            **kwargs,
+        self,
+        layer_id: str,
+        stroke: bool = True,
+        color: str = "#3388ff",
+        opacity: float = 1.0,
+        weight: float = 3.0,
+        line_cap: str = "round",
+        line_join: str = "round",
+        dash_array: str = "",
+        dash_offset: int = 0,
+        fill: bool = False,
+        fill_color: str = "#3388ff",
+        fill_opacity: float = 0.2,
+        fill_rule: str = "evenodd",
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self._map: ui.leaflet | None = None

@@ -4,7 +4,12 @@ from typing import Any, Mapping
 from nicegui import ui
 from nicegui.events import GenericEventArguments
 
-from app.converters.map import MapPolylineGridConverter, MapPolylineMapConverter, MapPolygonMapConverter
+from app.converters.map import (
+    MapPolylineGridConverter,
+    MapPolylineMapConverter,
+    MapPolygonMapConverter,
+)
+from app.geo.geomath import circle_to_polygon
 from app.views.PolylinePropertyView import PolylinePropertyView
 from nicemvvm import nm
 from nicemvvm.Command import Command
@@ -61,25 +66,25 @@ def create_map(view_model: Observable) -> ui.leaflet:
         "draw": {
             "polygon": True,
             "polyline": False,
-            "rectangle": False,
-            "circle": False,
+            "rectangle": True,
+            "circle": True,
             "marker": False,
             "circlemarker": False,
         },
-        "edit": False
+        "edit": False,
     }
     m = (
         nm.leaflet(draw_control=draw_control, hide_drawn_items=True)
-            .classes("h-full w-full")
-            .bind(view_model, "zoom", "zoom")
-            .bind(view_model, "center", "center")
-            .bind(
-                view_model,
-                "polylines",
-                "polylines",
-                converter=MapPolylineMapConverter(),
-            )
-            .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
+        .classes("h-full w-full")
+        .bind(view_model, "zoom", "zoom")
+        .bind(view_model, "center", "center")
+        .bind(
+            view_model,
+            "polylines",
+            "polylines",
+            converter=MapPolylineMapConverter(),
+        )
+        .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
     )
     asyncio.create_task(setup_map(m))
     return m
@@ -91,7 +96,7 @@ def create_property_view(view_model: Observable) -> PolylinePropertyView:
 
 
 class MapView(ui.column, Observer):
-    add_area_to_map: Command|None = None
+    add_area_to_map: Command | None = None
 
     def __init__(self, view_model: Observable):
         super().__init__()
@@ -109,9 +114,13 @@ class MapView(ui.column, Observer):
                 # Property view
                 with ui.grid(columns="auto 1fr").classes("w-full h-full gap-0"):
                     with ui.column().classes("h-full"):
-                        with ui.tabs().props('vertical').classes('w-full') as tabs:
-                            routes_tab = ui.tab(name="routes", label="Routes", icon="route").props("no-caps")
-                            areas_tab = ui.tab(name="areas", label="Areas", icon="pentagon").props("no-caps")
+                        with ui.tabs().props("vertical").classes("w-full") as tabs:
+                            routes_tab = ui.tab(
+                                name="routes", label="Routes", icon="route"
+                            ).props("no-caps")
+                            areas_tab = ui.tab(
+                                name="areas", label="Areas", icon="pentagon"
+                            ).props("no-caps")
                     with ui.column().classes("h-full") as content_column:
                         with ui.splitter(horizontal=False, value=80).classes(
                             "w-full h-full"
@@ -132,8 +141,22 @@ class MapView(ui.column, Observer):
     def _handle_draw(self, event: GenericEventArguments) -> None:
         layer_type = event.args["layerType"]
         layer = event.args["layer"]
-        if layer_type == "polygon":
-            self.add_area_to_map.execute(layer)
+        match layer_type:
+            case "polygon" | "rectangle":
+                self.add_area_to_map.execute(layer)
+            case "circle":
+                center_lat = layer["_latlng"]["lat"]
+                center_lng = layer["_latlng"]["lng"]
+                radius = layer["_mRadius"]
+                layer["_latlngs"] = [[{"lat": p[0], "lng": p[1]}
+                                     for p in circle_to_polygon(center_lat,
+                                                                center_lng,
+                                                                radius,
+                                                                num_points=720)]]
+                self.add_area_to_map.execute(layer)
+
+                # _latlng
+                # _mRadius
             # ui.notify("Polygon!")
         # ui.notify(f"Draw event: {event.args}")
         # args:

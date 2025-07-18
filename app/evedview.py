@@ -7,6 +7,15 @@ from nicemvvm.ResourceLocator import ResourceLocator
 
 @ui.page("/")
 async def index():
+    ui.add_css("""
+    .custom-scroll-area .q-scrollarea__content {
+        padding: 0px 12px 0px 4px !important;
+        gap: 0px !important;
+    }
+    .edit-view-field .q-field {
+        padding-top: 4px !important;
+    """)
+
     context.client.content.classes("p-0")
     ui.page_title("eVED Viewer")
     MainView()
