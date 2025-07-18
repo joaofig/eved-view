@@ -26,12 +26,12 @@ class MapPolyline(MapShape):
             fill=False,
             fill_color=color,
             fill_opacity=opacity,
-            locations=locations,
         )
         self._traj_id = traj_id
         self._vehicle_id = vehicle_id
         self._km = km
         self._trace_name = trace_name
+        self._locations = locations
 
     @property
     def traj_id(self) -> int:
@@ -53,6 +53,15 @@ class MapPolyline(MapShape):
     @notify_change
     def trace_name(self, value: str):
         self._trace_name = value
+
+    @property
+    def locations(self) -> List[LatLng]:
+        return self._locations
+
+    @locations.setter
+    @notify_change
+    def locations(self, value: List[LatLng]):
+        self._locations = value
 
     def to_dict(self):
         return {

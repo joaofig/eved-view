@@ -14,7 +14,6 @@ class MapShape(Observable):
         fill: bool,
         fill_color: str,
         fill_opacity: float,
-        locations: List[LatLng],
     ):
         super().__init__()
         self._shape_id = shape_id
@@ -24,7 +23,6 @@ class MapShape(Observable):
         self._fill = fill
         self._fill_color = fill_color
         self._fill_opacity = fill_opacity
-        self._locations = locations
 
     @property
     def shape_id(self) -> str:
@@ -83,12 +81,3 @@ class MapShape(Observable):
     @notify_change
     def fill_opacity(self, value: float):
         self._fill_opacity = value
-
-    @property
-    def locations(self) -> List[LatLng]:
-        return self._locations
-
-    @locations.setter
-    @notify_change
-    def locations(self, value: List[LatLng]):
-        self._locations = value

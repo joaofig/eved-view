@@ -7,8 +7,8 @@ from nicemvvm.observables.observability import notify_change, Observable
 
 class MapCircle(MapShape, Observable):
     def __init__(self, shape_id: str, color: str, weight: float, opacity: float, center: LatLng, radius: float,
-                 fill: bool, fill_color: str, fill_opacity: float, locations: List[LatLng]):
-        super().__init__(shape_id, color, weight, opacity, fill, fill_color, fill_opacity, locations)
+                 fill: bool, fill_color: str, fill_opacity: float):
+        super().__init__(shape_id, color, weight, opacity, fill, fill_color, fill_opacity)
         self._center = center
         self._radius = radius
 

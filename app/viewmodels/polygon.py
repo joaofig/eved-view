@@ -2,6 +2,7 @@ from typing import List
 
 from app.viewmodels.shape import MapShape
 from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.observables.observability import notify_change
 
 
 class MapPolygon(MapShape):
@@ -24,8 +25,18 @@ class MapPolygon(MapShape):
             fill=fill,
             fill_color=color if not fill_color else fill_color,
             fill_opacity=fill_opacity,
-            locations=locations,
         )
+        self._locations = locations
+
+    @property
+    def locations(self) -> List[LatLng]:
+        return self._locations
+
+    @locations.setter
+    @notify_change
+    def locations(self, value: List[LatLng]):
+        self._locations = value
+
 
     def to_dict(self):
         return {

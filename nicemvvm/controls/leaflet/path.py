@@ -20,9 +20,8 @@ class Path(Observer):
         fill_color: str = "#3388ff",
         fill_opacity: float = 0.2,
         fill_rule: str = "evenodd",
-        **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__()
         self._map: ui.leaflet | None = None
         self._options = {
             "stroke": stroke,
@@ -167,3 +166,6 @@ class Path(Observer):
     def fill_rule(self, value: str):
         self._options["fillRule"] = value
         self.set_style()
+
+    def add_to(self, leaflet: ui.leaflet) -> GenericLayer|None:
+        return None

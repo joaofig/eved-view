@@ -41,6 +41,20 @@ class MapViewModel(Observable):
 
     def show_circle(self, circle: Dict) -> None:
         options = circle["options"]
+        center = LatLng(circle["_latlng"]["lat"], circle["_latlng"]["lng"])
+        radius = circle["_mRadius"]
+        circle = MapCircle(
+            shape_id=str(uuid.uuid4()),
+            color=options["color"],
+            weight=options["weight"],
+            opacity=options["opacity"],
+            center=center,
+            radius=radius,
+            fill=options["fill"],
+            fill_color=options["fillColor"],
+            fill_opacity=options["fillOpacity"],
+        )
+        self._circles.append(circle)
         return None
 
     def show_polygon(self, draw_polygon: Dict) -> None:
@@ -57,7 +71,7 @@ class MapViewModel(Observable):
             locations=locations,
         )
         self._polygons.append(poly)
-        self.bounds = locations
+        # self.bounds = locations
         return None
 
     def show_polyline(self, trip: Trip, trace_name: str) -> None:
@@ -98,6 +112,10 @@ class MapViewModel(Observable):
     @property
     def add_area_to_map_command(self) -> "AddAreaToMapCommand":
         return AddAreaToMapCommand(self)
+
+    @property
+    def add_circle_to_map_command(self) -> "AddCircleToMapCommand":
+        return AddCircleToMapCommand(self)
 
     @property
     def zoom(self) -> int:
@@ -214,4 +232,16 @@ class AddAreaToMapCommand(Command):
         if isinstance(arg, Dict):
             draw_polygon: Dict = arg
             self._view_model.show_polygon(draw_polygon)
+        return None
+
+
+class AddCircleToMapCommand(Command):
+    def __init__(self, view_model: MapViewModel, **kwargs):
+        super().__init__(**kwargs)
+        self._view_model = view_model
+
+    def execute(self, arg: Any = None) -> Any:
+        if isinstance(arg, Dict):
+            circle: Dict = arg
+            self._view_model.show_circle(circle)
         return None

@@ -7,7 +7,7 @@ from nicegui.events import GenericEventArguments
 from app.converters.map import (
     MapPolylineGridConverter,
     MapPolylineMapConverter,
-    MapPolygonMapConverter,
+    MapPolygonMapConverter, MapCircleMapConverter,
 )
 from app.geo.geomath import circle_to_polygon
 from app.views.polyline import PolylinePropertyView
@@ -78,13 +78,9 @@ def create_map(view_model: Observable) -> ui.leaflet:
         .classes("h-full w-full")
         .bind(view_model, "zoom", "zoom")
         .bind(view_model, "center", "center")
-        .bind(
-            view_model,
-            "polylines",
-            "polylines",
-            converter=MapPolylineMapConverter(),
-        )
+        .bind(view_model,"polylines", "polylines", converter=MapPolylineMapConverter())
         .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
+        .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
     )
     asyncio.create_task(setup_map(m))
     return m
@@ -97,11 +93,13 @@ def create_property_view(view_model: Observable) -> PolylinePropertyView:
 
 class MapView(ui.column, Observer):
     add_area_to_map: Command | None = None
+    add_circle_to_map: Command | None = None
 
     def __init__(self, view_model: Observable):
         super().__init__()
         view_model.register(self._listener)
         self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
+        self.bind(view_model, "add_circle_to_map_command", "add_circle_to_map")
 
         with ui.splitter(horizontal=True, value=80).classes(
             "w-full h-full"
@@ -121,6 +119,7 @@ class MapView(ui.column, Observer):
                             areas_tab = ui.tab(
                                 name="areas", label="Areas", icon="pentagon"
                             ).props("no-caps")
+                            circles_tab = ui.tab(name="circles", label="Circles", icon="brightness_1").props("no-caps")
                     with ui.column().classes("h-full") as content_column:
                         with ui.splitter(horizontal=False, value=80).classes(
                             "w-full h-full"
@@ -145,23 +144,7 @@ class MapView(ui.column, Observer):
             case "polygon" | "rectangle":
                 self.add_area_to_map.execute(layer)
             case "circle":
-                center_lat = layer["_latlng"]["lat"]
-                center_lng = layer["_latlng"]["lng"]
-                radius = layer["_mRadius"]
-                layer["_latlngs"] = [[{"lat": p[0], "lng": p[1]}
-                                     for p in circle_to_polygon(center_lat,
-                                                                center_lng,
-                                                                radius,
-                                                                num_points=720)]]
-                self.add_area_to_map.execute(layer)
-
-                # _latlng
-                # _mRadius
-            # ui.notify("Polygon!")
-        # ui.notify(f"Draw event: {event.args}")
-        # args:
-        # layerType
-        # layer: options, _bounds, _latlngs, editing
+                self.add_circle_to_map.execute(layer)
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         match action:

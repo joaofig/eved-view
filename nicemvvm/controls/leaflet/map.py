@@ -3,6 +3,8 @@ from typing import Union, Dict, Any, Self, List
 from nicegui import ui
 from nicegui.events import GenericEventArguments
 
+from nicemvvm.controls.leaflet.circle import Circle
+from nicemvvm.controls.leaflet.path import Path
 from nicemvvm.converter import ValueConverter
 from nicemvvm.controls.leaflet.polygon import Polygon
 from nicemvvm.controls.leaflet.polyline import Polyline
@@ -26,6 +28,8 @@ class LeafletMap(ui.leaflet, Observer):
         self._polyline_converter: ValueConverter | None = None
         self._polygons: Dict[str, Polygon] = {}
         self._polygon_converter: ValueConverter | None = None
+        self._circles: Dict[str, Circle] = {}
+        self._circle_converter: ValueConverter | None = None
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]
@@ -35,75 +39,50 @@ class LeafletMap(ui.leaflet, Observer):
         zoom = e.args["zoom"]
         self._outbound_handler("zoom", zoom)
 
-    def _polygons_handler(self, action: str, args: Dict[str, Any]) -> None:
-        def to_polygon(v: Any) -> Polygon:
-            p: Polyline = (
+    def _shape_handler(self, action: str, args: Dict[str, Any],
+                       shapes: Dict[str, Path], converter: ValueConverter) -> None:
+        def to_path(v: Any) -> Path:
+            p: Path = (
                 value
-                if self._polygon_converter is None
-                else self._polygon_converter.convert(v)
+                if converter is None
+                else converter.convert(v)
             )
             return p
 
-        def add_polygon(v: Any) -> Polygon:
-            p: Polygon = to_polygon(v)
-            if p.layer_id not in self._polygons:
+        def add_path(v: Any) -> Path:
+            p: Path = to_path(v)
+            if p.layer_id not in shapes:
                 p.add_to(self)
-                self._polygons[p.layer_id] = p
+                shapes[p.layer_id] = p
             return p
 
         match action:
             case "append":
-                add_polygon(args["value"])
+                add_path(args["value"])
 
             case "extend":
                 for value in args["values"]:
-                    add_polygon(value)
+                    add_path(value)
 
             case "pop" | "remove":
-                polygon = to_polygon(args["value"])
-                layer = self._polylines[polygon.layer_id]
+                polygon = to_path(args["value"])
+                layer = shapes[polygon.layer_id]
                 layer.remove()
-                del self._polylines[polygon.layer_id]
+                del shapes[layer.layer_id]
 
             case "clear":
-                for layer_id, layer in self._polygons.items():
+                for layer_id, layer in shapes.items():
                     layer.remove()
-                self._polygons.clear()
+                shapes.clear()
+
+    def _circles_handler(self, action: str, args: Dict[str, Any]) -> None:
+        self._shape_handler(action, args, self._circles, self._circle_converter)
+
+    def _polygons_handler(self, action: str, args: Dict[str, Any]) -> None:
+        self._shape_handler(action, args, self._polygons, self._polygon_converter)
 
     def _polylines_handler(self, action: str, args: Dict[str, Any]) -> None:
-        def to_polyline(v: Any) -> Polyline:
-            p: Polyline = (
-                value
-                if self._polyline_converter is None
-                else self._polyline_converter.convert(v)
-            )
-            return p
-
-        def add_polyline(v: Any) -> Polyline:
-            p: Polyline = to_polyline(v)
-            if p.layer_id not in self._polylines:
-                p.add_to(self)
-                self._polylines[p.layer_id] = p
-            return p
-
-        match action:
-            case "append":
-                add_polyline(args["value"])
-
-            case "extend":
-                for value in args["values"]:
-                    add_polyline(value)
-
-            case "pop" | "remove":
-                polyline = to_polyline(args["value"])
-                layer = self._polylines[polyline.layer_id]
-                layer.remove()
-                del self._polylines[polyline.layer_id]
-
-            case "clear":
-                for layer_id, layer in self._polylines.items():
-                    layer.remove()
-                self._polylines.clear()
+        self._shape_handler(action, args, self._polylines, self._polyline_converter)
 
     def bind(
         self,
@@ -133,6 +112,13 @@ class LeafletMap(ui.leaflet, Observer):
                     obs_list: ObservableList = polygons
                     obs_list.register(self._polygons_handler)
                 self._polygon_converter = converter
+                return self
+            case "circles":
+                circles = getattr(source, property_name)
+                if isinstance(circles, ObservableList):
+                    obs_list: ObservableList = circles
+                    obs_list.register(self._circles_handler)
+                self._circle_converter = converter
                 return self
 
         Observer.bind(self, source, property_name, local_name, handler, converter)

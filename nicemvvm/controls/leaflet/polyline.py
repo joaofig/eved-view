@@ -26,7 +26,6 @@ class Polyline(Path):
         fill_color: str = "#3388ff",
         fill_opacity: float = 0.2,
         fill_rule: str = "evenodd",
-        **kwargs,
     ):
         Path.__init__(
             self,
@@ -43,7 +42,6 @@ class Polyline(Path):
             fill_color=fill_color,
             fill_opacity=fill_opacity,
             fill_rule=fill_rule,
-            **kwargs,
         )
         self._options["noClipping"] = no_clipping
         self._options["smoothFactor"] = smooth_factor
