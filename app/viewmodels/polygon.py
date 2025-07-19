@@ -40,11 +40,12 @@ class MapPolygon(MapShape):
 
     def to_dict(self):
         return {
-            "polygon_id": self._shape_id,
+            "shape_id": self._shape_id,
             "color": self._color,
             "weight": self._weight,
             "opacity": self._opacity,
             "fill": self._fill,
             "fill_color": self._fill_color,
             "fill_opacity": self._fill_opacity,
+            "vertices": len(self._locations),
         }

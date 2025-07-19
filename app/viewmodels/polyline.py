@@ -65,7 +65,7 @@ class MapPolyline(MapShape):
 
     def to_dict(self):
         return {
-            "polyline_id": self._shape_id,
+            "shape_id": self._shape_id,
             "traj_id": self._traj_id,
             "vehicle_id": self._vehicle_id,
             "color": self._color,

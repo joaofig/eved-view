@@ -32,6 +32,8 @@ class MapViewModel(Observable):
         self._circles: ObservableList[MapCircle] = ObservableList()
         self._bounds: List[LatLng] = list()
 
+        self._polygon_counter: int = 1
+
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
         return any(
             t
@@ -61,7 +63,7 @@ class MapViewModel(Observable):
         options = draw_polygon["options"]
         locations = [LatLng(ll["lat"], ll["lng"]) for ll in draw_polygon["_latlngs"][0]]
         poly = MapPolygon(
-            shape_id=str(uuid.uuid4()),
+            shape_id=f"area-{self._polygon_counter}",
             color=options["color"],
             weight=options["weight"],
             opacity=options["opacity"],
@@ -71,7 +73,7 @@ class MapViewModel(Observable):
             locations=locations,
         )
         self._polygons.append(poly)
-        # self.bounds = locations
+        self._polygon_counter += 1
         return None
 
     def show_polyline(self, trip: Trip, trace_name: str) -> None:

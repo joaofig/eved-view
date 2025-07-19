@@ -44,7 +44,25 @@ def create_polyline_grid(view_model: Observable) -> GridView:
         GridViewColumn(header="Trace", field="trace_name", filter=True, width=60),
         GridViewColumn(header="km", field="km", filter=True, width=60),
     ]
-    grid.row_id = "polyline_id"
+    grid.row_id = "shape_id"
+    return grid
+
+
+def create_area_grid(view_model: Observable) -> GridView:
+    grid = (
+        nm.gridview(
+            row_selection="single",
+            supress_auto_size=True,
+        )
+        .classes("h_full h-full")
+        .bind(view_model, "polygons", "items")
+        .bind(view_model, "selected_polygon", "selected_item")
+    )
+    grid.columns = [
+        GridViewColumn(header="ID", field="shape_id", filter=True, width=60,),
+        GridViewColumn(header="Vertices", field="vertices", filter=True, width=60),
+    ]
+    grid.row_id = "shape_id"
     return grid
 
 
@@ -85,7 +103,7 @@ def create_map(view_model: Observable) -> ui.leaflet:
     return m
 
 
-def create_property_view(view_model: Observable) -> PolylinePropertyView:
+def create_route_property_view(view_model: Observable) -> PolylinePropertyView:
     view = PolylinePropertyView(view_model).classes("w-full h-full")
     return view
 
@@ -100,7 +118,7 @@ class MapView(ui.column, Observer):
         self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
         self.bind(view_model, "add_circle_to_map_command", "add_circle_to_map")
 
-        with ui.splitter(horizontal=True, value=80).classes(
+        with ui.splitter(horizontal=True, value=70).classes(
             "w-full h-full"
         ) as main_splitter:
             with main_splitter.before:
@@ -119,14 +137,25 @@ class MapView(ui.column, Observer):
                                 name="areas", label="Areas", icon="pentagon"
                             ).props("no-caps")
                             circles_tab = ui.tab(name="circles", label="Circles", icon="brightness_1").props("no-caps")
-                    with ui.column().classes("h-full") as content_column:
-                        with ui.splitter(horizontal=False, value=80).classes(
-                            "w-full h-full"
-                        ) as property_splitter:
-                            with property_splitter.after:
-                                self._property_view = create_property_view(view_model)
-                            with property_splitter.before:
-                                self._grid = create_polyline_grid(view_model)
+                    with ui.column().classes("h-full"):
+
+                        with ui.tab_panels(tabs, value=routes_tab).classes("w-full h-full") \
+                                    .props("transition-prev=slide-down transition-next=slide-up"):
+                            with ui.tab_panel(routes_tab).classes("w-full h-full p-0"):
+                                # Route properties
+                                with ui.splitter(horizontal=False, value=80).classes(
+                                    "w-full h-full"
+                                ) as property_splitter:
+                                    with property_splitter.after:
+                                        self._property_view = create_route_property_view(view_model)
+                                    with property_splitter.before:
+                                        self._grid = create_polyline_grid(view_model)
+
+                            with ui.tab_panel(areas_tab).classes("w-full h-full p-0"):
+                                ui.label("Not implemented yet")
+
+                            with ui.tab_panel(circles_tab).classes("w-full h-full p-0"):
+                                ui.label("Not implemented yet")
 
             # Make sure the map is correctly resized
             main_splitter.on_value_change(
