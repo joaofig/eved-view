@@ -7,7 +7,7 @@ from nicemvvm.controls.inputs.number import NumberInput
 from nicemvvm.observables.observability import Observable, notify_change, Observer
 
 
-class PolygonPropertyView(ui.column, Observer, Observable):
+class PolygonPropertyEditor(ui.column, Observer, Observable):
     def __init__(self, view_model: Observable | None = None, **kwargs):
         super().__init__(**kwargs)
         self._observable: Observable | None = None

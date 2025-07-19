@@ -7,7 +7,7 @@ from nicemvvm.controls.inputs.number import NumberInput
 from nicemvvm.observables.observability import Observable, Observer, notify_change
 
 
-class PolylinePropertyView(ui.column, Observer, Observable):
+class PolylinePropertyEditor(ui.column, Observer, Observable):
     def __init__(self, view_model: Observable | None = None):
         super().__init__()
         self._observable: Observable | None = None
@@ -43,13 +43,31 @@ class PolylinePropertyView(ui.column, Observer, Observable):
                         label="Color", value="#3388ff", preview=True
                     ).classes("w-full edit-view-field")
 
-        self._weight_input.disable()
-        self._opacity_input.disable()
-        self._color_input.disable()
-        self._remove_button.disable()
+
+        # Store input objects in a collection for easy iteration
+        self._input_controls = [
+            self._weight_input,
+            self._opacity_input,
+            self._color_input,
+            self._remove_button
+        ]
+
+        # Disable all controls initially
+        for control in self._input_controls:
+            control.disable()
 
         self.bind(view_model, "selected_polyline", "observable")
         self.bind(view_model, "remove_route_command", "remove_command")
+
+    def _enable_all_controls(self):
+        """Enable all input controls."""
+        for control in self._input_controls:
+            control.enable()
+
+    def _disable_all_controls(self):
+        """Disable all input controls."""
+        for control in self._input_controls:
+            control.disable()
 
     @property
     def observable(self) -> Observable | None:
@@ -64,10 +82,7 @@ class PolylinePropertyView(ui.column, Observer, Observable):
                 self._opacity_input.unbind("opacity", self._observable)
                 self._color_input.unbind("color", self._observable)
 
-            self._weight_input.disable()
-            self._opacity_input.disable()
-            self._color_input.disable()
-            self._remove_button.disable()
+            self._disable_all_controls()
 
         self._observable = observable
         if observable is not None:
@@ -75,10 +90,7 @@ class PolylinePropertyView(ui.column, Observer, Observable):
             self._opacity_input.bind(observable, "opacity", "value")
             self._color_input.bind(observable, "color", "value")
 
-            self._weight_input.enable()
-            self._opacity_input.enable()
-            self._color_input.enable()
-            self._remove_button.enable()
+            self._enable_all_controls()
 
     @property
     def remove_command(self) -> RemoveRouteCommand:

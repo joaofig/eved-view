@@ -9,8 +9,8 @@ from app.converters.map import (
     MapPolylineMapConverter,
     MapPolygonMapConverter, MapCircleMapConverter,
 )
-from app.views.polygon import PolygonPropertyView
-from app.views.polyline import PolylinePropertyView
+from app.views.polygon import PolygonPropertyEditor
+from app.views.polyline import PolylinePropertyEditor
 from nicemvvm import nm
 from nicemvvm.command import Command
 from nicemvvm.controls.grid_view import GridView, GridViewColumn
@@ -49,8 +49,8 @@ def create_polyline_grid(view_model: Observable) -> GridView:
     return grid
 
 
-def create_route_property_editor(view_model: Observable) -> PolylinePropertyView:
-    view = PolylinePropertyView(view_model).classes("w-full h-full")
+def create_route_property_editor(view_model: Observable) -> PolylinePropertyEditor:
+    view = PolylinePropertyEditor(view_model).classes("w-full h-full")
     return view
 
 
@@ -158,7 +158,7 @@ class MapView(ui.column, Observer):
                                         self._area_grid = create_area_grid(view_model)
                                         self._area_grid.classes("w-full h-full")
                                     with area_splitter.after:
-                                        self._area_editor = PolygonPropertyView(view_model)
+                                        self._area_editor = PolygonPropertyEditor(view_model)
                                         self._area_editor.classes("w-full h-full")
 
                             with ui.tab_panel(circles_tab).classes("w-full h-full p-0"):
