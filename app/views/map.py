@@ -9,6 +9,7 @@ from app.converters.map import (
     MapPolylineMapConverter,
     MapPolygonMapConverter, MapCircleMapConverter,
 )
+from app.views.polygon import PolygonPropertyView
 from app.views.polyline import PolylinePropertyView
 from nicemvvm import nm
 from nicemvvm.command import Command
@@ -46,6 +47,11 @@ def create_polyline_grid(view_model: Observable) -> GridView:
     ]
     grid.row_id = "shape_id"
     return grid
+
+
+def create_route_property_editor(view_model: Observable) -> PolylinePropertyView:
+    view = PolylinePropertyView(view_model).classes("w-full h-full")
+    return view
 
 
 def create_area_grid(view_model: Observable) -> GridView:
@@ -103,11 +109,6 @@ def create_map(view_model: Observable) -> ui.leaflet:
     return m
 
 
-def create_route_property_view(view_model: Observable) -> PolylinePropertyView:
-    view = PolylinePropertyView(view_model).classes("w-full h-full")
-    return view
-
-
 class MapView(ui.column, Observer):
     add_area_to_map: Command | None = None
     add_circle_to_map: Command | None = None
@@ -118,9 +119,9 @@ class MapView(ui.column, Observer):
         self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
         self.bind(view_model, "add_circle_to_map_command", "add_circle_to_map")
 
-        with ui.splitter(horizontal=True, value=70).classes(
+        with (ui.splitter(horizontal=True, value=70).classes(
             "w-full h-full"
-        ) as main_splitter:
+        ) as main_splitter):
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
@@ -143,16 +144,22 @@ class MapView(ui.column, Observer):
                                     .props("transition-prev=slide-down transition-next=slide-up"):
                             with ui.tab_panel(routes_tab).classes("w-full h-full p-0"):
                                 # Route properties
-                                with ui.splitter(horizontal=False, value=80).classes(
-                                    "w-full h-full"
-                                ) as property_splitter:
-                                    with property_splitter.after:
-                                        self._property_view = create_route_property_view(view_model)
-                                    with property_splitter.before:
-                                        self._grid = create_polyline_grid(view_model)
+                                with ui.splitter(horizontal=False, value=80) \
+                                        .classes("w-full h-full") as route_splitter:
+                                    with route_splitter.after:
+                                        self._property_editor = create_route_property_editor(view_model)
+                                    with route_splitter.before:
+                                        self._polyline_grid = create_polyline_grid(view_model)
 
                             with ui.tab_panel(areas_tab).classes("w-full h-full p-0"):
-                                ui.label("Not implemented yet")
+                                with ui.splitter(horizontal=False, value=80) \
+                                        .classes("h-full w-full") as area_splitter:
+                                    with area_splitter.before:
+                                        self._area_grid = create_area_grid(view_model)
+                                        self._area_grid.classes("w-full h-full")
+                                    with area_splitter.after:
+                                        self._area_editor = PolygonPropertyView(view_model)
+                                        self._area_editor.classes("w-full h-full")
 
                             with ui.tab_panel(circles_tab).classes("w-full h-full p-0"):
                                 ui.label("Not implemented yet")
