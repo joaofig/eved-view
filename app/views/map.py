@@ -7,7 +7,7 @@ from nicegui.events import GenericEventArguments
 from app.converters.map import (
     MapPolylineGridConverter,
     MapPolylineMapConverter,
-    MapPolygonMapConverter, MapCircleMapConverter,
+    MapPolygonMapConverter, MapCircleMapConverter, MapPolygonGridConverter,
 )
 from app.views.polygon import PolygonPropertyEditor
 from app.views.polyline import PolylinePropertyEditor
@@ -49,20 +49,16 @@ def create_polyline_grid(view_model: Observable) -> GridView:
     return grid
 
 
-def create_route_property_editor(view_model: Observable) -> PolylinePropertyEditor:
-    view = PolylinePropertyEditor(view_model).classes("w-full h-full")
-    return view
-
-
 def create_area_grid(view_model: Observable) -> GridView:
+    polygon_converter = MapPolygonGridConverter()
     grid = (
         nm.gridview(
             row_selection="single",
             supress_auto_size=True,
         )
         .classes("h_full h-full")
-        .bind(view_model, "polygons", "items")
-        .bind(view_model, "selected_polygon", "selected_item")
+        .bind(view_model, "polygons", "items", converter=polygon_converter)
+        .bind(view_model, "selected_polygon", "selected_item", converter=polygon_converter)
     )
     grid.columns = [
         GridViewColumn(header="ID", field="shape_id", filter=True, width=60,),
@@ -119,9 +115,9 @@ class MapView(ui.column, Observer):
         self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
         self.bind(view_model, "add_circle_to_map_command", "add_circle_to_map")
 
-        with (ui.splitter(horizontal=True, value=70).classes(
-            "w-full h-full"
-        ) as main_splitter):
+        main_splitter = ui.splitter(horizontal=True, value=70)
+        main_splitter.classes("w-full h-full")
+        with main_splitter:
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
@@ -140,16 +136,19 @@ class MapView(ui.column, Observer):
                             circles_tab = ui.tab(name="circles", label="Circles", icon="brightness_1").props("no-caps")
                     with ui.column().classes("h-full"):
 
-                        with ui.tab_panels(tabs, value=routes_tab).classes("w-full h-full") \
-                                    .props("transition-prev=slide-down transition-next=slide-up"):
+                        self._tab_panels = ui.tab_panels(tabs, value=routes_tab).classes("w-full h-full") \
+                                    .props("transition-prev=slide-down transition-next=slide-up")
+                        with self._tab_panels:
                             with ui.tab_panel(routes_tab).classes("w-full h-full p-0"):
                                 # Route properties
                                 with ui.splitter(horizontal=False, value=80) \
                                         .classes("w-full h-full") as route_splitter:
-                                    with route_splitter.after:
-                                        self._property_editor = create_route_property_editor(view_model)
                                     with route_splitter.before:
                                         self._polyline_grid = create_polyline_grid(view_model)
+                                    with route_splitter.after:
+                                        self._route_editor = PolylinePropertyEditor(view_model)
+                                        self._route_editor.classes("w-full h-full")
+
 
                             with ui.tab_panel(areas_tab).classes("w-full h-full p-0"):
                                 with ui.splitter(horizontal=False, value=80) \
@@ -178,8 +177,10 @@ class MapView(ui.column, Observer):
         match layer_type:
             case "polygon" | "rectangle":
                 self.add_area_to_map.execute(layer)
+                self._tab_panels.set_value("areas")
             case "circle":
                 self.add_circle_to_map.execute(layer)
+                self._tab_panels.set_value("circles")
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         match action:

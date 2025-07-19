@@ -24,16 +24,19 @@ class MapPolylineGridConverter(ValueConverter):
         return self._object_map[value["shape_id"]]
 
 
-class MapPolylineValueConverter(ValueConverter):
+class MapPolygonGridConverter(ValueConverter):
     def __init__(self):
         super().__init__()
-        self._object_map: Dict[str, MapPolyline] = dict()
+        self._object_map: Dict[str, MapPolygon] = dict()
 
-    def convert(self, map_polyline: MapPolyline) -> Dict:
-        self._object_map[map_polyline.shape_id] = map_polyline
-        return map_polyline.to_dict()
+    def convert(self, map_polygon: MapPolygon) -> Dict[str, Any]:
+        if map_polygon:
+            self._object_map[map_polygon.shape_id] = map_polygon
+            return map_polygon.to_dict()
+        else:
+            return {}
 
-    def reverse_convert(self, value: Dict) -> MapPolyline:
+    def reverse_convert(self, value: Dict[str, Any]) -> MapPolygon:
         return self._object_map[value["shape_id"]]
 
 
@@ -76,6 +79,8 @@ class MapPolygonMapConverter(ValueConverter):
             .bind(map_polygon, "color", "color")
             .bind(map_polygon, "weight", "weight")
             .bind(map_polygon, "opacity", "opacity")
+            .bind(map_polygon, "fill_color", "fill_color")
+            .bind(map_polygon, "fill_opacity", "fill_opacity")
         )
         return polygon
 

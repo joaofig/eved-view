@@ -43,7 +43,6 @@ class PolylinePropertyEditor(ui.column, Observer, Observable):
                         label="Color", value="#3388ff", preview=True
                     ).classes("w-full edit-view-field")
 
-
         # Store input objects in a collection for easy iteration
         self._input_controls = [
             self._weight_input,

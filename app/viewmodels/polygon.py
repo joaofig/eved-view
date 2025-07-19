@@ -37,7 +37,6 @@ class MapPolygon(MapShape):
     def locations(self, value: List[LatLng]):
         self._locations = value
 
-
     def to_dict(self):
         return {
             "shape_id": self._shape_id,

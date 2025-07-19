@@ -57,7 +57,6 @@ class MapViewModel(Observable):
             fill_opacity=options["fillOpacity"],
         )
         self._circles.append(circle)
-        return None
 
     def show_polygon(self, draw_polygon: Dict) -> None:
         options = draw_polygon["options"]
@@ -74,7 +73,6 @@ class MapViewModel(Observable):
         )
         self._polygons.append(poly)
         self._polygon_counter += 1
-        return None
 
     def show_polyline(self, trip: Trip, trace_name: str) -> None:
         if not self._has_trace(trip, trace_name):

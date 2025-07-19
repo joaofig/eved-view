@@ -1,6 +1,3 @@
-from typing import List
-
-from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.observability import Observable, notify_change
 
 

@@ -45,7 +45,7 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
 
                     self._fill_opacity_input = NumberInput(
                         label="Fill Opacity",
-                        value=0.2,
+                        value=0.0,
                         min=0.0,
                         max=1.0,
                         step=0.1,
@@ -53,7 +53,7 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
                     ).classes("w-full edit-view-field")
 
                     self._fill_color_input = ColorInput(
-                        label="Fill Color", value="#3388ff", preview=True
+                        label="Fill Color", value="#ffffff", preview=True
                     ).classes("w-full edit-view-field")
 
         # Store input objects in a collection for easy iteration
@@ -70,8 +70,8 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
         for control in self._input_controls:
             control.disable()
 
-        self.bind(view_model, "selected_polyline", "observable")
-        self.bind(view_model, "remove_route_command", "remove_command")
+        self.bind(view_model, "selected_polygon", "observable")
+        # self.bind(view_model, "remove_route_command", "remove_command")
 
     def _enable_all_controls(self):
         """Enable all input controls."""

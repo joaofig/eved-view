@@ -26,7 +26,6 @@ class Polygon(Polyline):
         fill_color: str = "#3388ff",
         fill_opacity: float = 0.2,
         fill_rule: str = "evenodd",
-        **kwargs,
     ):
         Polyline.__init__(
             self,
@@ -46,7 +45,6 @@ class Polygon(Polyline):
             fill_color=fill_color,
             fill_opacity=fill_opacity,
             fill_rule=fill_rule,
-            **kwargs,
         )
 
     def add_to(self, leaflet: ui.leaflet) -> GenericLayer:
