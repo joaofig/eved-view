@@ -32,13 +32,20 @@ class LeafletMap(ui.leaflet, Observer):
         self._circles: Dict[str, Circle] = {}
         self._circle_converter: ValueConverter | None = None
 
-        self.clicked_command: Command | None = None
+        self.click_command: Command | None = None
+        self.double_click_command: Command | None = None
 
     def _on_click(self, e: GenericEventArguments):
-        if self.clicked_command is not None:
+        if self.click_command is not None:
             latlng = e.args["latlng"]
             point = LatLng(latlng["lat"], latlng["lng"])
             self.clicked_command.execute(point)
+
+    def _on_double_click(self, e: GenericEventArguments):
+        if self.double_click_command is not None:
+            latlng = e.args["latlng"]
+            point = LatLng(latlng["lat"], latlng["lng"])
+            self.double_clicked_command.execute(point)
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]
@@ -130,8 +137,12 @@ class LeafletMap(ui.leaflet, Observer):
                 self._circle_converter = converter
                 return self
 
-            case "clicked_command":
+            case "click_command":
                 self.on("map-click", self._on_click)
+                handler = self._inbound_handler
+
+            case "double_click_command":
+                self.on("map-dblclick", self._on_double_click)
                 handler = self._inbound_handler
 
         Observer.bind(self, source, property_name, local_name, handler, converter)
