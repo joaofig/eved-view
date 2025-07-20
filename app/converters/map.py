@@ -79,6 +79,7 @@ class MapPolygonMapConverter(ValueConverter):
             .bind(map_polygon, "color", "color")
             .bind(map_polygon, "weight", "weight")
             .bind(map_polygon, "opacity", "opacity")
+            .bind(map_polygon, "fill", "fill")
             .bind(map_polygon, "fill_color", "fill_color")
             .bind(map_polygon, "fill_opacity", "fill_opacity")
         )

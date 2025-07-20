@@ -4,6 +4,7 @@ from app.viewmodels.map import RemoveRouteCommand
 from nicemvvm.controls.button import Button
 from nicemvvm.controls.inputs.color import ColorInput
 from nicemvvm.controls.inputs.number import NumberInput
+from nicemvvm.controls.inputs.switch import SwitchInput
 from nicemvvm.observables.observability import Observable, notify_change, Observer
 
 
@@ -43,6 +44,9 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
                         label="Color", value="#3388ff", preview=True
                     ).classes("w-full edit-view-field")
 
+                    self._fill_input = SwitchInput(text="Fill", value=True) \
+                        .classes("w-full edit-view-field")
+
                     self._fill_opacity_input = NumberInput(
                         label="Fill Opacity",
                         value=0.0,
@@ -61,6 +65,7 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
             self._weight_input,
             self._opacity_input,
             self._color_input,
+            self._fill_input,
             self._fill_opacity_input,
             self._fill_color_input,
             self._remove_button
@@ -96,6 +101,7 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
                 self._opacity_input.unbind("opacity", self._observable)
                 self._color_input.unbind("color", self._observable)
 
+                self._fill_input.unbind("fill", self._observable)
                 self._fill_opacity_input.unbind("fill_opacity", self._observable)
                 self._fill_color_input.unbind("fill_color", self._observable)
             self._disable_all_controls()
@@ -106,6 +112,7 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
             self._opacity_input.bind(observable, "opacity", "value")
             self._color_input.bind(observable, "color", "value")
 
+            self._fill_input.bind(observable, "fill", "value")
             self._fill_opacity_input.bind(observable, "fill_opacity", "value")
             self._fill_color_input.bind(observable, "fill_color", "value")
 
