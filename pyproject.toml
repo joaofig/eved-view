@@ -9,5 +9,6 @@ dependencies = [
     "numpy>=2.2.4",
     "observable-properties>=4.0.0",
     "pandas>=2.2.3",
+    "shapely>=2.1.1",
     "tomli>=2.2.1",
 ]

@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import asdict, dataclass, is_dataclass
 from typing import Any, Dict, List, Mapping, Self
 
-from nicegui import events
+from nicegui import events, ui
 from nicegui.elements.aggrid import AgGrid as NiceGUIAgGrid
 
 from nicemvvm.observables.observability import (
@@ -135,10 +135,6 @@ class GridView(NiceGUIAgGrid, Observer):
                     self, source, property_name, local_name, handler, converter
                 )
 
-            # case "selected_items":
-            #     self.on("selectionChanged", self._selection_changed_handler)
-            #     Observer.bind(self, source, property_name, local_name, handler, converter)
-
             case "items":
                 items = getattr(source, property_name)
                 if isinstance(items, ObservableList):
@@ -230,9 +226,7 @@ class GridView(NiceGUIAgGrid, Observer):
         column = self._row_id
         if len(column) > 0 and item and column in item:
             row_id_value = str(item[column])
-            row = await self.run_grid_method("getRowNode", row_id_value)
-            if row is not None:
-                await self.run_row_method(row, "setSelected", True)
+            await self.run_row_method(row_id_value, "setSelected", True)
 
     async def _select_items(self, items: List[Any]) -> None:
         column = self._row_id

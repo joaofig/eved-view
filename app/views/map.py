@@ -100,6 +100,7 @@ def create_map(view_model: Observable) -> ui.leaflet:
         .bind(view_model, "polylines", "polylines", converter=MapPolylineMapConverter())
         .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
         .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
+        .bind(view_model, "select_shape_command", "clicked_command")
     )
     asyncio.create_task(setup_map(m))
     return m

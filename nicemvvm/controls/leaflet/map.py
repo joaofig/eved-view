@@ -3,6 +3,7 @@ from typing import Union, Dict, Any, Self, List
 from nicegui import ui
 from nicegui.events import GenericEventArguments
 
+from nicemvvm.command import Command
 from nicemvvm.controls.leaflet.circle import Circle
 from nicemvvm.controls.leaflet.path import Path
 from nicemvvm.converter import ValueConverter
@@ -30,6 +31,14 @@ class LeafletMap(ui.leaflet, Observer):
         self._polygon_converter: ValueConverter | None = None
         self._circles: Dict[str, Circle] = {}
         self._circle_converter: ValueConverter | None = None
+
+        self.clicked_command: Command | None = None
+
+    def _on_click(self, e: GenericEventArguments):
+        if self.clicked_command is not None:
+            latlng = e.args["latlng"]
+            point = LatLng(latlng["lat"], latlng["lng"])
+            self.clicked_command.execute(point)
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]
@@ -120,6 +129,10 @@ class LeafletMap(ui.leaflet, Observer):
                     obs_list.register(self._circles_handler)
                 self._circle_converter = converter
                 return self
+
+            case "clicked_command":
+                self.on("map-click", self._on_click)
+                handler = self._inbound_handler
 
         Observer.bind(self, source, property_name, local_name, handler, converter)
         return self

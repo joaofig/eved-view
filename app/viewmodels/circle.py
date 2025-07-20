@@ -1,5 +1,4 @@
-from typing import List
-
+from app.geo.geomath import num_haversine
 from app.viewmodels.shape import MapShape
 from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.observability import notify_change, Observable
@@ -11,6 +10,11 @@ class MapCircle(MapShape, Observable):
         super().__init__(shape_id, color, weight, opacity, fill, fill_color, fill_opacity)
         self._center = center
         self._radius = radius
+
+    def contains(self, latlng: LatLng) -> bool:
+        d = num_haversine(self._center.lat, self._center.lng,
+                          latlng.lat, latlng.lng)
+        return d <= self._radius
 
     @property
     def center(self) -> LatLng:

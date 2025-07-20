@@ -118,6 +118,10 @@ class MapViewModel(Observable):
         return AddCircleToMapCommand(self)
 
     @property
+    def select_shape_command(self) -> "SelectShapeCommand":
+        return SelectShapeCommand(self)
+
+    @property
     def zoom(self) -> int:
         return self._zoom
 
@@ -245,3 +249,20 @@ class AddCircleToMapCommand(Command):
             circle: Dict = arg
             self._view_model.show_circle(circle)
         return None
+
+class SelectShapeCommand(Command, Observer):
+    def __init__(self, view_model: MapViewModel):
+        super().__init__()
+        self._view_model = view_model
+
+    def execute(self, arg: Any = None) -> Any:
+        if isinstance(arg, LatLng):
+            point: LatLng = arg
+            for polygon in self._view_model.polygons:
+                if polygon.contains(point):
+                    self._view_model.selected_polygon = polygon
+                    break
+            for circle in self._view_model.circles:
+                if circle.contains(point):
+                    self._view_model.selected_circle = circle
+                    break

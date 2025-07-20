@@ -1,5 +1,8 @@
 from typing import List
 
+from shapely.geometry.point import Point
+from shapely.geometry.polygon import Polygon
+
 from app.viewmodels.shape import MapShape
 from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.observability import notify_change
@@ -27,6 +30,11 @@ class MapPolygon(MapShape):
             fill_opacity=fill_opacity,
         )
         self._locations = locations
+
+    def contains(self, latlng: LatLng) -> bool:
+        point = Point(latlng.lng, latlng.lat)
+        polygon = Polygon([ll.lng, ll.lat] for ll in self._locations)
+        return polygon.contains(point)
 
     @property
     def locations(self) -> List[LatLng]:
