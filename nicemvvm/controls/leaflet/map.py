@@ -39,13 +39,13 @@ class LeafletMap(ui.leaflet, Observer):
         if self.click_command is not None:
             latlng = e.args["latlng"]
             point = LatLng(latlng["lat"], latlng["lng"])
-            self.clicked_command.execute(point)
+            self.click_command.execute(point)
 
     def _on_double_click(self, e: GenericEventArguments):
         if self.double_click_command is not None:
             latlng = e.args["latlng"]
             point = LatLng(latlng["lat"], latlng["lng"])
-            self.double_clicked_command.execute(point)
+            self.double_click_command.execute(point)
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]

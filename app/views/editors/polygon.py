@@ -9,8 +9,8 @@ from nicemvvm.observables.observability import Observable, notify_change, Observ
 
 
 class PolygonPropertyEditor(ui.column, Observer, Observable):
-    def __init__(self, view_model: Observable | None = None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, view_model: Observable | None = None):
+        super().__init__()
         self._observable: Observable | None = None
         self._remove_command: RemoveRouteCommand | None = None
 
@@ -45,7 +45,7 @@ class PolygonPropertyEditor(ui.column, Observer, Observable):
                     ).classes("w-full edit-view-field")
 
                     self._fill_input = SwitchInput(text="Fill", value=True) \
-                        .classes("w-full edit-view-field")
+                        .classes("w-full border-b border-gray-400 edit-view-field")
 
                     self._fill_opacity_input = NumberInput(
                         label="Fill Opacity",

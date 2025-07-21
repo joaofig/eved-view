@@ -9,8 +9,8 @@ from app.converters.map import (
     MapPolylineMapConverter,
     MapPolygonMapConverter, MapCircleMapConverter, MapPolygonGridConverter,
 )
-from app.views.polygon import PolygonPropertyEditor
-from app.views.polyline import PolylinePropertyEditor
+from app.views.editors.polygon import PolygonPropertyEditor
+from app.views.editors.polyline import PolylinePropertyEditor
 from nicemvvm import nm
 from nicemvvm.command import Command
 from nicemvvm.controls.grid_view import GridView, GridViewColumn

@@ -33,3 +33,17 @@ class MapCircle(MapShape, Observable):
     @notify_change
     def radius(self, value: float):
         self._radius = value
+
+
+    def to_dict(self):
+        return {
+            "shape_id": self._shape_id,
+            "color": self._color,
+            "weight": self._weight,
+            "opacity": self._opacity,
+            "fill": self._fill,
+            "fill_color": self._fill_color,
+            "fill_opacity": self._fill_opacity,
+            "center": self._center.to_dict(),
+            "radius": self._radius,
+        }
