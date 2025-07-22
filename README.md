@@ -79,6 +79,8 @@ eved-view/
 │   ├── controls/         # Custom UI controls
 │   │   └── leaflet/     # Leaflet map components
 │   └── observables/     # Observable properties system
+├── tests/                 # Unit tests
+│   └── test_map_converters.py  # Map converter tests
 └── tools/                # Utility modules
     └── database/         # Database helpers
 ```
