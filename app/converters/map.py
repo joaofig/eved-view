@@ -13,7 +13,7 @@ class MapPolylineGridConverter(ValueConverter):
         super().__init__()
         self._object_map: Dict[str, MapPolyline] = dict()
 
-    def convert(self, map_polyline: MapPolyline) -> Dict[str, Any]:
+    def convert(self, map_polyline: MapPolyline|None) -> Dict[str, Any]:
         if map_polyline:
             self._object_map[map_polyline.shape_id] = map_polyline
             return map_polyline.to_dict()
@@ -29,7 +29,7 @@ class MapPolygonGridConverter(ValueConverter):
         super().__init__()
         self._object_map: Dict[str, MapPolygon] = dict()
 
-    def convert(self, map_polygon: MapPolygon) -> Dict[str, Any]:
+    def convert(self, map_polygon: MapPolygon|None) -> Dict[str, Any]:
         if map_polygon:
             self._object_map[map_polygon.shape_id] = map_polygon
             return map_polygon.to_dict()
