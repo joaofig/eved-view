@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.viewmodels.map import MapViewModel, SelectedTripValueConverter
+from app.viewmodels.map import MapViewModel, NotNoneValueConverter
 from nicemvvm.command import Command
 from nicemvvm.observables.observability import Observer
 
@@ -14,7 +14,7 @@ class AddRouteToMapCommand(Command, Observer):
             view_model,
             property_name="selected_trip",
             local_name="is_enabled",
-            converter=SelectedTripValueConverter(),
+            converter=NotNoneValueConverter(),
         )
 
     def execute(self, arg: Any = None) -> Any:

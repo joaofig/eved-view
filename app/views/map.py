@@ -9,8 +9,10 @@ from app.converters.map import (
     MapPolygonGridConverter,
     MapPolygonMapConverter,
     MapPolylineGridConverter,
-    MapPolylineMapConverter,
+    MapPolylineMapConverter, MapCircleGridConverter,
 )
+from app.viewmodels.map import RemoveRouteCommand, RemoveAreaCommand
+from app.views.editors.circle import CirclePropertyEditor
 from app.views.editors.polygon import PolygonPropertyEditor
 from app.views.editors.polyline import PolylinePropertyEditor
 from nicemvvm import nm
@@ -77,6 +79,32 @@ def create_area_grid(view_model: Observable) -> GridView:
     return grid
 
 
+def create_circle_grid(view_model: Observable) -> GridView:
+    circle_converter = MapCircleGridConverter()
+    grid = (
+        nm.gridview(
+            row_selection="single",
+            supress_auto_size=True,
+        )
+        .classes("h_full h-full")
+        .bind(view_model, "circles", "items", converter=circle_converter)
+        .bind(
+            view_model, "selected_circle", "selected_item", converter=circle_converter
+        )
+    )
+    grid.columns = [
+        GridViewColumn(
+            header="ID",
+            field="shape_id",
+            filter=True,
+            width=60,
+        ),
+        GridViewColumn(header="Radius", field="radius", filter=True, width=60),
+    ]
+    grid.row_id = "shape_id"
+    return grid
+
+
 async def setup_map(m: ui.leaflet) -> None:
     await m.initialized()
 
@@ -115,15 +143,60 @@ def create_map(view_model: Observable) -> ui.leaflet:
     return m
 
 
+class VerticalTabView(ui.column):
+    def __init__(self):
+        super().__init__()
+
+        with self:
+            with ui.tabs().props("vertical").classes("w-full") as tabs:
+                routes_tab = ui.tab(
+                    name="routes", label="Routes", icon="route"
+                ).props("no-caps")
+                areas_tab = ui.tab(
+                    name="areas", label="Areas", icon="pentagon"
+                ).props("no-caps")
+                circles_tab = ui.tab(
+                    name="circles", label="Circles", icon="brightness_1"
+                ).props("no-caps")
+
+        self._tabs = tabs
+        self._routes_tab = routes_tab
+        self._areas_tab = areas_tab
+        self._circles_tab = circles_tab
+
+    @property
+    def tabs(self) -> ui.tabs:
+        return self._tabs
+
+    @property
+    def routes_tab(self) -> ui.tab:
+        return self._routes_tab
+
+    @property
+    def areas_tab(self) -> ui.tab:
+        return self._areas_tab
+
+    @property
+    def circles_tab(self) -> ui.tab:
+        return self._circles_tab
+
+
 class MapView(ui.column, Observer):
     add_area_to_map: Command | None = None
     add_circle_to_map: Command | None = None
+
+    remove_route_command: Command | None = None
+    remove_area_command: Command | None = None
+    remove_circle_command: Command | None = None
 
     def __init__(self, view_model: Observable):
         super().__init__()
         view_model.register(self._listener)
         self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
         self.bind(view_model, "add_circle_to_map_command", "add_circle_to_map")
+        self.bind(view_model, "remove_route_command", "remove_route_command")
+        self.bind(view_model, "remove_area_command", "remove_area_command")
+        self.bind(view_model, "remove_circle_command", "remove_circle_command")
 
         main_splitter = ui.splitter(horizontal=True, value=70)
         main_splitter.classes("w-full h-full")
@@ -135,56 +208,46 @@ class MapView(ui.column, Observer):
             with main_splitter.after:
                 # Property view
                 with ui.grid(columns="auto 1fr").classes("w-full h-full gap-0"):
-                    with ui.column().classes("h-full"):
-                        with ui.tabs().props("vertical").classes("w-full") as tabs:
-                            routes_tab = ui.tab(
-                                name="routes", label="Routes", icon="route"
-                            ).props("no-caps")
-                            areas_tab = ui.tab(
-                                name="areas", label="Areas", icon="pentagon"
-                            ).props("no-caps")
-                            circles_tab = ui.tab(
-                                name="circles", label="Circles", icon="brightness_1"
-                            ).props("no-caps")
+                    vertical_tab = VerticalTabView().classes("h-full")
+
                     with ui.column().classes("h-full"):
                         self._tab_panels = (
-                            ui.tab_panels(tabs, value=routes_tab)
+                            ui.tab_panels(vertical_tab.tabs, value=vertical_tab.routes_tab)
                             .classes("w-full h-full")
-                            .props(
-                                "transition-prev=slide-down transition-next=slide-up"
-                            )
+                            .props("transition-prev=slide-down transition-next=slide-up")
                         )
                         with self._tab_panels:
-                            with ui.tab_panel(routes_tab).classes("w-full h-full p-0"):
+                            with ui.tab_panel(vertical_tab.routes_tab).classes("w-full h-full p-0"):
                                 # Route properties
-                                with ui.splitter(horizontal=False, value=80).classes(
-                                    "w-full h-full"
-                                ) as route_splitter:
+                                with ui.splitter(horizontal=False, value=80) \
+                                        .classes("w-full h-full") as route_splitter:
                                     with route_splitter.before:
-                                        self._polyline_grid = create_polyline_grid(
-                                            view_model
-                                        )
+                                        create_polyline_grid(view_model)
+
                                     with route_splitter.after:
-                                        self._route_editor = PolylinePropertyEditor(
-                                            view_model
-                                        )
-                                        self._route_editor.classes("w-full h-full")
+                                        PolylinePropertyEditor(view_model,
+                                                               remove_command=self.remove_route_command) \
+                                            .classes("w-full h-full")
 
-                            with ui.tab_panel(areas_tab).classes("w-full h-full p-0"):
-                                with ui.splitter(horizontal=False, value=80).classes(
-                                    "h-full w-full"
-                                ) as area_splitter:
+                            with ui.tab_panel(vertical_tab.areas_tab).classes("w-full h-full p-0"):
+                                with ui.splitter(horizontal=False, value=80) \
+                                        .classes("h-full w-full") as area_splitter:
                                     with area_splitter.before:
-                                        self._area_grid = create_area_grid(view_model)
-                                        self._area_grid.classes("w-full h-full")
-                                    with area_splitter.after:
-                                        self._area_editor = PolygonPropertyEditor(
-                                            view_model
-                                        )
-                                        self._area_editor.classes("w-full h-full")
+                                        create_area_grid(view_model).classes("w-full h-full")
 
-                            with ui.tab_panel(circles_tab).classes("w-full h-full p-0"):
-                                ui.label("Not implemented yet")
+                                    with area_splitter.after:
+                                        PolygonPropertyEditor(view_model, remove_command=self.remove_area_command) \
+                                            .classes("w-full h-full")
+
+                            with ui.tab_panel(vertical_tab.circles_tab).classes("w-full h-full p-0"):
+                                with ui.splitter(horizontal=False, value=80) \
+                                        .classes("h-full w-full") as circle_splitter:
+                                    with circle_splitter.before:
+                                        create_circle_grid(view_model).classes("w-full h-full")
+
+                                    with circle_splitter.after:
+                                        CirclePropertyEditor(view_model, remove_command=self.remove_circle_command) \
+                                            .classes("w-full h-full")
 
             # Make sure the map is correctly resized
             main_splitter.on_value_change(

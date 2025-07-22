@@ -40,6 +40,22 @@ class MapPolygonGridConverter(ValueConverter):
         return self._object_map[value["shape_id"]]
 
 
+class MapCircleGridConverter(ValueConverter):
+    def __init__(self):
+        super().__init__()
+        self._object_map: Dict[str, MapCircle] = dict()
+
+    def convert(self, map_circle: MapCircle | None) -> Dict[str, Any]:
+        if map_circle:
+            self._object_map[map_circle.shape_id] = map_circle
+            return map_circle.to_dict()
+        else:
+            return {}
+
+    def reverse_convert(self, value: Dict[str, Any]) -> MapCircle:
+        return self._object_map[value["shape_id"]]
+
+
 class MapPolylineMapConverter(ValueConverter):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)

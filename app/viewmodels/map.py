@@ -165,6 +165,14 @@ class MapViewModel(Observable):
         return RemoveRouteCommand(self)
 
     @property
+    def remove_area_command(self) -> "RemoveAreaCommand":
+        return RemoveAreaCommand(self)
+
+    @property
+    def remove_circle_command(self) -> "RemoveCircleCommand":
+        return RemoveCircleCommand(self)
+
+    @property
     def add_area_to_map_command(self) -> "AddAreaToMapCommand":
         return AddAreaToMapCommand(self)
 
@@ -256,7 +264,7 @@ class MapViewModel(Observable):
         self._bounds = value
 
 
-class SelectedTripValueConverter(ValueConverter):
+class NotNoneValueConverter(ValueConverter):
     def __init__(self):
         super().__init__()
 
@@ -272,7 +280,7 @@ class RemoveRouteCommand(Command, Observer):
             view_model,
             property_name="selected_polyline",
             local_name="is_enabled",
-            converter=SelectedTripValueConverter(),
+            converter=NotNoneValueConverter(),
         )
 
     def execute(self, arg: Any = None) -> Any:
@@ -280,6 +288,42 @@ class RemoveRouteCommand(Command, Observer):
         if map_polyline is not None:
             self._view_model.polylines.remove(map_polyline)
             self._view_model.selected_polyline = None
+
+
+class RemoveAreaCommand(Command, Observer):
+    def __init__(self, view_model: MapViewModel, **kwargs):
+        super().__init__(**kwargs)
+        self._view_model = view_model
+        self.bind(
+            view_model,
+            property_name="selected_polygon",
+            local_name="is_enabled",
+            converter=NotNoneValueConverter(),
+        )
+
+    def execute(self, arg: Any = None) -> Any:
+        map_polygon = self._view_model.selected_polygon
+        if map_polygon is not None:
+            self._view_model.polygons.remove(map_polygon)
+            self._view_model.selected_polygon = None
+
+
+class RemoveCircleCommand(Command, Observer):
+    def __init__(self, view_model: MapViewModel, **kwargs):
+        super().__init__(**kwargs)
+        self._view_model = view_model
+        self.bind(
+            view_model,
+            property_name="selected_circle",
+            local_name="is_enabled",
+            converter=NotNoneValueConverter(),
+        )
+
+    def execute(self, arg: Any = None) -> Any:
+        map_circle = self._view_model.selected_circle
+        if map_circle is not None:
+            self._view_model.circles.remove(map_circle)
+            self._view_model.selected_circle = None
 
 
 class AddAreaToMapCommand(Command):
