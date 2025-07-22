@@ -1,6 +1,5 @@
 import uuid
-
-from typing import Any, List, Tuple, Dict
+from typing import Any, Dict, List, Tuple
 
 from app.models.trip import Trip, TripModel
 from app.viewmodels.circle import MapCircle
@@ -8,10 +7,10 @@ from app.viewmodels.polygon import MapPolygon
 from app.viewmodels.polyline import MapPolyline
 from nicemvvm.command import Command
 from nicemvvm.controls.leaflet.types import LatLng
-from nicemvvm.observables.observability import Observable, Observer, notify_change
-from nicemvvm.observables.collections import ObservableList
-from nicemvvm.ResourceLocator import ResourceLocator
 from nicemvvm.converter import ValueConverter
+from nicemvvm.observables.collections import ObservableList
+from nicemvvm.observables.observability import Observable, Observer, notify_change
+from nicemvvm.ResourceLocator import ResourceLocator
 
 
 class MapViewModel(Observable):
@@ -249,6 +248,7 @@ class AddCircleToMapCommand(Command):
             circle: Dict = arg
             self._view_model.show_circle(circle)
         return None
+
 
 class SelectShapeCommand(Command, Observer):
     def __init__(self, view_model: MapViewModel):

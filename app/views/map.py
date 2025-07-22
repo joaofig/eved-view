@@ -5,9 +5,11 @@ from nicegui import ui
 from nicegui.events import GenericEventArguments
 
 from app.converters.map import (
+    MapCircleMapConverter,
+    MapPolygonGridConverter,
+    MapPolygonMapConverter,
     MapPolylineGridConverter,
     MapPolylineMapConverter,
-    MapPolygonMapConverter, MapCircleMapConverter, MapPolygonGridConverter,
 )
 from app.views.editors.polygon import PolygonPropertyEditor
 from app.views.editors.polyline import PolylinePropertyEditor
@@ -58,10 +60,17 @@ def create_area_grid(view_model: Observable) -> GridView:
         )
         .classes("h_full h-full")
         .bind(view_model, "polygons", "items", converter=polygon_converter)
-        .bind(view_model, "selected_polygon", "selected_item", converter=polygon_converter)
+        .bind(
+            view_model, "selected_polygon", "selected_item", converter=polygon_converter
+        )
     )
     grid.columns = [
-        GridViewColumn(header="ID", field="shape_id", filter=True, width=60,),
+        GridViewColumn(
+            header="ID",
+            field="shape_id",
+            filter=True,
+            width=60,
+        ),
         GridViewColumn(header="Vertices", field="vertices", filter=True, width=60),
     ]
     grid.row_id = "shape_id"
@@ -134,31 +143,44 @@ class MapView(ui.column, Observer):
                             areas_tab = ui.tab(
                                 name="areas", label="Areas", icon="pentagon"
                             ).props("no-caps")
-                            circles_tab = ui.tab(name="circles", label="Circles", icon="brightness_1").props("no-caps")
+                            circles_tab = ui.tab(
+                                name="circles", label="Circles", icon="brightness_1"
+                            ).props("no-caps")
                     with ui.column().classes("h-full"):
-
-                        self._tab_panels = ui.tab_panels(tabs, value=routes_tab).classes("w-full h-full") \
-                                    .props("transition-prev=slide-down transition-next=slide-up")
+                        self._tab_panels = (
+                            ui.tab_panels(tabs, value=routes_tab)
+                            .classes("w-full h-full")
+                            .props(
+                                "transition-prev=slide-down transition-next=slide-up"
+                            )
+                        )
                         with self._tab_panels:
                             with ui.tab_panel(routes_tab).classes("w-full h-full p-0"):
                                 # Route properties
-                                with ui.splitter(horizontal=False, value=80) \
-                                        .classes("w-full h-full") as route_splitter:
+                                with ui.splitter(horizontal=False, value=80).classes(
+                                    "w-full h-full"
+                                ) as route_splitter:
                                     with route_splitter.before:
-                                        self._polyline_grid = create_polyline_grid(view_model)
+                                        self._polyline_grid = create_polyline_grid(
+                                            view_model
+                                        )
                                     with route_splitter.after:
-                                        self._route_editor = PolylinePropertyEditor(view_model)
+                                        self._route_editor = PolylinePropertyEditor(
+                                            view_model
+                                        )
                                         self._route_editor.classes("w-full h-full")
 
-
                             with ui.tab_panel(areas_tab).classes("w-full h-full p-0"):
-                                with ui.splitter(horizontal=False, value=80) \
-                                        .classes("h-full w-full") as area_splitter:
+                                with ui.splitter(horizontal=False, value=80).classes(
+                                    "h-full w-full"
+                                ) as area_splitter:
                                     with area_splitter.before:
                                         self._area_grid = create_area_grid(view_model)
                                         self._area_grid.classes("w-full h-full")
                                     with area_splitter.after:
-                                        self._area_editor = PolygonPropertyEditor(view_model)
+                                        self._area_editor = PolygonPropertyEditor(
+                                            view_model
+                                        )
                                         self._area_editor.classes("w-full h-full")
 
                             with ui.tab_panel(circles_tab).classes("w-full h-full p-0"):

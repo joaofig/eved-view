@@ -1,19 +1,30 @@
 from app.geo.geomath import num_haversine
 from app.viewmodels.shape import MapShape
 from nicemvvm.controls.leaflet.types import LatLng
-from nicemvvm.observables.observability import notify_change, Observable
+from nicemvvm.observables.observability import Observable, notify_change
 
 
 class MapCircle(MapShape, Observable):
-    def __init__(self, shape_id: str, color: str, weight: float, opacity: float, center: LatLng, radius: float,
-                 fill: bool, fill_color: str, fill_opacity: float):
-        super().__init__(shape_id, color, weight, opacity, fill, fill_color, fill_opacity)
+    def __init__(
+        self,
+        shape_id: str,
+        color: str,
+        weight: float,
+        opacity: float,
+        center: LatLng,
+        radius: float,
+        fill: bool,
+        fill_color: str,
+        fill_opacity: float,
+    ):
+        super().__init__(
+            shape_id, color, weight, opacity, fill, fill_color, fill_opacity
+        )
         self._center = center
         self._radius = radius
 
     def contains(self, latlng: LatLng) -> bool:
-        d = num_haversine(self._center.lat, self._center.lng,
-                          latlng.lat, latlng.lng)
+        d = num_haversine(self._center.lat, self._center.lng, latlng.lat, latlng.lng)
         return d <= self._radius
 
     @property
@@ -33,7 +44,6 @@ class MapCircle(MapShape, Observable):
     @notify_change
     def radius(self, value: float):
         self._radius = value
-
 
     def to_dict(self):
         return {

@@ -48,7 +48,7 @@ class PolylinePropertyEditor(ui.column, Observer, Observable):
             self._weight_input,
             self._opacity_input,
             self._color_input,
-            self._remove_button
+            self._remove_button,
         ]
 
         # Disable all controls initially

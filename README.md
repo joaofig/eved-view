@@ -44,6 +44,24 @@ A modern web-based viewer for exploring and visualizing eVED (electric Vehicle E
 - `make format` - Format code with ruff (includes import sorting)
 - `make check` - Run linting checks
 
+### Testing
+
+The project includes comprehensive unit tests for core components:
+
+- **Map Converters**: Tests for all map converter classes located in `tests/test_map_converters.py`
+  - `MapPolylineGridConverter` - Grid data conversion for polylines
+  - `MapPolygonGridConverter` - Grid data conversion for polygons  
+  - `MapPolylineMapConverter` - Map control conversion for polylines
+  - `MapPolygonMapConverter` - Map control conversion for polygons
+  - `MapCircleMapConverter` - Map control conversion for circles
+
+Run tests using:
+```bash
+python -m pytest tests/
+# or
+python -m unittest discover tests/
+```
+
 ### Project Structure
 
 ```

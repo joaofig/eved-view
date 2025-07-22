@@ -3,8 +3,8 @@ from typing import Optional, Self
 from nicegui import ui
 from nicegui.events import Handler, ValueChangeEventArguments
 
-from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
 from nicemvvm.converter import ValueConverter
+from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
 
 
 class ColorInput(ui.color_input, Observer):

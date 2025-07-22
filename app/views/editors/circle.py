@@ -4,7 +4,7 @@ from nicemvvm.controls.button import Button
 from nicemvvm.controls.inputs.color import ColorInput
 from nicemvvm.controls.inputs.number import NumberInput
 from nicemvvm.controls.inputs.switch import SwitchInput
-from nicemvvm.observables.observability import Observer, Observable
+from nicemvvm.observables.observability import Observable, Observer
 
 
 class CirclePropertyEditor(ui.column, Observer):
@@ -42,8 +42,9 @@ class CirclePropertyEditor(ui.column, Observer):
                         label="Color", value="#3388ff", preview=True
                     ).classes("w-full edit-view-field")
 
-                    self._fill_input = SwitchInput(text="Fill", value=True) \
-                        .classes("w-full edit-view-field")
+                    self._fill_input = SwitchInput(text="Fill", value=True).classes(
+                        "w-full edit-view-field"
+                    )
 
                     self._fill_opacity_input = NumberInput(
                         label="Fill Opacity",

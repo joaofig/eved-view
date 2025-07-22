@@ -167,5 +167,5 @@ class Path(Observer):
         self._options["fillRule"] = value
         self.set_style()
 
-    def add_to(self, leaflet: ui.leaflet) -> GenericLayer|None:
+    def add_to(self, leaflet: ui.leaflet) -> GenericLayer | None:
         return None

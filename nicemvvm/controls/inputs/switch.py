@@ -4,12 +4,17 @@ from nicegui import ui
 from nicegui.events import Handler, ValueChangeEventArguments
 
 from nicemvvm.converter import ValueConverter
-from nicemvvm.observables.observability import Observer, Observable, ObserverHandler
+from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
 
 
 class SwitchInput(ui.switch, Observer):
-    def __init__(self, text: str = "", *, value: bool = False,
-                 on_change: Optional[Handler[ValueChangeEventArguments]] = None):
+    def __init__(
+        self,
+        text: str = "",
+        *,
+        value: bool = False,
+        on_change: Optional[Handler[ValueChangeEventArguments]] = None,
+    ):
         super().__init__(text, value=value, on_change=on_change)
 
     def _value_changed_handler(self) -> None:

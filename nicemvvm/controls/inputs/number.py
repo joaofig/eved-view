@@ -7,8 +7,8 @@ from nicegui.elements.mixins.validation_element import (
 )
 from nicegui.events import Handler, ValueChangeEventArguments
 
-from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
 from nicemvvm.converter import ValueConverter
+from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
 
 
 class NumberInput(ui.number, Observer):

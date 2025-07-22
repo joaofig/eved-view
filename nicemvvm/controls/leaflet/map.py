@@ -1,4 +1,4 @@
-from typing import Union, Dict, Any, Self, List
+from typing import Any, Dict, List, Self, Union
 
 from nicegui import ui
 from nicegui.events import GenericEventArguments
@@ -6,12 +6,12 @@ from nicegui.events import GenericEventArguments
 from nicemvvm.command import Command
 from nicemvvm.controls.leaflet.circle import Circle
 from nicemvvm.controls.leaflet.path import Path
-from nicemvvm.converter import ValueConverter
 from nicemvvm.controls.leaflet.polygon import Polygon
 from nicemvvm.controls.leaflet.polyline import Polyline
 from nicemvvm.controls.leaflet.types import LatLng
-from nicemvvm.observables.observability import Observer, Observable, ObserverHandler
+from nicemvvm.converter import ValueConverter
 from nicemvvm.observables.collections import ObservableList
+from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
 
 
 class LeafletMap(ui.leaflet, Observer):
@@ -55,14 +55,15 @@ class LeafletMap(ui.leaflet, Observer):
         zoom = e.args["zoom"]
         self._outbound_handler("zoom", zoom)
 
-    def _shape_handler(self, action: str, args: Dict[str, Any],
-                       shapes: Dict[str, Path], converter: ValueConverter) -> None:
+    def _shape_handler(
+        self,
+        action: str,
+        args: Dict[str, Any],
+        shapes: Dict[str, Path],
+        converter: ValueConverter,
+    ) -> None:
         def to_path(v: Any) -> Path:
-            p: Path = (
-                value
-                if converter is None
-                else converter.convert(v)
-            )
+            p: Path = value if converter is None else converter.convert(v)
             return p
 
         def add_path(v: Any) -> Path:
