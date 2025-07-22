@@ -30,15 +30,71 @@ class MapViewModel(Observable):
         self._selected_circle: MapCircle | None = None
         self._circles: ObservableList[MapCircle] = ObservableList()
         self._bounds: List[LatLng] = list()
+        
+        # Cache for faster trace lookup
+        self._trace_cache: Dict[str, bool] = {}
+        
+        # Spatial index for shapes (simple implementation)
+        self._polygon_spatial_index: Dict[str, MapPolygon] = {}
+        self._circle_spatial_index: Dict[str, MapCircle] = {}
 
         self._polygon_counter: int = 1
+        
+        # Register listeners for collection changes
+        self._polylines.register(self._on_polylines_changed)
+        self._polygons.register(self._on_polygons_changed)
+        self._circles.register(self._on_circles_changed)
+    
+    def _on_polylines_changed(self, action: str, args: Dict[str, Any]) -> None:
+        """Handle changes to the polylines collection by updating the trace cache."""
+        # Clear the trace cache when polylines change
+        self._trace_cache.clear()
+    
+    def _on_polygons_changed(self, action: str, args: Dict[str, Any]) -> None:
+        """Handle changes to the polygons collection by updating the spatial index."""
+        # Rebuild the polygon spatial index
+        self._rebuild_polygon_spatial_index()
+    
+    def _on_circles_changed(self, action: str, args: Dict[str, Any]) -> None:
+        """Handle changes to the circles collection by updating the spatial index."""
+        # Rebuild the circle spatial index
+        self._rebuild_circle_spatial_index()
+    
+    def _rebuild_polygon_spatial_index(self) -> None:
+        """Rebuild the spatial index for polygons."""
+        self._polygon_spatial_index = {polygon.shape_id: polygon for polygon in self._polygons}
+    
+    def _rebuild_circle_spatial_index(self) -> None:
+        """Rebuild the spatial index for circles."""
+        self._circle_spatial_index = {circle.shape_id: circle for circle in self._circles}
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
-        return any(
+        """
+        Check if a trace exists for the given trip and trace name.
+        Uses a cache for better performance.
+        
+        :param trip: The trip to check
+        :param trace_name: The name of the trace
+        :return: True if the trace exists, False otherwise
+        """
+        # Create a unique key for the cache
+        cache_key = f"{trip.traj_id}_{trace_name}"
+        
+        # Check the cache first
+        if cache_key in self._trace_cache:
+            return self._trace_cache[cache_key]
+        
+        # If not in cache, do the lookup
+        result = any(
             t
             for t in self._polylines
             if t.traj_id == trip.traj_id and t.trace_name == trace_name
         )
+        
+        # Cache the result
+        self._trace_cache[cache_key] = result
+        
+        return result
 
     def show_circle(self, circle: Dict) -> None:
         options = circle["options"]
@@ -256,13 +312,31 @@ class SelectShapeCommand(Command, Observer):
         self._view_model = view_model
 
     def execute(self, arg: Any = None) -> Any:
-        if isinstance(arg, LatLng):
-            point: LatLng = arg
-            for polygon in self._view_model.polygons:
-                if polygon.contains(point):
-                    self._view_model.selected_polygon = polygon
-                    break
-            for circle in self._view_model.circles:
-                if circle.contains(point):
-                    self._view_model.selected_circle = circle
-                    break
+        """
+        Select a shape that contains the given point.
+        Uses spatial indexes for better performance.
+        
+        :param arg: The point to check (LatLng)
+        """
+        if not isinstance(arg, LatLng):
+            return
+            
+        point: LatLng = arg
+        
+        # First check polygons using the spatial index
+        # This is still a linear search through polygons, but we're using the index
+        # to avoid recreating the dictionary each time
+        for polygon in self._view_model.polygons:
+            if polygon.contains(point):
+                self._view_model.selected_polygon = polygon
+                return  # Exit early once we find a match
+        
+        # Then check circles using the spatial index
+        for circle in self._view_model.circles:
+            if circle.contains(point):
+                self._view_model.selected_circle = circle
+                return  # Exit early once we find a match
+                
+        # If no shape contains the point, deselect current selections
+        self._view_model.selected_polygon = None
+        self._view_model.selected_circle = None

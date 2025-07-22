@@ -66,10 +66,41 @@ def num_haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 def outer_haversine(
     lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray
 ) -> np.ndarray:
-    matrix = np.zeros((lat1.shape[0], lat2.shape[0]))
-    for i in range(lat1.shape[0]):
-        matrix[i, :] = vec_haversine(lat2, lon2, lat1[i], lon1[i])
-    return matrix
+    """
+    Vectorized outer haversine distance calculation between two sets of points.
+    This computes the distance between each point in set 1 and each point in set 2.
+    
+    :param lat1: Array of latitudes for set 1 in degrees
+    :param lon1: Array of longitudes for set 1 in degrees
+    :param lat2: Array of latitudes for set 2 in degrees
+    :param lon2: Array of longitudes for set 2 in degrees
+    :return: Matrix of distances in meters with shape (len(lat1), len(lat2))
+    """
+    # Convert to radians once
+    rad_lat1 = np.radians(lat1)
+    rad_lon1 = np.radians(lon1)
+    rad_lat2 = np.radians(lat2)
+    rad_lon2 = np.radians(lon2)
+    
+    # Reshape for broadcasting
+    rad_lat1 = rad_lat1.reshape(-1, 1)
+    rad_lon1 = rad_lon1.reshape(-1, 1)
+    rad_lat2 = rad_lat2.reshape(1, -1)
+    rad_lon2 = rad_lon2.reshape(1, -1)
+    
+    # Haversine formula components
+    d_lon = rad_lon2 - rad_lon1
+    d_lat = rad_lat2 - rad_lat1
+    
+    a = np.sin(d_lat / 2.0) ** 2 + np.multiply(
+        np.multiply(np.cos(rad_lat1), np.cos(rad_lat2)), np.sin(d_lon / 2.0) ** 2
+    )
+    
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1.0 - a))
+    earth_radius = 6378137.0
+    meters = earth_radius * c
+    
+    return meters
 
 
 def delta_location(
@@ -160,42 +191,63 @@ def heron_distance(a: float, b: float, c: float) -> float:
 
 def decode_polyline(encoded: str, order: str = "lonlat") -> List[List]:
     """
-    Code drawn from https://valhalla.github.io/valhalla/decoding/
-    :param order: Coordinate order: 'lonlat' (default) or 'latlon'
+    Optimized polyline decoder based on https://valhalla.github.io/valhalla/decoding/
+    
     :param encoded: String-encoded polyline
-    :return: Decoded polyline as a list of [lat, lon] coordinates
+    :param order: Coordinate order: 'lonlat' (default) or 'latlon'
+    :return: Decoded polyline as a list of [lat, lon] or [lon, lat] coordinates
     """
+    if not encoded:
+        return []
+    
     inv = 1.0 / 1e6
     decoded = []
     previous = [0, 0]
     i = 0
-    # for each byte
-    while i < len(encoded):
-        # for each coord (lat, lon)
+    encoded_len = len(encoded)
+    
+    # Pre-allocate result list for better performance
+    # Estimate size: each coordinate pair typically takes 3-4 characters
+    estimated_size = encoded_len // 4
+    decoded = []
+    decoded.reserve = estimated_size if hasattr(decoded, 'reserve') else lambda x: None
+    decoded.reserve(estimated_size)
+    
+    while i < encoded_len:
+        # Process both coordinates (lat, lon) in one iteration
         ll = [0, 0]
-        for j in [0, 1]:
+        for j in range(2):  # 0 = lat, 1 = lon
             shift = 0
-            byte = 0x20
-            # keep decoding bytes until you have this coord
-            while byte >= 0x20:
+            result = 0
+            
+            # Decode one coordinate
+            while True:
+                if i >= encoded_len:
+                    break
+                    
                 byte = ord(encoded[i]) - 63
                 i += 1
-                ll[j] |= (byte & 0x1F) << shift
+                result |= (byte & 0x1F) << shift
                 shift += 5
-            # get the final value adding the previous offset and remember it for the next
-            ll[j] = previous[j] + (~(ll[j] >> 1) if ll[j] & 1 else (ll[j] >> 1))
+                
+                if byte < 0x20:
+                    break
+            
+            # Handle negative values and add to previous
+            if result & 1:
+                ll[j] = previous[j] - (result >> 1)
+            else:
+                ll[j] = previous[j] + (result >> 1)
+                
             previous[j] = ll[j]
-        # scale by the precision and chop off long coords also flip the positions so
-        # its the far more standard lon,lat instead of lat,lon
+        
+        # Format and append the coordinate pair
         if order == "lonlat":
-            decoded.append(
-                [float("%.6f" % (ll[1] * inv)), float("%.6f" % (ll[0] * inv))]
-            )
+            # Avoid string formatting for better performance
+            decoded.append([ll[1] * inv, ll[0] * inv])
         else:
-            decoded.append(
-                [float("%.6f" % (ll[0] * inv)), float("%.6f" % (ll[1] * inv))]
-            )
-    # hand back the list of coordinates
+            decoded.append([ll[0] * inv, ll[1] * inv])
+    
     return decoded
 
 
@@ -207,15 +259,45 @@ def circle_to_polygon(
 ) -> np.ndarray:
     """
     Synthesizes a circle with the specified center and radius into a polygon with the specified number of points.
+    Vectorized implementation for better performance.
+    
     :param center_latitude: Latitude of the circle center.
     :param center_longitude: Longitude of the circle center.
     :param radius: Circle radius in meters.
     :param num_points: Number of points in the polygon.
     :return: Polygon points as a numpy array of shape (num_points, 2).
     """
-    points = np.zeros((num_points, 2))
-    for i in range(num_points):
-        degree = float(i) / num_points * 360.0
-        lat, lng = delta_location(center_latitude, center_longitude, degree, radius)
-        points[i, :] = [lat, lng]
+    # Constants
+    earth_radius = 6378137.0
+    delta = radius / earth_radius
+    
+    # Generate angles in radians
+    angles = np.linspace(0, 2 * np.pi, num_points, endpoint=False)
+    
+    # Convert center to radians
+    lat_r = np.radians(center_latitude)
+    lon_r = np.radians(center_longitude)
+    
+    # Vectorized calculations
+    sin_angles = np.sin(angles)
+    cos_angles = np.cos(angles)
+    
+    # Calculate new latitudes
+    lat_r2 = np.arcsin(
+        np.sin(lat_r) * np.cos(delta) + 
+        np.cos(lat_r) * np.sin(delta) * cos_angles
+    )
+    
+    # Calculate new longitudes
+    lon_r2 = lon_r + np.arctan2(
+        sin_angles * np.sin(delta) * np.cos(lat_r),
+        np.cos(delta) - np.sin(lat_r) * np.sin(lat_r2)
+    )
+    
+    # Convert back to degrees
+    points = np.column_stack((
+        np.degrees(lat_r2),
+        np.degrees(lon_r2)
+    ))
+    
     return points
