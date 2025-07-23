@@ -10,30 +10,12 @@ from pandas import DataFrame
 
 
 class BaseDb(object):
-    _connections: Dict[int, Connection] = {}
-    _lock = threading.Lock()
 
     def __init__(self, db_name):
         self.db_name = db_name
 
     def connect(self) -> Connection:
-        """Get a connection from the pool or create a new one if needed."""
-        thread_id = threading.get_ident()
-        
-        with self._lock:
-            if thread_id not in self._connections:
-                self._connections[thread_id] = sqlite3.connect(
-                    self.db_name, check_same_thread=True
-                )
-            
-            return self._connections[thread_id]
-
-    def close_all_connections(self) -> None:
-        """Close all connections in the pool."""
-        with self._lock:
-            for conn in self._connections.values():
-                conn.close()
-            self._connections.clear()
+        return sqlite3.connect(self.db_name, check_same_thread=True)
 
     def execute_sql(self, sql, parameters=None, many=False) -> None:
         if parameters is None:
@@ -48,21 +30,16 @@ class BaseDb(object):
             conn.commit()
         finally:
             cur.close()
+            conn.close()
 
-    def query_df(
-        self,
-        sql: str,
-        parameters=None,
-        chunksize: Optional[int] = None,
-    ) -> Iterator[DataFrame] | DataFrame:
+    def query_df(self, sql: str, parameters=None) -> DataFrame:
         """
         Execute SQL query and return results as DataFrame.
-        Use chunksize for large result sets to process data in chunks.
+        Use chunk_size for large result sets to process data in chunks.
         """
-        conn = self.connect()
-        if chunksize:
-            return sqlio.read_sql_query(sql, conn, params=parameters, chunksize=chunksize)
-        return sqlio.read_sql_query(sql, conn, params=parameters)
+        with self.connect() as conn:
+            df = sqlio.read_sql_query(sql, conn, params=parameters)
+        return df
 
     def query_json(self, sql, parameters=None) -> str:
         df = self.query_df(sql, parameters)
@@ -73,11 +50,13 @@ class BaseDb(object):
             parameters = []
         conn = self.connect()
         cur = conn.cursor()
+        result = None
         try:
             result = list(cur.execute(sql, parameters))
-            return result
         finally:
             cur.close()
+            conn.close()
+        return result
 
     @contextlib.contextmanager
     def query_iterator(self, sql, parameters=None):
@@ -124,3 +103,4 @@ class BaseDb(object):
             conn.commit()
         finally:
             cur.close()
+            conn.close()

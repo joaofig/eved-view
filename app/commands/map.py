@@ -25,4 +25,6 @@ class AddRouteToMapCommand(Command, Observer):
             if len(trip.nodes) == 0:
                 trip.load_nodes()
             self._view_model.show_polyline(trip, self._trace_name)
+        else:
+            print("No trip selected")
         return None

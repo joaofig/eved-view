@@ -66,7 +66,7 @@ class LeafletMap(ui.leaflet, Observer):
             return None if not v or not converter else converter.convert(v)
 
         def add_path(v: Any) -> None:
-            p = to_path(v)
+            p: Path = to_path(v)
             if p and p.layer_id not in shapes:
                 p.add_to(self)
                 shapes[p.layer_id] = p

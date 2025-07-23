@@ -39,7 +39,7 @@ def load_signals(traj_id: int) -> pd.DataFrame:
         ,           s.gradient
         ,           s.h3_12
         from        signal s
-        inner join  trajectory t on s.vehicle_id = t.vehicle_id AND s.trip_id = t.trip_id
+        inner join  trajectory t on s.vehicle_id = t.vehicle_id and s.trip_id = t.trip_id
         where       t.traj_id = ?
     """
     return db.query_df(sql, parameters=[traj_id])

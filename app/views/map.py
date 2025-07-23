@@ -2,6 +2,7 @@ import asyncio
 from typing import Any, Mapping
 
 from nicegui import ui
+from nicegui.elements.leaflet import Leaflet
 from nicegui.events import GenericEventArguments
 
 from app.converters.map import (
@@ -18,6 +19,7 @@ from app.views.editors.polyline import PolylinePropertyEditor
 from nicemvvm import nm
 from nicemvvm.command import Command
 from nicemvvm.controls.grid_view import GridView, GridViewColumn
+from nicemvvm.controls.leaflet.map import LeafletMap
 from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.observability import Observable, Observer
 
@@ -116,7 +118,7 @@ async def setup_map(m: ui.leaflet) -> None:
     )
 
 
-def create_map(view_model: Observable) -> ui.leaflet:
+def create_map(view_model: Observable) -> LeafletMap:
     draw_control = {
         "position": "topleft",
         "draw": {
@@ -131,13 +133,13 @@ def create_map(view_model: Observable) -> ui.leaflet:
     }
     m = (
         nm.leaflet(draw_control=draw_control, hide_drawn_items=True)
-        .classes("h-full w-full")
-        .bind(view_model, "zoom", "zoom")
-        .bind(view_model, "center", "center")
-        .bind(view_model, "polylines", "polylines", converter=MapPolylineMapConverter())
-        .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
-        .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
-        .bind(view_model, "select_shape_command", "click_command")
+            .classes("h-full w-full")
+            .bind(view_model, "zoom", "zoom")
+            .bind(view_model, "center", "center")
+            .bind(view_model, "polylines", "polylines", converter=MapPolylineMapConverter())
+            .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
+            .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
+            .bind(view_model, "select_shape_command", "click_command")
     )
     asyncio.create_task(setup_map(m))
     return m
@@ -182,6 +184,7 @@ class VerticalTabView(ui.column):
 
 
 class MapView(ui.column, Observer):
+    _map: LeafletMap
     add_area_to_map: Command | None = None
     add_circle_to_map: Command | None = None
 
@@ -197,6 +200,7 @@ class MapView(ui.column, Observer):
         self.bind(view_model, "remove_route_command", "remove_route_command")
         self.bind(view_model, "remove_area_command", "remove_area_command")
         self.bind(view_model, "remove_circle_command", "remove_circle_command")
+        self.bind(view_model, "bounds", "bounds")
 
         main_splitter = ui.splitter(horizontal=True, value=70)
         main_splitter.classes("w-full h-full")
@@ -269,6 +273,7 @@ class MapView(ui.column, Observer):
                 self._tab_panels.set_value("circles")
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
+        # ui.notify(f"Map listener: {action} {args}")
         match action:
             case "property_changed":
                 name = args["name"]
@@ -276,3 +281,4 @@ class MapView(ui.column, Observer):
 
                 if name == "bounds":
                     self._map.fit_bounds(value)
+                    # ui.notify(f"Map bounds set to {value}")
