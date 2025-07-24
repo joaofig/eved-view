@@ -19,12 +19,22 @@ class LeafletMap(ui.leaflet, Observer):
         self,
         draw_control: Union[bool, Dict] = False,
         hide_drawn_items: bool = False,
+        options=None,
+        **kwargs,
     ):
+        if not options:
+            options = dict()
+
         ui.leaflet.__init__(
-            self, draw_control=draw_control, hide_drawn_items=hide_drawn_items
+            self, draw_control=draw_control,
+            hide_drawn_items=hide_drawn_items,
+            options=options,
+            **kwargs,
         )
         Observer.__init__(self)
 
+        if options is None:
+            options = {}
         self._polylines: Dict[str, Polyline] = {}
         self._polyline_converter: ValueConverter | None = None
         self._polygons: Dict[str, Polygon] = {}

@@ -24,6 +24,44 @@ from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.observability import Observable, Observer
 
 
+class VerticalTabView(ui.column):
+    def __init__(self):
+        super().__init__()
+
+        with self:
+            with ui.tabs().props("vertical").classes("w-full") as tabs:
+                routes_tab = ui.tab(
+                    name="routes", label="Routes", icon="route"
+                ).props("no-caps")
+                areas_tab = ui.tab(
+                    name="areas", label="Areas", icon="pentagon"
+                ).props("no-caps")
+                circles_tab = ui.tab(
+                    name="circles", label="Circles", icon="brightness_1"
+                ).props("no-caps")
+
+        self._tabs = tabs
+        self._routes_tab = routes_tab
+        self._areas_tab = areas_tab
+        self._circles_tab = circles_tab
+
+    @property
+    def tabs(self) -> ui.tabs:
+        return self._tabs
+
+    @property
+    def routes_tab(self) -> ui.tab:
+        return self._routes_tab
+
+    @property
+    def areas_tab(self) -> ui.tab:
+        return self._areas_tab
+
+    @property
+    def circles_tab(self) -> ui.tab:
+        return self._circles_tab
+
+
 def create_polyline_grid(view_model: Observable) -> GridView:
     polyline_converter = MapPolylineGridConverter()
     grid = (
@@ -116,6 +154,7 @@ async def setup_map(m: ui.leaflet) -> None:
             LatLng(42.3258, -83.674),
         ]
     )
+    m.on("contextmenu.select", lambda e: print(e))
 
 
 def create_map(view_model: Observable) -> LeafletMap:
@@ -131,8 +170,19 @@ def create_map(view_model: Observable) -> LeafletMap:
         },
         "edit": False,
     }
+    options = {
+        "contextmenu": True,
+        "contextmenuWidth": 200,
+        "contextmenuItems": [
+            {"text": "Demo"},
+            {"text": "Remove"},
+        ]
+    }
     m = (
-        nm.leaflet(draw_control=draw_control, hide_drawn_items=True)
+        nm.leaflet(draw_control=draw_control,
+                   hide_drawn_items=True,
+                   additional_resources=["/js/leaflet/contextmenu/leaflet.contextmenu.js"],
+                   options=options)
             .classes("h-full w-full")
             .bind(view_model, "zoom", "zoom")
             .bind(view_model, "center", "center")
@@ -143,44 +193,6 @@ def create_map(view_model: Observable) -> LeafletMap:
     )
     asyncio.create_task(setup_map(m))
     return m
-
-
-class VerticalTabView(ui.column):
-    def __init__(self):
-        super().__init__()
-
-        with self:
-            with ui.tabs().props("vertical").classes("w-full") as tabs:
-                routes_tab = ui.tab(
-                    name="routes", label="Routes", icon="route"
-                ).props("no-caps")
-                areas_tab = ui.tab(
-                    name="areas", label="Areas", icon="pentagon"
-                ).props("no-caps")
-                circles_tab = ui.tab(
-                    name="circles", label="Circles", icon="brightness_1"
-                ).props("no-caps")
-
-        self._tabs = tabs
-        self._routes_tab = routes_tab
-        self._areas_tab = areas_tab
-        self._circles_tab = circles_tab
-
-    @property
-    def tabs(self) -> ui.tabs:
-        return self._tabs
-
-    @property
-    def routes_tab(self) -> ui.tab:
-        return self._routes_tab
-
-    @property
-    def areas_tab(self) -> ui.tab:
-        return self._areas_tab
-
-    @property
-    def circles_tab(self) -> ui.tab:
-        return self._circles_tab
 
 
 class MapView(ui.column, Observer):
@@ -208,6 +220,7 @@ class MapView(ui.column, Observer):
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
+                # self._map.on("contextmenu.select", self._handle_contextmenu_show)
 
             with main_splitter.after:
                 # Property view
@@ -271,6 +284,9 @@ class MapView(ui.column, Observer):
             case "circle":
                 self.add_circle_to_map.execute(layer)
                 self._tab_panels.set_value("circles")
+
+    def _handle_contextmenu_show(self, event: GenericEventArguments) -> None:
+        print(event)
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         # ui.notify(f"Map listener: {action} {args}")
