@@ -154,7 +154,6 @@ async def setup_map(m: ui.leaflet) -> None:
             LatLng(42.3258, -83.674),
         ]
     )
-    m.on("contextmenu.select", lambda e: print(e))
 
 
 def create_map(view_model: Observable) -> LeafletMap:
@@ -170,19 +169,11 @@ def create_map(view_model: Observable) -> LeafletMap:
         },
         "edit": False,
     }
-    options = {
-        "contextmenu": True,
-        "contextmenuWidth": 200,
-        "contextmenuItems": [
-            {"text": "Demo"},
-            {"text": "Remove"},
-        ]
-    }
+
     m = (
         nm.leaflet(draw_control=draw_control,
                    hide_drawn_items=True,
-                   additional_resources=["/js/leaflet/contextmenu/leaflet.contextmenu.js"],
-                   options=options)
+                   )
             .classes("h-full w-full")
             .bind(view_model, "zoom", "zoom")
             .bind(view_model, "center", "center")
@@ -206,6 +197,9 @@ class MapView(ui.column, Observer):
 
     def __init__(self, view_model: Observable):
         super().__init__()
+        self._context_menu: ui.context_menu | None = None
+        self._ctx_latlng: LatLng | None = None
+
         view_model.register(self._listener)
         self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
         self.bind(view_model, "add_circle_to_map_command", "add_circle_to_map")
@@ -220,7 +214,11 @@ class MapView(ui.column, Observer):
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
-                # self._map.on("contextmenu.select", self._handle_contextmenu_show)
+                self._map.on("contextmenu", self._handle_contextmenu)
+                # self._map.on("click", self._handle_click)
+
+                with ui.context_menu() as self._context_menu:
+                    ui.menu_item("Test")
 
             with main_splitter.after:
                 # Property view
@@ -285,8 +283,15 @@ class MapView(ui.column, Observer):
                 self.add_circle_to_map.execute(layer)
                 self._tab_panels.set_value("circles")
 
-    def _handle_contextmenu_show(self, event: GenericEventArguments) -> None:
+    def _handle_click(self, event: GenericEventArguments) -> None:
         print(event)
+
+    async def _handle_contextmenu(self, event: GenericEventArguments) -> None:
+        print(event)
+        x = event.args["clientX"]
+        y = event.args["clientY"]
+        ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
+        self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         # ui.notify(f"Map listener: {action} {args}")
