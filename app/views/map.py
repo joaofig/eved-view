@@ -218,7 +218,9 @@ class MapView(ui.column, Observer):
                 # self._map.on("click", self._handle_click)
 
                 with ui.context_menu() as self._context_menu:
-                    ui.menu_item("Test")
+                    ui.menu_item("Zoom In")
+                    ui.menu_item("Zoom Out")
+                    ui.menu_item("Fit to Content")
 
             with main_splitter.after:
                 # Property view
@@ -287,7 +289,7 @@ class MapView(ui.column, Observer):
         print(event)
 
     async def _handle_contextmenu(self, event: GenericEventArguments) -> None:
-        print(event)
+        # print(event)
         x = event.args["clientX"]
         y = event.args["clientY"]
         ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
