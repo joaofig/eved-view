@@ -101,10 +101,10 @@ def create_area_grid(view_model: Observable) -> GridView:
             supress_auto_size=True,
         )
         .classes("h_full h-full")
-        .bind(view_model, "polygons", "items", converter=polygon_converter)
-        .bind(
-            view_model, "selected_polygon", "selected_item", converter=polygon_converter
-        )
+        .bind(view_model, "polygons", "items",
+              converter=polygon_converter)
+        .bind(view_model, "selected_polygon", "selected_item",
+              converter=polygon_converter)
     )
     grid.columns = [
         GridViewColumn(
@@ -122,15 +122,13 @@ def create_area_grid(view_model: Observable) -> GridView:
 def create_circle_grid(view_model: Observable) -> GridView:
     circle_converter = MapCircleGridConverter()
     grid = (
-        nm.gridview(
-            row_selection="single",
-            supress_auto_size=True,
-        )
+        nm.gridview(row_selection="single", supress_auto_size=True,)
         .classes("h_full h-full")
-        .bind(view_model, "circles", "items", converter=circle_converter)
-        .bind(
-            view_model, "selected_circle", "selected_item", converter=circle_converter
-        )
+        .bind(view_model, "circles", "items",
+              converter=circle_converter)
+        .bind(view_model, "selected_circle",
+              "selected_item",
+              converter=circle_converter)
     )
     grid.columns = [
         GridViewColumn(

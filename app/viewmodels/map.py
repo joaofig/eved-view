@@ -1,6 +1,7 @@
 import uuid
 from typing import Any, Dict, List, Tuple
 
+from app.converters.general import NotNoneValueConverter
 from app.models.trip import Trip, TripModel
 from app.viewmodels.circle import MapCircle
 from app.viewmodels.polygon import MapPolygon
@@ -93,8 +94,28 @@ class MapViewModel(Observable):
         
         # Cache the result
         self._trace_cache[cache_key] = result
-        
         return result
+
+    def geo_select_shape(self, point: LatLng) -> None:
+        # First check polygons using the spatial index
+        # This is still a linear search through polygons, but we're using the index
+        # to avoid recreating the dictionary each time
+        for polygon in self.polygons:
+            if polygon.contains(point):
+                self.selected_polygon = polygon
+                self.selected_circle = None
+                return  # Exit early once we find a match
+
+        # Then check circles using the spatial index
+        for circle in self.circles:
+            if circle.contains(point):
+                self.selected_polygon = None
+                self.selected_circle = circle
+                return  # Exit early once we find a match
+
+        # If no shape contains the point, deselect current selections
+        self.selected_polygon = None
+        self.selected_circle = None
 
     def show_circle(self, circle: Dict) -> None:
         options = circle["options"]
@@ -264,14 +285,6 @@ class MapViewModel(Observable):
         self._bounds = value
 
 
-class NotNoneValueConverter(ValueConverter):
-    def __init__(self):
-        super().__init__()
-
-    def convert(self, x: Any) -> Any:
-        return x is not None
-
-
 class RemoveRouteCommand(Command, Observer):
     def __init__(self, view_model: MapViewModel, **kwargs):
         super().__init__(**kwargs)
@@ -366,21 +379,4 @@ class SelectShapeCommand(Command, Observer):
             return
             
         point: LatLng = arg
-        
-        # First check polygons using the spatial index
-        # This is still a linear search through polygons, but we're using the index
-        # to avoid recreating the dictionary each time
-        for polygon in self._view_model.polygons:
-            if polygon.contains(point):
-                self._view_model.selected_polygon = polygon
-                return  # Exit early once we find a match
-        
-        # Then check circles using the spatial index
-        for circle in self._view_model.circles:
-            if circle.contains(point):
-                self._view_model.selected_circle = circle
-                return  # Exit early once we find a match
-                
-        # If no shape contains the point, deselect current selections
-        self._view_model.selected_polygon = None
-        self._view_model.selected_circle = None
+        self._view_model.geo_select_shape(point)
