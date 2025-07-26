@@ -18,7 +18,7 @@ class SwitchInput(ui.switch, Observer):
         super().__init__(text, value=value, on_change=on_change)
 
     def _value_changed_handler(self) -> None:
-        self._outbound_handler(local_name="value", value=self.value)
+        self.propagate(local_name="value", value=self.value)
 
     def bind(
         self,

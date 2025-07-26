@@ -45,7 +45,7 @@ class NumberInput(ui.number, Observer):
         )
 
     def _value_changed_handler(self) -> None:
-        self._outbound_handler(local_name="value", value=self.value)
+        self.propagate(local_name="value", value=self.value)
 
     def bind(
         self,

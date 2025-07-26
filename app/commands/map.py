@@ -1,6 +1,7 @@
 from typing import Any
 
 from app.viewmodels.map import MapViewModel, NotNoneValueConverter
+from app.views.map import MapView
 from nicemvvm.command import Command
 from nicemvvm.observables.observability import Observer
 

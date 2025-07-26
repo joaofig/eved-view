@@ -8,7 +8,6 @@ from app.viewmodels.polygon import MapPolygon
 from app.viewmodels.polyline import MapPolyline
 from nicemvvm.command import Command
 from nicemvvm.controls.leaflet.types import LatLng
-from nicemvvm.converter import ValueConverter
 from nicemvvm.observables.collections import ObservableList
 from nicemvvm.observables.observability import Observable, Observer, notify_change
 from nicemvvm.ResourceLocator import ResourceLocator
@@ -182,27 +181,31 @@ class MapViewModel(Observable):
             self.bounds = locations
 
     @property
-    def remove_route_command(self) -> "RemoveRouteCommand":
+    def fit_content_command(self) -> Command:
+        return FitContentCommand(self)
+
+    @property
+    def remove_route_command(self) -> Command:
         return RemoveRouteCommand(self)
 
     @property
-    def remove_area_command(self) -> "RemoveAreaCommand":
+    def remove_area_command(self) -> Command:
         return RemoveAreaCommand(self)
 
     @property
-    def remove_circle_command(self) -> "RemoveCircleCommand":
+    def remove_circle_command(self) -> Command:
         return RemoveCircleCommand(self)
 
     @property
-    def add_area_to_map_command(self) -> "AddAreaToMapCommand":
+    def add_area_to_map_command(self) -> Command:
         return AddAreaToMapCommand(self)
 
     @property
-    def add_circle_to_map_command(self) -> "AddCircleToMapCommand":
+    def add_circle_to_map_command(self) -> Command:
         return AddCircleToMapCommand(self)
 
     @property
-    def select_shape_command(self) -> "SelectShapeCommand":
+    def select_shape_command(self) -> Command:
         return SelectShapeCommand(self)
 
     @property
@@ -348,7 +351,6 @@ class AddAreaToMapCommand(Command):
         if isinstance(arg, Dict):
             draw_polygon: Dict = arg
             self._view_model.show_polygon(draw_polygon)
-        return None
 
 
 class AddCircleToMapCommand(Command):
@@ -375,8 +377,26 @@ class SelectShapeCommand(Command, Observer):
         
         :param arg: The point to check (LatLng)
         """
-        if not isinstance(arg, LatLng):
-            return
-            
-        point: LatLng = arg
-        self._view_model.geo_select_shape(point)
+        if isinstance(arg, LatLng):
+            point: LatLng = arg
+            self._view_model.geo_select_shape(point)
+
+
+class FitContentCommand(Command):
+    def __init__(self, view_model: MapViewModel):
+        super().__init__()
+        self._view_model = view_model
+
+    def execute(self, arg: Any = None) -> Any:
+        bounds = []
+        for polyline in self._view_model.polylines:
+            bounds.extend(polyline.locations)
+        for polygon in self._view_model.polygons:
+            bounds.extend(polygon.locations)
+        if len(bounds) > 0:
+            self._view_model.bounds = bounds
+        else:
+            self._view_model.bounds = [
+                LatLng(42.2203052778, -83.8042902778),
+                LatLng(42.3258, -83.674),
+            ]

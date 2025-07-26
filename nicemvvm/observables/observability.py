@@ -110,7 +110,7 @@ class Observer:
     def _inbound_handler(self, action: str, args: Mapping[str, Any]) -> None:
         """
         This is the default binding handler that just propagates the changed value to an internal property,
-        as per the bind call.
+        as per the bind call. The handler is called by the Observable object to which this Observer binds to.
         :param action: Action to perform.
         :param args: The arguments to pass to the action.
         :return: None
@@ -127,7 +127,14 @@ class Observer:
                 if value != getattr(self, local_name):
                     setattr(self, local_name, value)
 
-    def _outbound_handler(self, local_name: str, value: Any) -> None:
+    def propagate(self, local_name: str, value: Any) -> None:
+        """
+        For properties whose values originate in the Observer, like in the case of a UI control,
+        by calling this function the Observer propagates the value to the Observable.
+        :param local_name: Local property name
+        :param value: Local property value
+        :return: None
+        """
         if local_name in self._prop_pam:
             property_name = self._prop_pam[local_name]
             converter = self._conv_map[property_name]

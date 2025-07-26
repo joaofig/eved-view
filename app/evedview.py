@@ -14,6 +14,12 @@ async def index():
     }
     .edit-view-field .q-field {
         padding-top: 4px !important;
+    }
+    .small-menu .q-item {
+        min-height: 24px;
+        padding: 4px 8px;
+        font-size: 12px;
+    }
     """)
 
     context.client.content.classes("p-0")

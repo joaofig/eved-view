@@ -21,6 +21,7 @@ from nicemvvm.command import Command
 from nicemvvm.controls.grid_view import GridView, GridViewColumn
 from nicemvvm.controls.leaflet.map import LeafletMap
 from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.controls.menu import MenuItem
 from nicemvvm.observables.observability import Observable, Observer
 
 
@@ -215,10 +216,12 @@ class MapView(ui.column, Observer):
                 self._map.on("contextmenu", self._handle_contextmenu)
                 # self._map.on("click", self._handle_click)
 
-                with ui.context_menu() as self._context_menu:
-                    ui.menu_item("Zoom In")
-                    ui.menu_item("Zoom Out")
-                    ui.menu_item("Fit to Content")
+                with ui.context_menu().classes("small-menu") as self._context_menu:
+                    MenuItem("Zoom In", on_click=lambda _: self._map.zoom_in())
+                    MenuItem("Zoom Out", on_click=lambda _: self._map.zoom_out())
+                    MenuItem("Fit to Content").bind(view_model, "fit_content_command", "command")
+                    ui.separator()
+                    MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
 
             with main_splitter.after:
                 # Property view
@@ -287,11 +290,11 @@ class MapView(ui.column, Observer):
         print(event)
 
     async def _handle_contextmenu(self, event: GenericEventArguments) -> None:
-        # print(event)
         x = event.args["clientX"]
         y = event.args["clientY"]
         ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
         self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
+        print(self._ctx_latlng)
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         # ui.notify(f"Map listener: {action} {args}")

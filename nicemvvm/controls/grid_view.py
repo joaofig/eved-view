@@ -182,7 +182,7 @@ class GridView(NiceGUIAgGrid, Observer):
         for item in self._items:
             if item[column] == row[column]:
                 self._selected_item = item
-                self._outbound_handler("selected_item", item)
+                self.propagate("selected_item", item)
                 break
 
     async def _find_selected_rows(self, column: str) -> None:
@@ -195,7 +195,7 @@ class GridView(NiceGUIAgGrid, Observer):
                 selected_items.append(item)
                 count += 1
         if count:
-            self._outbound_handler("selected_items", selected_items)
+            self.propagate("selected_items", selected_items)
 
     def _selection_changed_handler(self, event: events.GenericEventArguments) -> None:
         if event.args["source"] == "rowClicked":

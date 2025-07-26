@@ -59,11 +59,11 @@ class LeafletMap(ui.leaflet, Observer):
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]
-        self._outbound_handler("center", center)
+        self.propagate("center", center)
 
     def _on_map_zoom(self, e: GenericEventArguments):
         zoom = e.args["zoom"]
-        self._outbound_handler("zoom", zoom)
+        self.propagate("zoom", zoom)
 
     def _shape_handler(
         self,
