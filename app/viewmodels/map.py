@@ -6,7 +6,7 @@ from app.models.trip import Trip, TripModel
 from app.viewmodels.circle import MapCircle
 from app.viewmodels.polygon import MapPolygon
 from app.viewmodels.polyline import MapPolyline
-from nicemvvm.command import Command
+from nicemvvm.command import Command, RelayCommand
 from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.collections import ObservableList
 from nicemvvm.observables.observability import Observable, Observer, notify_change
@@ -33,40 +33,8 @@ class MapViewModel(Observable):
         
         # Cache for faster trace lookup
         self._trace_cache: Dict[str, bool] = {}
-        
-        # Spatial index for shapes (simple implementation)
-        self._polygon_spatial_index: Dict[str, MapPolygon] = {}
-        self._circle_spatial_index: Dict[str, MapCircle] = {}
 
         self._polygon_counter: int = 1
-        
-        # Register listeners for collection changes
-        self._polylines.register(self._on_polylines_changed)
-        self._polygons.register(self._on_polygons_changed)
-        self._circles.register(self._on_circles_changed)
-    
-    def _on_polylines_changed(self, action: str, args: Dict[str, Any]) -> None:
-        """Handle changes to the polylines collection by updating the trace cache."""
-        # Clear the trace cache when polylines change
-        self._trace_cache.clear()
-    
-    def _on_polygons_changed(self, action: str, args: Dict[str, Any]) -> None:
-        """Handle changes to the polygons collection by updating the spatial index."""
-        # Rebuild the polygon spatial index
-        self._rebuild_polygon_spatial_index()
-    
-    def _on_circles_changed(self, action: str, args: Dict[str, Any]) -> None:
-        """Handle changes to the circles collection by updating the spatial index."""
-        # Rebuild the circle spatial index
-        self._rebuild_circle_spatial_index()
-    
-    def _rebuild_polygon_spatial_index(self) -> None:
-        """Rebuild the spatial index for polygons."""
-        self._polygon_spatial_index = {polygon.shape_id: polygon for polygon in self._polygons}
-    
-    def _rebuild_circle_spatial_index(self) -> None:
-        """Rebuild the spatial index for circles."""
-        self._circle_spatial_index = {circle.shape_id: circle for circle in self._circles}
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
         """
@@ -86,8 +54,7 @@ class MapViewModel(Observable):
         
         # If not in cache, do the lookup
         result = any(
-            t
-            for t in self._polylines
+            t for t in self._polylines
             if t.traj_id == trip.traj_id and t.trace_name == trace_name
         )
         
@@ -180,9 +147,23 @@ class MapViewModel(Observable):
             # self.selected_polyline = poly
             self.bounds = locations
 
+    def _fit_content(self) -> Any:
+        bounds = []
+        for polyline in self.polylines:
+            bounds.extend(polyline.locations)
+        for polygon in self.polygons:
+            bounds.extend(polygon.locations)
+        if len(bounds) > 0:
+            self.bounds = bounds
+        else:
+            self.bounds = [
+                LatLng(42.2203052778, -83.8042902778),
+                LatLng(42.3258, -83.674),
+            ]
+
     @property
     def fit_content_command(self) -> Command:
-        return FitContentCommand(self)
+        return RelayCommand(lambda _: self._fit_content())
 
     @property
     def remove_route_command(self) -> Command:
@@ -196,17 +177,32 @@ class MapViewModel(Observable):
     def remove_circle_command(self) -> Command:
         return RemoveCircleCommand(self)
 
+    def _add_area_to_map(self, arg: Any) -> None:
+        if isinstance(arg, Dict):
+            draw_polygon: Dict = arg
+            self.show_polygon(draw_polygon)
+
     @property
     def add_area_to_map_command(self) -> Command:
-        return AddAreaToMapCommand(self)
+        return RelayCommand(lambda arg: self._add_area_to_map(arg))
+
+    def _add_circle_to_map(self, arg: Any) -> None:
+        if isinstance(arg, Dict):
+            circle: Dict = arg
+            self.show_circle(circle)
 
     @property
     def add_circle_to_map_command(self) -> Command:
-        return AddCircleToMapCommand(self)
+        return RelayCommand(lambda arg: self._add_circle_to_map(arg))
+
+    def _select_shape(self, arg: Any = None) -> Any:
+        if isinstance(arg, LatLng):
+            point: LatLng = arg
+            self.geo_select_shape(point)
 
     @property
     def select_shape_command(self) -> Command:
-        return SelectShapeCommand(self)
+        return RelayCommand(lambda arg: self._select_shape(arg))
 
     @property
     def zoom(self) -> int:
@@ -304,6 +300,7 @@ class RemoveRouteCommand(Command, Observer):
         if map_polyline is not None:
             self._view_model.polylines.remove(map_polyline)
             self._view_model.selected_polyline = None
+        return None
 
 
 class RemoveAreaCommand(Command, Observer):
@@ -322,6 +319,7 @@ class RemoveAreaCommand(Command, Observer):
         if map_polygon is not None:
             self._view_model.polygons.remove(map_polygon)
             self._view_model.selected_polygon = None
+        return None
 
 
 class RemoveCircleCommand(Command, Observer):
@@ -340,63 +338,4 @@ class RemoveCircleCommand(Command, Observer):
         if map_circle is not None:
             self._view_model.circles.remove(map_circle)
             self._view_model.selected_circle = None
-
-
-class AddAreaToMapCommand(Command):
-    def __init__(self, view_model: MapViewModel, **kwargs):
-        super().__init__(**kwargs)
-        self._view_model = view_model
-
-    def execute(self, arg: Any = None) -> Any:
-        if isinstance(arg, Dict):
-            draw_polygon: Dict = arg
-            self._view_model.show_polygon(draw_polygon)
-
-
-class AddCircleToMapCommand(Command):
-    def __init__(self, view_model: MapViewModel, **kwargs):
-        super().__init__(**kwargs)
-        self._view_model = view_model
-
-    def execute(self, arg: Any = None) -> Any:
-        if isinstance(arg, Dict):
-            circle: Dict = arg
-            self._view_model.show_circle(circle)
         return None
-
-
-class SelectShapeCommand(Command, Observer):
-    def __init__(self, view_model: MapViewModel):
-        super().__init__()
-        self._view_model = view_model
-
-    def execute(self, arg: Any = None) -> Any:
-        """
-        Select a shape that contains the given point.
-        Uses spatial indexes for better performance.
-        
-        :param arg: The point to check (LatLng)
-        """
-        if isinstance(arg, LatLng):
-            point: LatLng = arg
-            self._view_model.geo_select_shape(point)
-
-
-class FitContentCommand(Command):
-    def __init__(self, view_model: MapViewModel):
-        super().__init__()
-        self._view_model = view_model
-
-    def execute(self, arg: Any = None) -> Any:
-        bounds = []
-        for polyline in self._view_model.polylines:
-            bounds.extend(polyline.locations)
-        for polygon in self._view_model.polygons:
-            bounds.extend(polygon.locations)
-        if len(bounds) > 0:
-            self._view_model.bounds = bounds
-        else:
-            self._view_model.bounds = [
-                LatLng(42.2203052778, -83.8042902778),
-                LatLng(42.3258, -83.674),
-            ]

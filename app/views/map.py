@@ -2,7 +2,6 @@ import asyncio
 from typing import Any, Mapping
 
 from nicegui import ui
-from nicegui.elements.leaflet import Leaflet
 from nicegui.events import GenericEventArguments
 
 from app.converters.map import (
@@ -12,7 +11,6 @@ from app.converters.map import (
     MapPolylineGridConverter,
     MapPolylineMapConverter, MapCircleGridConverter,
 )
-from app.viewmodels.map import RemoveRouteCommand, RemoveAreaCommand
 from app.views.editors.circle import CirclePropertyEditor
 from app.views.editors.polygon import PolygonPropertyEditor
 from app.views.editors.polyline import PolylinePropertyEditor
@@ -213,10 +211,13 @@ class MapView(ui.column, Observer):
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
-                self._map.on("contextmenu", self._handle_contextmenu)
+                # self._map.on("contextmenu", self._handle_contextmenu)
                 # self._map.on("click", self._handle_click)
 
                 with ui.context_menu().classes("small-menu") as self._context_menu:
+                    self._context_menu.on("before-show", self._ctx_menu_before)
+                    # self._context_menu.on("show", lambda _: ui.notify(self._ctx_latlng))
+
                     MenuItem("Zoom In", on_click=lambda _: self._map.zoom_in())
                     MenuItem("Zoom Out", on_click=lambda _: self._map.zoom_out())
                     MenuItem("Fit to Content").bind(view_model, "fit_content_command", "command")
@@ -275,6 +276,16 @@ class MapView(ui.column, Observer):
                 "resize", lambda _: self._map.invalidate_size(animate=True)
             )
 
+    async def _ctx_menu_before(self, event: GenericEventArguments) -> None:
+        x = event.args["clientX"]
+        y = event.args["clientY"]
+        ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
+        self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
+
+    @property
+    def context_location(self) -> LatLng:
+        return self._ctx_latlng
+
     def _handle_draw(self, event: GenericEventArguments) -> None:
         layer_type = event.args["layerType"]
         layer = event.args["layer"]
@@ -290,11 +301,12 @@ class MapView(ui.column, Observer):
         print(event)
 
     async def _handle_contextmenu(self, event: GenericEventArguments) -> None:
+        # ui.notify(f"Map context menu: {event.args}")
         x = event.args["clientX"]
         y = event.args["clientY"]
         ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
         self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
-        print(self._ctx_latlng)
+        # print(self._ctx_latlng)
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         # ui.notify(f"Map listener: {action} {args}")

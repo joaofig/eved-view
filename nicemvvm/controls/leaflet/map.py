@@ -170,3 +170,12 @@ class LeafletMap(ui.leaflet, Observer):
             bounds_list = [[min_lat, min_lng], [max_lat, max_lng]]
             self.run_map_method("fitBounds", bounds_list, options)
         return self
+
+    def zoom_in(self) -> Self:
+        self.run_map_method("zoomIn")
+        return self
+
+    def zoom_out(self) -> Self:
+        self.run_map_method("zoomOut")
+        return self
+

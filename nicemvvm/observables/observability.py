@@ -30,7 +30,7 @@ def notify_change(func):
     return wrapper
 
 
-class Observable(ABC):
+class Observable:
     def __init__(self, **kwargs):
         self._handlers: Set[ObserverHandler] = set()
         super().__init__(**kwargs)
