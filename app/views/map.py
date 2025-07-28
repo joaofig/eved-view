@@ -4,6 +4,7 @@ from typing import Any, Mapping
 from nicegui import ui
 from nicegui.events import GenericEventArguments
 
+from app.converters.general import NotNoneValueConverter
 from app.converters.map import (
     MapCircleMapConverter,
     MapPolygonGridConverter,
@@ -215,7 +216,7 @@ class MapView(ui.column, Observer):
                 # self._map.on("click", self._handle_click)
 
                 with ui.context_menu().classes("small-menu") as self._context_menu:
-                    self._context_menu.on("before-show", self._ctx_menu_before)
+                    self._context_menu.on("before-show", self._context_menu_before)
                     # self._context_menu.on("show", lambda _: ui.notify(self._ctx_latlng))
 
                     MenuItem("Zoom In", on_click=lambda _: self._map.zoom_in())
@@ -223,6 +224,10 @@ class MapView(ui.column, Observer):
                     MenuItem("Fit to Content").bind(view_model, "fit_content_command", "command")
                     ui.separator()
                     MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
+                    MenuItem("Remove Polygons").bind(view_model,
+                                                     property_name="context_location",
+                                                     local_name="visible",
+                                                     converter=NotNoneValueConverter())
 
             with main_splitter.after:
                 # Property view
@@ -276,11 +281,12 @@ class MapView(ui.column, Observer):
                 "resize", lambda _: self._map.invalidate_size(animate=True)
             )
 
-    async def _ctx_menu_before(self, event: GenericEventArguments) -> None:
+    async def _context_menu_before(self, event: GenericEventArguments) -> None:
         x = event.args["clientX"]
         y = event.args["clientY"]
         ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
         self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
+        self.propagate("context_location", self._ctx_latlng)
 
     @property
     def context_location(self) -> LatLng:

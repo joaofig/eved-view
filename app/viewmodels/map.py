@@ -1,11 +1,14 @@
 import uuid
 from typing import Any, Dict, List, Tuple
 
+from shapely.geometry import point
+
 from app.converters.general import NotNoneValueConverter
 from app.models.trip import Trip, TripModel
 from app.viewmodels.circle import MapCircle
 from app.viewmodels.polygon import MapPolygon
 from app.viewmodels.polyline import MapPolyline
+from app.viewmodels.shape import MapShape
 from nicemvvm.command import Command, RelayCommand
 from nicemvvm.controls.leaflet.types import LatLng
 from nicemvvm.observables.collections import ObservableList
@@ -18,7 +21,6 @@ class MapViewModel(Observable):
         super().__init__()
         self._zoom = 10
         self._center: Tuple[float, float] = (0.0, 0.0)
-        self._center_text: str = "(0, 0)"
         self._locator = ResourceLocator()
         self._trip_model: TripModel = self._locator["TripModel"]
         self._trips: ObservableList[Trip] = ObservableList(self._trip_model.load())
@@ -30,6 +32,7 @@ class MapViewModel(Observable):
         self._selected_circle: MapCircle | None = None
         self._circles: ObservableList[MapCircle] = ObservableList()
         self._bounds: List[LatLng] = list()
+        self._context_location: LatLng | None = None
         
         # Cache for faster trace lookup
         self._trace_cache: Dict[str, bool] = {}
@@ -62,26 +65,26 @@ class MapViewModel(Observable):
         self._trace_cache[cache_key] = result
         return result
 
-    def geo_select_shape(self, point: LatLng) -> None:
-        # First check polygons using the spatial index
-        # This is still a linear search through polygons, but we're using the index
-        # to avoid recreating the dictionary each time
+    def find_shape(self, point: LatLng) -> MapShape | None:
         for polygon in self.polygons:
             if polygon.contains(point):
-                self.selected_polygon = polygon
-                self.selected_circle = None
-                return  # Exit early once we find a match
-
-        # Then check circles using the spatial index
+                return polygon
         for circle in self.circles:
             if circle.contains(point):
-                self.selected_polygon = None
-                self.selected_circle = circle
-                return  # Exit early once we find a match
+                return circle
+        return None
 
-        # If no shape contains the point, deselect current selections
+    def geo_select_shape(self, point: LatLng | None) -> None:
         self.selected_polygon = None
         self.selected_circle = None
+
+        if point is not None:
+            shape = self.find_shape(point)
+            if shape is not None:
+                if isinstance(shape, MapPolygon):
+                    self.selected_polygon = shape
+                elif isinstance(shape, MapCircle):
+                    self.selected_circle = shape
 
     def show_circle(self, circle: Dict) -> None:
         options = circle["options"]
@@ -221,6 +224,16 @@ class MapViewModel(Observable):
     @notify_change
     def center(self, value: Tuple[float, float]) -> None:
         self._center = value
+
+    @property
+    def context_location(self) -> LatLng | None:
+        return self._context_location
+
+    @context_location.setter
+    @notify_change
+    def context_location(self, value: LatLng | None) -> None:
+        self._context_location = value
+        self.geo_select_shape(value)
 
     @property
     def trips(self) -> ObservableList[Trip]:
