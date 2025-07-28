@@ -68,7 +68,7 @@ def outer_haversine(
 ) -> np.ndarray:
     """
     Vectorized outer haversine distance calculation between two sets of points.
-    This computes the distance between each point in set 1 and each point in set 2.
+    This computes the distance between each pt in set 1 and each pt in set 2.
     
     :param lat1: Array of latitudes for set 1 in degrees
     :param lon1: Array of longitudes for set 1 in degrees
@@ -112,7 +112,7 @@ def delta_location(
     :param lat: Start latitude
     :param lon: Start longitude
     :param bearing: Bearing (North is zero degrees, measured clockwise)
-    :param meters: Distance to displace from the starting point
+    :param meters: Distance to displace from the starting pt
     :return: Tuple with the new latitude and longitude
     """
     delta = meters / 6378137.0

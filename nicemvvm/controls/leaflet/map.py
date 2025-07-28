@@ -44,6 +44,7 @@ class LeafletMap(ui.leaflet, Observer):
 
         self.click_command: Command | None = None
         self.double_click_command: Command | None = None
+        self.contextmenu_command: Command | None = None
 
     def _on_click(self, e: GenericEventArguments):
         if self.click_command is not None:

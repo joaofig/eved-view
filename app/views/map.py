@@ -192,6 +192,7 @@ class MapView(ui.column, Observer):
     remove_route_command: Command | None = None
     remove_area_command: Command | None = None
     remove_circle_command: Command | None = None
+    context_menu_command: Command | None = None
 
     def __init__(self, view_model: Observable):
         super().__init__()
@@ -205,6 +206,8 @@ class MapView(ui.column, Observer):
         self.bind(view_model, "remove_area_command", "remove_area_command")
         self.bind(view_model, "remove_circle_command", "remove_circle_command")
         self.bind(view_model, "bounds", "bounds")
+        self.bind(view_model, "context_location", "context_location")
+        self.bind(view_model, "select_shape_command", "context_menu_command")
 
         main_splitter = ui.splitter(horizontal=True, value=70)
         main_splitter.classes("w-full h-full")
@@ -212,8 +215,6 @@ class MapView(ui.column, Observer):
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
-                # self._map.on("contextmenu", self._handle_contextmenu)
-                # self._map.on("click", self._handle_click)
 
                 with ui.context_menu().classes("small-menu") as self._context_menu:
                     self._context_menu.on("before-show", self._context_menu_before)
@@ -224,10 +225,10 @@ class MapView(ui.column, Observer):
                     MenuItem("Fit to Content").bind(view_model, "fit_content_command", "command")
                     ui.separator()
                     MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
-                    MenuItem("Remove Polygons").bind(view_model,
-                                                     property_name="context_location",
-                                                     local_name="visible",
-                                                     converter=NotNoneValueConverter())
+                    MenuItem("Remove Shape").bind(view_model,
+                                                  property_name="selected_shape",
+                                                  local_name="visible",
+                                                  converter=NotNoneValueConverter())
 
             with main_splitter.after:
                 # Property view
@@ -282,15 +283,24 @@ class MapView(ui.column, Observer):
             )
 
     async def _context_menu_before(self, event: GenericEventArguments) -> None:
-        x = event.args["clientX"]
-        y = event.args["clientY"]
-        ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
-        self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
-        self.propagate("context_location", self._ctx_latlng)
+        if self.context_menu_command is not None:
+            print(event.args)
+            x = event.args["layerX"]
+            y = event.args["layerY"]
+            ll = await self._map.run_map_method("layerPointToLatLng", [x, y])
+            self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
+            self.context_menu_command.execute(self._ctx_latlng)
+            # self.propagate("context_location", self._ctx_latlng)
+            ui.notify(self._ctx_latlng)
 
     @property
     def context_location(self) -> LatLng:
         return self._ctx_latlng
+
+    @context_location.setter
+    def context_location(self, latlng: LatLng):
+        self._ctx_latlng = latlng
+        self.propagate("context_location", latlng)
 
     def _handle_draw(self, event: GenericEventArguments) -> None:
         layer_type = event.args["layerType"]
@@ -303,16 +313,15 @@ class MapView(ui.column, Observer):
                 self.add_circle_to_map.execute(layer)
                 self._tab_panels.set_value("circles")
 
-    def _handle_click(self, event: GenericEventArguments) -> None:
-        print(event)
-
-    async def _handle_contextmenu(self, event: GenericEventArguments) -> None:
-        # ui.notify(f"Map context menu: {event.args}")
-        x = event.args["clientX"]
-        y = event.args["clientY"]
-        ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
-        self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
-        # print(self._ctx_latlng)
+    # def _handle_click(self, event: GenericEventArguments) -> None:
+    #     print(event)
+    #
+    # async def _handle_contextmenu(self, event: GenericEventArguments) -> None:
+    #     x = event.args["clientX"]
+    #     y = event.args["clientY"]
+    #     ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
+    #     self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
+    #     self.propagate("context_location", self._ctx_latlng)
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         # ui.notify(f"Map listener: {action} {args}")

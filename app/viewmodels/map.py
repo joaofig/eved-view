@@ -31,6 +31,7 @@ class MapViewModel(Observable):
         self._polygons: ObservableList[MapPolygon] = ObservableList()
         self._selected_circle: MapCircle | None = None
         self._circles: ObservableList[MapCircle] = ObservableList()
+        self._selected_shape: MapShape | None = None
         self._bounds: List[LatLng] = list()
         self._context_location: LatLng | None = None
         
@@ -65,21 +66,23 @@ class MapViewModel(Observable):
         self._trace_cache[cache_key] = result
         return result
 
-    def find_shape(self, point: LatLng) -> MapShape | None:
+    def find_shape(self, pt: LatLng) -> MapShape | None:
         for polygon in self.polygons:
-            if polygon.contains(point):
+            if polygon.contains(pt):
                 return polygon
         for circle in self.circles:
-            if circle.contains(point):
+            if circle.contains(pt):
                 return circle
         return None
 
-    def geo_select_shape(self, point: LatLng | None) -> None:
+    def geo_select_shape(self, pt: LatLng | None) -> None:
         self.selected_polygon = None
         self.selected_circle = None
 
-        if point is not None:
-            shape = self.find_shape(point)
+        if pt is not None:
+            shape = self.find_shape(pt)
+            print(f"Geo-selected shape: {shape}")
+            self.selected_shape = shape
             if shape is not None:
                 if isinstance(shape, MapPolygon):
                     self.selected_polygon = shape
@@ -187,7 +190,7 @@ class MapViewModel(Observable):
 
     @property
     def add_area_to_map_command(self) -> Command:
-        return RelayCommand(lambda arg: self._add_area_to_map(arg))
+        return RelayCommand(self._add_area_to_map)
 
     def _add_circle_to_map(self, arg: Any) -> None:
         if isinstance(arg, Dict):
@@ -196,16 +199,17 @@ class MapViewModel(Observable):
 
     @property
     def add_circle_to_map_command(self) -> Command:
-        return RelayCommand(lambda arg: self._add_circle_to_map(arg))
+        return RelayCommand(self._add_circle_to_map)
 
     def _select_shape(self, arg: Any = None) -> Any:
         if isinstance(arg, LatLng):
-            point: LatLng = arg
-            self.geo_select_shape(point)
+            pt: LatLng = arg
+            print(f"Selecting shape at {pt}")
+            self.geo_select_shape(pt)
 
     @property
     def select_shape_command(self) -> Command:
-        return RelayCommand(lambda arg: self._select_shape(arg))
+        return RelayCommand(self._select_shape)
 
     @property
     def zoom(self) -> int:
@@ -286,6 +290,16 @@ class MapViewModel(Observable):
     @notify_change
     def selected_circle(self, circle: MapCircle | None):
         self._selected_circle = circle
+
+    @property
+    def selected_shape(self) -> MapShape | None:
+        return self._selected_shape
+
+    @selected_shape.setter
+    @notify_change
+    def selected_shape(self, shape: MapShape | None):
+        print(f"Selected shape: {shape}")
+        self._selected_shape = shape
 
     @property
     def bounds(self) -> List[LatLng]:
