@@ -59,4 +59,6 @@ class MapPolygon(MapShape):
             "fill_color": self._fill_color,
             "fill_opacity": self._fill_opacity,
             "vertices": len(self._locations),
+            "dash_array": self._dash_array,
+            "dash_offset": self._dash_offset,
         }

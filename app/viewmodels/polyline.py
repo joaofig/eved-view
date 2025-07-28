@@ -78,4 +78,6 @@ class MapPolyline(MapShape):
             "trace_name": self._trace_name,
             "locations": self._locations,
             "km": self._km,
+            "dash_array": self._dash_array,
+            "dash_offset": self._dash_offset,
         }

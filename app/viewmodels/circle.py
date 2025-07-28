@@ -60,4 +60,6 @@ class MapCircle(MapShape, Observable):
             "fill_opacity": self._fill_opacity,
             "center": self._center.to_dict(),
             "radius": self._radius,
+            "dash_array": self._dash_array,
+            "dash_offset": self._dash_offset,
         }
