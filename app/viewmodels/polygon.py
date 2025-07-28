@@ -19,6 +19,8 @@ class MapPolygon(MapShape):
         fill: bool = True,
         fill_color: str = "",
         fill_opacity: float = 0.2,
+        dash_array: str = "",
+        dash_offset: str = "",
     ):
         super().__init__(
             shape_id=shape_id,
@@ -28,6 +30,8 @@ class MapPolygon(MapShape):
             fill=fill,
             fill_color=color if not fill_color else fill_color,
             fill_opacity=fill_opacity,
+            dash_array=dash_array,
+            dash_offset=dash_offset,
         )
         self._locations = locations
 

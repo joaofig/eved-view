@@ -11,12 +11,16 @@ class MapShape(Observable):
         fill: bool,
         fill_color: str,
         fill_opacity: float,
+        dash_array: str = "",
+        dash_offset: str = "",
     ):
         super().__init__()
         self._shape_id = shape_id
         self._color = color
         self._weight = weight
         self._opacity = opacity
+        self._dash_array = dash_array
+        self._dash_offset = dash_offset
         self._fill = fill
         self._fill_color = fill_color
         self._fill_opacity = fill_opacity
@@ -78,3 +82,21 @@ class MapShape(Observable):
     @notify_change
     def fill_opacity(self, value: float):
         self._fill_opacity = value
+
+    @property
+    def dash_array(self) -> str:
+        return self._dash_array
+
+    @dash_array.setter
+    @notify_change
+    def dash_array(self, value: str):
+        self._dash_array = value
+
+    @property
+    def dash_offset(self) -> str:
+        return self._dash_offset
+
+    @dash_offset.setter
+    @notify_change
+    def dash_offset(self, value: str):
+        self._dash_offset = value

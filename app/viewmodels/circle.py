@@ -16,9 +16,13 @@ class MapCircle(MapShape, Observable):
         fill: bool,
         fill_color: str,
         fill_opacity: float,
+        dash_array: str = "",
+        dash_offset: str = "",
     ):
         super().__init__(
-            shape_id, color, weight, opacity, fill, fill_color, fill_opacity
+            shape_id, color, weight, opacity, fill, fill_color, fill_opacity,
+            dash_array=dash_array,
+            dash_offset=dash_offset,
         )
         self._center = center
         self._radius = radius

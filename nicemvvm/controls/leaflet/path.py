@@ -15,7 +15,7 @@ class Path(Observer):
         line_cap: str = "round",
         line_join: str = "round",
         dash_array: str = "",
-        dash_offset: int = 0,
+        dash_offset: str = "",
         fill: bool = False,
         fill_color: str = "#3388ff",
         fill_opacity: float = 0.2,

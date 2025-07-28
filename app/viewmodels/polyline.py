@@ -17,6 +17,8 @@ class MapPolyline(MapShape):
         opacity: float,
         trace_name: str,
         locations: List[LatLng],
+        dash_array: str = "",
+        dash_offset: str = "",
     ):
         super().__init__(
             shape_id,
@@ -26,6 +28,8 @@ class MapPolyline(MapShape):
             fill=False,
             fill_color=color,
             fill_opacity=opacity,
+            dash_array=dash_array,
+            dash_offset=dash_offset
         )
         self._traj_id = traj_id
         self._vehicle_id = vehicle_id
