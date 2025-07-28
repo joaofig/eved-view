@@ -1,6 +1,7 @@
 import uuid
 from typing import Any, Dict, List, Tuple
 
+from nicegui.run import process_pool
 from shapely.geometry import point
 
 from app.converters.general import NotNoneValueConverter
@@ -178,6 +179,22 @@ class MapViewModel(Observable):
     @property
     def remove_area_command(self) -> Command:
         return RemoveAreaCommand(self)
+
+    def _remove_shape(self) -> None:
+        if self.selected_shape is not None:
+            map_polygon = self.selected_polygon
+            if map_polygon is not None:
+                self._polygons.remove(map_polygon)
+                self.selected_polygon = None
+                return
+            map_circle = self.selected_circle
+            if map_circle is not None:
+                self._circles.remove(map_circle)
+                self.selected_circle = None
+
+    @property
+    def remove_shape_command(self) -> Command:
+        return RelayCommand(lambda _: self._remove_shape())
 
     @property
     def remove_circle_command(self) -> Command:

@@ -216,19 +216,7 @@ class MapView(ui.column, Observer):
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
 
-                with ui.context_menu().classes("small-menu") as self._context_menu:
-                    self._context_menu.on("before-show", self._context_menu_before)
-                    # self._context_menu.on("show", lambda _: ui.notify(self._ctx_latlng))
-
-                    MenuItem("Zoom In", on_click=lambda _: self._map.zoom_in())
-                    MenuItem("Zoom Out", on_click=lambda _: self._map.zoom_out())
-                    MenuItem("Fit to Content").bind(view_model, "fit_content_command", "command")
-                    ui.separator()
-                    MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
-                    MenuItem("Remove Shape").bind(view_model,
-                                                  property_name="selected_shape",
-                                                  local_name="visible",
-                                                  converter=NotNoneValueConverter())
+                self._create_context_menu(view_model)
 
             with main_splitter.after:
                 # Property view
@@ -282,16 +270,39 @@ class MapView(ui.column, Observer):
                 "resize", lambda _: self._map.invalidate_size(animate=True)
             )
 
+    def _create_context_menu(self, view_model: Observable) -> ui.context_menu:
+        with ui.context_menu().classes("small-menu") as self._context_menu:
+            self._context_menu.on("before-show", self._context_menu_before)
+            # self._context_menu.on("show", lambda _: ui.notify(self._ctx_latlng))
+
+            MenuItem("Zoom In", on_click=lambda _: self._map.zoom_in())
+            MenuItem("Zoom Out", on_click=lambda _: self._map.zoom_out())
+            MenuItem("Fit to Content") \
+                .bind(view_model,
+                      property_name="fit_content_command",
+                      local_name="command")
+            ui.separator()
+            MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
+            MenuItem("Remove Shape") \
+                .bind(view_model,
+                      property_name="selected_shape",
+                      local_name="visible",
+                      converter=NotNoneValueConverter()) \
+                .bind(view_model,
+                      property_name="remove_shape_command",
+                      local_name="command")
+        return self._context_menu
+
     async def _context_menu_before(self, event: GenericEventArguments) -> None:
         if self.context_menu_command is not None:
-            print(event.args)
+            # print(event.args)
             x = event.args["layerX"]
             y = event.args["layerY"]
             ll = await self._map.run_map_method("layerPointToLatLng", [x, y])
             self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
             self.context_menu_command.execute(self._ctx_latlng)
             # self.propagate("context_location", self._ctx_latlng)
-            ui.notify(self._ctx_latlng)
+            # ui.notify(self._ctx_latlng)
 
     @property
     def context_location(self) -> LatLng:
