@@ -82,7 +82,7 @@ class MapViewModel(Observable):
 
         if pt is not None:
             shape = self.find_shape(pt)
-            print(f"Geo-selected shape: {shape}")
+            # print(f"Geo-selected shape: {shape}")
             self.selected_shape = shape
             if shape is not None:
                 if isinstance(shape, MapPolygon):
@@ -221,7 +221,7 @@ class MapViewModel(Observable):
     def _select_shape(self, arg: Any = None) -> Any:
         if isinstance(arg, LatLng):
             pt: LatLng = arg
-            print(f"Selecting shape at {pt}")
+            # print(f"Selecting shape at {pt}")
             self.geo_select_shape(pt)
 
     @property
@@ -293,7 +293,11 @@ class MapViewModel(Observable):
     @selected_polygon.setter
     @notify_change
     def selected_polygon(self, polygon: MapPolygon | None):
+        if self._selected_polygon is not None:
+            self._selected_polygon.dash_array = ""
         self._selected_polygon = polygon
+        if polygon is not None:
+            polygon.dash_array = "8 8"
 
     @property
     def circles(self) -> ObservableList[MapCircle]:
@@ -306,7 +310,11 @@ class MapViewModel(Observable):
     @selected_circle.setter
     @notify_change
     def selected_circle(self, circle: MapCircle | None):
+        if self._selected_circle is not None:
+            self._selected_circle.dash_array = ""
         self._selected_circle = circle
+        if circle is not None:
+            circle.dash_array = "8 8"
 
     @property
     def selected_shape(self) -> MapShape | None:
@@ -315,7 +323,6 @@ class MapViewModel(Observable):
     @selected_shape.setter
     @notify_change
     def selected_shape(self, shape: MapShape | None):
-        print(f"Selected shape: {shape}")
         self._selected_shape = shape
 
     @property

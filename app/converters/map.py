@@ -72,6 +72,7 @@ class MapPolylineMapConverter(ValueConverter):
             .bind(map_polyline, "color", "color")
             .bind(map_polyline, "weight", "weight")
             .bind(map_polyline, "opacity", "opacity")
+            .bind(map_polyline, "dash_array", "dash_array")
         )
         return polyline
 
@@ -98,6 +99,7 @@ class MapPolygonMapConverter(ValueConverter):
             .bind(map_polygon, "fill", "fill")
             .bind(map_polygon, "fill_color", "fill_color")
             .bind(map_polygon, "fill_opacity", "fill_opacity")
+            .bind(map_polygon, "dash_array", "dash_array")
         )
         return polygon
 
@@ -125,5 +127,6 @@ class MapCircleMapConverter(ValueConverter):
             .bind(map_circle, "fill", "fill")
             .bind(map_circle, "fill_color", "fill_color")
             .bind(map_circle, "fill_opacity", "fill_opacity")
+            .bind(map_circle, "dash_array", "dash_array")
         )
         return circle
