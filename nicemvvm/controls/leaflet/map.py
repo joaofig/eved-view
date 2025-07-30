@@ -8,7 +8,7 @@ from nicemvvm.controls.leaflet.circle import Circle
 from nicemvvm.controls.leaflet.path import Path
 from nicemvvm.controls.leaflet.polygon import Polygon
 from nicemvvm.controls.leaflet.polyline import Polyline
-from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
 from nicemvvm.converter import ValueConverter
 from nicemvvm.observables.collections import ObservableList
 from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
@@ -162,14 +162,10 @@ class LeafletMap(ui.leaflet, Observer):
         self.run_map_method("invalidateSize", animate)
         return self
 
-    def fit_bounds(self, bounds: List[LatLng], options: Dict | None = None) -> Self:
-        if len(bounds) > 0:
-            min_lat = min(b.lat for b in bounds)
-            max_lat = max(b.lat for b in bounds)
-            min_lng = min(b.lng for b in bounds)
-            max_lng = max(b.lng for b in bounds)
-            bounds_list = [[min_lat, min_lng], [max_lat, max_lng]]
-            self.run_map_method("fitBounds", bounds_list, options)
+    def fit_bounds(self, bounds: GeoBounds, options: Dict | None = None) -> Self:
+        bounds_list = [[bounds.sw.lat, bounds.sw.lng],
+                       [bounds.ne.lat, bounds.ne.lng]]
+        self.run_map_method("fitBounds", bounds_list, options)
         return self
 
     def zoom_in(self) -> Self:

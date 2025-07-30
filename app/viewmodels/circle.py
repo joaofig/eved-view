@@ -1,6 +1,6 @@
-from app.geo.geomath import num_haversine
+from app.geo.geomath import num_haversine, delta_location
 from app.viewmodels.shape import MapShape
-from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
 from nicemvvm.observables.observability import Observable, notify_change
 
 
@@ -26,6 +26,7 @@ class MapCircle(MapShape, Observable):
         )
         self._center = center
         self._radius = radius
+        self._bounds: GeoBounds | None = None
 
     def contains(self, latlng: LatLng) -> bool:
         d = num_haversine(self._center.lat, self._center.lng, latlng.lat, latlng.lng)
@@ -48,6 +49,19 @@ class MapCircle(MapShape, Observable):
     @notify_change
     def radius(self, value: float):
         self._radius = value
+
+    @property
+    def bounds(self) -> GeoBounds:
+        if not self._bounds:
+            lat = self._center.lat
+            lng = self._center.lng
+            radius = self._radius
+            n = delta_location(lat, lng, 0.0, radius)
+            e = delta_location(lat, lng, 90.0, radius)
+            s = delta_location(lat, lng, 180.0, radius)
+            w = delta_location(lat, lng, 270.0, radius)
+            self._bounds = GeoBounds(LatLng(s[0], w[1]), LatLng(n[0], e[1]))
+        return self._bounds
 
     def to_dict(self):
         return {

@@ -1,8 +1,6 @@
 import uuid
+from functools import reduce
 from typing import Any, Dict, List, Tuple
-
-from nicegui.run import process_pool
-from shapely.geometry import point
 
 from app.converters.general import NotNoneValueConverter
 from app.models.trip import Trip, TripModel
@@ -11,7 +9,7 @@ from app.viewmodels.polygon import MapPolygon
 from app.viewmodels.polyline import MapPolyline
 from app.viewmodels.shape import MapShape
 from nicemvvm.command import Command, RelayCommand
-from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
 from nicemvvm.observables.collections import ObservableList
 from nicemvvm.observables.observability import Observable, Observer, notify_change
 from nicemvvm.ResourceLocator import ResourceLocator
@@ -33,13 +31,20 @@ class MapViewModel(Observable):
         self._selected_circle: MapCircle | None = None
         self._circles: ObservableList[MapCircle] = ObservableList()
         self._selected_shape: MapShape | None = None
-        self._bounds: List[LatLng] = list()
+        self._bounds: GeoBounds | None = None
+        self._content_bounds: GeoBounds | None = None
         self._context_location: LatLng | None = None
         
         # Cache for faster trace lookup
         self._trace_cache: Dict[str, bool] = {}
 
         self._polygon_counter: int = 1
+
+    def _merge_bounds(self, bounds: GeoBounds) -> None:
+        if self._content_bounds is None:
+            self._content_bounds = bounds
+        else:
+            self._content_bounds.merge(bounds)
 
     def _has_trace(self, trip: Trip, trace_name: str) -> bool:
         """
@@ -92,34 +97,25 @@ class MapViewModel(Observable):
 
     def show_circle(self, circle: Dict) -> None:
         options = circle["options"]
-        center = LatLng(circle["_latlng"]["lat"], circle["_latlng"]["lng"])
+        latlng = circle["_latlng"]
+        lat = latlng["lat"]
+        lng = latlng["lng"]
+        center = LatLng(lat, lng)
         radius = circle["_mRadius"]
-        circle = MapCircle(
-            shape_id=str(uuid.uuid4()),
-            color=options["color"],
-            weight=options["weight"],
-            opacity=options["opacity"],
-            center=center,
-            radius=radius,
-            fill=options["fill"],
-            fill_color=options["fillColor"],
-            fill_opacity=options["fillOpacity"],
-        )
+        circle = MapCircle(shape_id=str(uuid.uuid4()), color=options["color"],
+                           weight=options["weight"], opacity=options["opacity"],
+                           center=center, radius=radius, fill=options["fill"],
+                           fill_color=options["fillColor"], fill_opacity=options["fillOpacity"],)
         self._circles.append(circle)
 
     def show_polygon(self, draw_polygon: Dict) -> None:
         options = draw_polygon["options"]
         locations = [LatLng(ll["lat"], ll["lng"]) for ll in draw_polygon["_latlngs"][0]]
-        poly = MapPolygon(
-            shape_id=f"area-{self._polygon_counter}",
-            color=options["color"],
-            weight=options["weight"],
-            opacity=options["opacity"],
-            fill=options["fill"],
-            fill_color=options["fillColor"],
-            fill_opacity=options["fillOpacity"],
-            locations=locations,
-        )
+        poly = MapPolygon(shape_id=f"area-{self._polygon_counter}",
+                          color=options["color"], weight=options["weight"],
+                          opacity=options["opacity"], fill=options["fill"],
+                          fill_color=options["fillColor"], fill_opacity=options["fillOpacity"],
+                          locations=locations,)
         self._polygons.append(poly)
         self._polygon_counter += 1
 
@@ -155,18 +151,21 @@ class MapViewModel(Observable):
             self.bounds = locations
 
     def _fit_content(self) -> Any:
+        def merge(a: GeoBounds, b: GeoBounds) -> GeoBounds:
+            return a.merge(b)
+
         bounds = []
-        for polyline in self.polylines:
-            bounds.extend(polyline.locations)
-        for polygon in self.polygons:
-            bounds.extend(polygon.locations)
+        bounds.extend([polyline.bounds for polyline in self.polylines])
+        bounds.extend([polygon.bounds for polygon in self.polygons])
+        bounds.extend([circle.bounds for circle in self.circles])
+
         if len(bounds) > 0:
-            self.bounds = bounds
+            self.bounds = reduce(merge, bounds)
         else:
-            self.bounds = [
+            self.bounds = GeoBounds(
                 LatLng(42.2203052778, -83.8042902778),
                 LatLng(42.3258, -83.674),
-            ]
+            )
 
     @property
     def fit_content_command(self) -> Command:
@@ -326,12 +325,12 @@ class MapViewModel(Observable):
         self._selected_shape = shape
 
     @property
-    def bounds(self) -> List[LatLng]:
+    def bounds(self) -> GeoBounds:
         return self._bounds
 
     @bounds.setter
     @notify_change
-    def bounds(self, value: List[LatLng]) -> None:
+    def bounds(self, value: GeoBounds) -> None:
         self._bounds = value
 
 

@@ -1,7 +1,7 @@
 from typing import List
 
 from app.viewmodels.shape import MapShape
-from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
 from nicemvvm.observables.observability import notify_change
 
 
@@ -36,6 +36,7 @@ class MapPolyline(MapShape):
         self._km = km
         self._trace_name = trace_name
         self._locations = locations
+        self._bounds: GeoBounds | None = None
 
     @property
     def traj_id(self) -> int:
@@ -66,6 +67,17 @@ class MapPolyline(MapShape):
     @notify_change
     def locations(self, value: List[LatLng]):
         self._locations = value
+
+    @property
+    def bounds(self) -> GeoBounds:
+        if not self._bounds:
+            self._bounds = GeoBounds(
+                LatLng(min((p.lat for p in self._locations)),
+                       min((p.lng for p in self._locations))),
+                LatLng(max((p.lat for p in self._locations)),
+                       max((p.lng for p in self._locations))))
+        return self._bounds
+
 
     def to_dict(self):
         return {

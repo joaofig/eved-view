@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Self
 
 
 @dataclass
@@ -20,3 +21,21 @@ class ControlPosition(Enum):
     TOPRIGHT = "topright"
     BOTTOMLEFT = "bottomleft"
     BOTTOMRIGHT = "bottomright"
+
+
+@dataclass
+class GeoBounds:
+    sw: LatLng
+    ne: LatLng
+
+    def merge(self, other: Self) -> Self:
+        return GeoBounds(
+            sw=LatLng(
+                min(self.sw.lat, other.sw.lat),
+                min(self.sw.lng, other.sw.lng)
+            ),
+            ne=LatLng(
+                max(self.ne.lat, other.ne.lat),
+                max(self.ne.lng, other.ne.lng)
+            )
+        )

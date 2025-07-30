@@ -19,7 +19,7 @@ from nicemvvm import nm
 from nicemvvm.command import Command
 from nicemvvm.controls.grid_view import GridView, GridViewColumn
 from nicemvvm.controls.leaflet.map import LeafletMap
-from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
 from nicemvvm.controls.menu import MenuItem
 from nicemvvm.observables.observability import Observable, Observer
 
@@ -147,10 +147,10 @@ async def setup_map(m: ui.leaflet) -> None:
     await m.initialized()
 
     m.fit_bounds(
-        bounds=[
+        bounds=GeoBounds(
             LatLng(42.2203052778, -83.8042902778),
             LatLng(42.3258, -83.674),
-        ]
+        )
     )
 
 
