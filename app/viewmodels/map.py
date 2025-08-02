@@ -82,18 +82,16 @@ class MapViewModel(Observable):
         return None
 
     def geo_select_shape(self, pt: LatLng | None) -> None:
-        self.selected_polygon = None
-        self.selected_circle = None
-
         if pt is not None:
             shape = self.find_shape(pt)
-            # print(f"Geo-selected shape: {shape}")
             self.selected_shape = shape
             if shape is not None:
                 if isinstance(shape, MapPolygon):
                     self.selected_polygon = shape
+                    self.selected_circle = None
                 elif isinstance(shape, MapCircle):
                     self.selected_circle = shape
+                    self.selected_polygon = None
 
     def show_circle(self, circle: Dict) -> None:
         options = circle["options"]

@@ -222,11 +222,14 @@ class GridView(NiceGUIAgGrid, Observer):
         self._set_row_id(row_id)
         self._row_id = row_id
 
-    def _select_item(self, item: Dict[str, Any]) -> None:
-        column = self._row_id
-        if len(column) > 0 and item and column in item:
-            row_id_value = str(item[column])
-            self.run_row_method(row_id_value, "setSelected", True)
+    def _select_item(self, item: Dict[str, Any]|None) -> None:
+        if not item:
+            self.run_grid_method("deselectAll", "all")
+        else:
+            column = self._row_id
+            if len(column) > 0 and item and column in item:
+                row_id_value = str(item[column])
+                self.run_row_method(row_id_value, "setSelected", True)
 
     async def _select_items(self, items: List[Any]) -> None:
         column = self._row_id
@@ -244,7 +247,6 @@ class GridView(NiceGUIAgGrid, Observer):
         if self._selected_item != item:
             self._selected_item = item
             self._select_item(item)
-            # asyncio.create_task(self._select_item(item))
 
     @property
     def selected_items(self) -> List[Any] | None:

@@ -1,5 +1,6 @@
 import functools
 from abc import ABC
+from dataclasses import dataclass
 from typing import Any, Callable, Coroutine, Dict, Mapping, Self, Set
 
 from nicemvvm.converter import ValueConverter
@@ -53,6 +54,16 @@ class Observable:
         if old_value is not value or old_value != value:
             setattr(self, prop_name, value)
             self.notify("property_changed", name=name, value=value)
+
+
+@dataclass
+class Binder:
+    source: Observable
+    property_name: str
+    local_name: str
+    handler: ObserverHandler | None = None
+    converter: ValueConverter | None = None
+
 
 
 class Observer:
