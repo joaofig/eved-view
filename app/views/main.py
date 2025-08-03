@@ -2,7 +2,6 @@ from typing import Any
 
 from nicegui import ui
 
-from app.commands.map import AddRouteToMapCommand
 from app.converters.general import NotNoneValueConverter
 from app.viewmodels.map import MapViewModel
 from app.views.map import MapView

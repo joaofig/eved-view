@@ -178,7 +178,10 @@ def create_map(view_model: Observable) -> LeafletMap:
             .bind(view_model, "polylines", "polylines", converter=MapPolylineMapConverter())
             .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
             .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
-            .bind(view_model, "select_shape_command", "click_command")
+
+            .bind(view_model, "select_polyline_command", "polyline_click_command")
+            .bind(view_model, "select_polygon_command", "polygon_click_command")
+            .bind(view_model, "select_circle_command", "circle_click_command")
     )
     asyncio.create_task(setup_map(m))
     return m
@@ -202,12 +205,13 @@ class MapView(ui.column, Observer):
         view_model.register(self._listener)
         self.bind(view_model, "add_area_to_map_command", "add_area_to_map")
         self.bind(view_model, "add_circle_to_map_command", "add_circle_to_map")
+
         self.bind(view_model, "remove_route_command", "remove_route_command")
         self.bind(view_model, "remove_area_command", "remove_area_command")
         self.bind(view_model, "remove_circle_command", "remove_circle_command")
+
         self.bind(view_model, "bounds", "bounds")
         self.bind(view_model, "context_location", "context_location")
-        self.bind(view_model, "select_shape_command", "context_menu_command")
 
         main_splitter = ui.splitter(horizontal=True, value=70)
         main_splitter.classes("w-full h-full")
@@ -215,6 +219,10 @@ class MapView(ui.column, Observer):
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
+                #
+                # ui.on("polyline-click", lambda e: ui.notify(f"Polyline click: {e}"))
+                # ui.on("polygon-click", lambda e: ui.notify(f"Polygon click: {e}"))
+                # ui.on("circle-click", lambda e: ui.notify(f"Circle click: {e}"))
 
                 self._create_context_menu(view_model)
 
@@ -323,16 +331,6 @@ class MapView(ui.column, Observer):
             case "circle":
                 self.add_circle_to_map.execute(layer)
                 self._tab_panels.set_value("circles")
-
-    # def _handle_click(self, event: GenericEventArguments) -> None:
-    #     print(event)
-    #
-    # async def _handle_contextmenu(self, event: GenericEventArguments) -> None:
-    #     x = event.args["clientX"]
-    #     y = event.args["clientY"]
-    #     ll = await self._map.run_map_method("containerPointToLatLng", [x, y])
-    #     self._ctx_latlng = LatLng(ll["lat"], ll["lng"])
-    #     self.propagate("context_location", self._ctx_latlng)
 
     def _listener(self, action: str, args: Mapping[str, Any]) -> None:
         # ui.notify(f"Map listener: {action} {args}")

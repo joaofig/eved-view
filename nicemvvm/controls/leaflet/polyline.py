@@ -95,4 +95,5 @@ class Polyline(Path):
         self._layer = leaflet.generic_layer(
             name="polyline", args=[self._points, self._options]
         )
+        self._wire_js_events("polyline")
         return self._layer

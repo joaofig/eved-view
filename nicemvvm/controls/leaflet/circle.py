@@ -61,4 +61,5 @@ class Circle(Path):
         self._layer = leaflet.generic_layer(
             name="circle", args=[asdict(self._center), self._options]
         )
+        self._wire_js_events("circle")
         return self._layer

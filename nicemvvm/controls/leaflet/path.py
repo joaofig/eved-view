@@ -169,3 +169,23 @@ class Path(Observer):
 
     def add_to(self, leaflet: ui.leaflet) -> GenericLayer | None:
         return None
+
+    def _wire_js_events(self, shape: str) -> None:
+        # Add a surrogate event handler
+        arg = f"""
+            arg = {{
+                containerPoint: evt.containerPoint,
+                layerPoint: evt.layerPoint,
+                latlng: evt.latlng,
+                layerId: '{self._layer_id}'
+            }};
+        """
+
+        for js_event in ["click", "dblclick", "contextmenu"]:
+            js_code = f"""
+            (evt) => {{
+                {arg}
+                emitEvent('{shape}-{js_event}', arg);
+            }}
+            """
+            self._layer.run_method(":on", f"'{js_event}'", js_code)

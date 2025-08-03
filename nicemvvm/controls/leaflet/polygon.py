@@ -52,4 +52,5 @@ class Polygon(Polyline):
         self._layer = leaflet.generic_layer(
             name="polygon", args=[self._points, self._options]
         )
+        self._wire_js_events("polygon")
         return self._layer

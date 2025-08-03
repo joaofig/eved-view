@@ -1,6 +1,6 @@
 import uuid
 from functools import reduce
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 from app.converters.general import NotNoneValueConverter
 from app.models.trip import Trip, TripModel
@@ -34,6 +34,10 @@ class MapViewModel(Observable):
         self._bounds: GeoBounds | None = None
         self._content_bounds: GeoBounds | None = None
         self._context_location: LatLng | None = None
+
+        self._polyline_map: dict[str, MapPolyline] = dict()
+        self._polygon_map: dict[str, MapPolygon] = dict()
+        self._circle_map: dict[str, MapCircle] = dict()
         
         # Cache for faster trace lookup
         self._trace_cache: Dict[str, bool] = {}
@@ -81,6 +85,27 @@ class MapViewModel(Observable):
                 return circle
         return None
 
+    def select_polyline(self, layer_id: str) -> None:
+        if layer_id in self._polyline_map:
+            self.selected_polyline = self._polyline_map[layer_id]
+            # self.bounds = self.selected_polyline.bounds
+            self.selected_polygon = None
+            self.selected_circle = None
+
+    def select_polygon(self, layer_id: str) -> None:
+        if layer_id in self._polygon_map:
+            self.selected_polygon = self._polygon_map[layer_id]
+            # self.bounds = self.selected_polygon.bounds
+            self.selected_polyline = None
+            self.selected_circle = None
+
+    def select_circle(self, layer_id: str) -> None:
+        if layer_id in self._circle_map:
+            self.selected_circle = self._circle_map[layer_id]
+            # self.bounds = self.selected_circle.bounds
+            self.selected_polyline = None
+            self.selected_polygon = None
+
     def geo_select_shape(self, pt: LatLng | None) -> None:
         if pt is not None:
             shape = self.find_shape(pt)
@@ -105,6 +130,7 @@ class MapViewModel(Observable):
                            center=center, radius=radius, fill=options["fill"],
                            fill_color=options["fillColor"], fill_opacity=options["fillOpacity"],)
         self._circles.append(circle)
+        self._circle_map[circle.shape_id] = circle
 
     def show_polygon(self, draw_polygon: Dict) -> None:
         options = draw_polygon["options"]
@@ -116,6 +142,7 @@ class MapViewModel(Observable):
                           locations=locations,)
         self._polygons.append(poly)
         self._polygon_counter += 1
+        self._polygon_map[poly.shape_id] = poly
 
     def show_polyline(self, trip: Trip, trace_name: str) -> None:
         if not self._has_trace(trip, trace_name):
@@ -145,8 +172,9 @@ class MapViewModel(Observable):
                 km=trip.km,
             )
             self._polylines.append(poly)
+            self._polyline_map[poly.shape_id] = poly
             # self.selected_polyline = poly
-            self.bounds = locations
+            self.bounds = poly.bounds
 
     def _fit_content(self) -> Any:
         def merge(a: GeoBounds, b: GeoBounds) -> GeoBounds:
@@ -169,13 +197,27 @@ class MapViewModel(Observable):
     def fit_content_command(self) -> Command:
         return RelayCommand(lambda _: self._fit_content())
 
+    def _remove_polyline(self, layer_id: str) -> None:
+        if layer_id in self._polyline_map:
+            polyline = self._polyline_map[layer_id]
+            del self._polyline_map[layer_id]
+            self._polylines.remove(polyline)
+            self.selected_polyline = None
+
     @property
     def remove_route_command(self) -> Command:
-        return RemoveRouteCommand(self)
+        return RelayCommand(lambda layer_id: self._remove_polyline(layer_id))
+
+    def _remove_polygon(self, layer_id: str) -> None:
+        if layer_id in self._polygon_map:
+            polygon = self._polygon_map[layer_id]
+            del self._polygon_map[layer_id]
+            self._polygons.remove(polygon)
+            self.selected_polygon = None
 
     @property
     def remove_area_command(self) -> Command:
-        return RemoveAreaCommand(self)
+        return RelayCommand(lambda layer_id: self._remove_polygon(layer_id))
 
     def _remove_shape(self) -> None:
         if self.selected_shape is not None:
@@ -193,9 +235,16 @@ class MapViewModel(Observable):
     def remove_shape_command(self) -> Command:
         return RelayCommand(lambda _: self._remove_shape())
 
+    def _remove_circle(self, layer_id: str) -> None:
+        if layer_id in self._circle_map:
+            circle = self._circle_map[layer_id]
+            del self._circle_map[layer_id]
+            self._circles.remove(circle)
+            self.selected_circle = None
+
     @property
     def remove_circle_command(self) -> Command:
-        return RemoveCircleCommand(self)
+        return RelayCommand(lambda layer_id: self._remove_circle(layer_id))
 
     def _add_area_to_map(self, arg: Any) -> None:
         if isinstance(arg, Dict):
@@ -214,16 +263,28 @@ class MapViewModel(Observable):
     @property
     def add_circle_to_map_command(self) -> Command:
         return RelayCommand(self._add_circle_to_map)
-
-    def _select_shape(self, arg: Any = None) -> Any:
-        if isinstance(arg, LatLng):
-            pt: LatLng = arg
-            # print(f"Selecting shape at {pt}")
-            self.geo_select_shape(pt)
+    #
+    # def _select_shape(self, arg: Any = None) -> Any:
+    #     if isinstance(arg, LatLng):
+    #         pt: LatLng = arg
+    #         # print(f"Selecting shape at {pt}")
+    #         self.geo_select_shape(pt)
+    #
+    # @property
+    # def select_shape_command(self) -> Command:
+    #     return RelayCommand(self._select_shape)
 
     @property
-    def select_shape_command(self) -> Command:
-        return RelayCommand(self._select_shape)
+    def select_polyline_command(self) -> Command:
+        return RelayCommand(lambda layer_id: self.select_polyline(layer_id))
+
+    @property
+    def select_polygon_command(self) -> Command:
+        return RelayCommand(lambda layer_id: self.select_polygon(layer_id))
+
+    @property
+    def select_circle_command(self) -> Command:
+        return RelayCommand(lambda layer_id: self.select_circle(layer_id))
 
     @property
     def zoom(self) -> int:
