@@ -198,6 +198,9 @@ class MapViewModel(Observable):
         return RelayCommand(lambda _: self._fit_content())
 
     def _remove_polyline(self, layer_id: str) -> None:
+        if not layer_id and self.selected_polyline is not None:
+            layer_id = self.selected_polyline.shape_id
+
         if layer_id in self._polyline_map:
             polyline = self._polyline_map[layer_id]
             del self._polyline_map[layer_id]
@@ -263,16 +266,6 @@ class MapViewModel(Observable):
     @property
     def add_circle_to_map_command(self) -> Command:
         return RelayCommand(self._add_circle_to_map)
-    #
-    # def _select_shape(self, arg: Any = None) -> Any:
-    #     if isinstance(arg, LatLng):
-    #         pt: LatLng = arg
-    #         # print(f"Selecting shape at {pt}")
-    #         self.geo_select_shape(pt)
-    #
-    # @property
-    # def select_shape_command(self) -> Command:
-    #     return RelayCommand(self._select_shape)
 
     @property
     def select_polyline_command(self) -> Command:

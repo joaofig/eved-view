@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Self, Union
+from typing import Any, Dict, List, Self, Union, Mapping
 
 from nicegui import ui
 from nicegui.events import GenericEventArguments
@@ -108,7 +108,7 @@ class LeafletMap(ui.leaflet, Observer):
     def _shape_handler(
         self,
         action: str,
-        args: Dict[str, Any],
+        args: Mapping[str, Any],
         shapes: Dict[str, Path],
         converter: ValueConverter,
     ) -> None:
@@ -140,13 +140,13 @@ class LeafletMap(ui.leaflet, Observer):
                     layer.remove()
                 shapes.clear()
 
-    def _circles_handler(self, action: str, args: Dict[str, Any]) -> None:
+    def _circles_handler(self, action: str, args: Mapping[str, Any]) -> None:
         self._shape_handler(action, args, self._circles, self._circle_converter)
 
-    def _polygons_handler(self, action: str, args: Dict[str, Any]) -> None:
+    def _polygons_handler(self, action: str, args: Mapping[str, Any]) -> None:
         self._shape_handler(action, args, self._polygons, self._polygon_converter)
 
-    def _polylines_handler(self, action: str, args: Dict[str, Any]) -> None:
+    def _polylines_handler(self, action: str, args: Mapping[str, Any]) -> None:
         self._shape_handler(action, args, self._polylines, self._polyline_converter)
 
     def bind(
