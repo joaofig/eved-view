@@ -291,13 +291,21 @@ class MapView(ui.column, Observer):
                       local_name="command")
             ui.separator()
             MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
-            MenuItem("Remove Shape") \
+            MenuItem("Remove Route") \
                 .bind(view_model,
-                      property_name="selected_shape",
+                      property_name="selected_route",
                       local_name="visible",
                       converter=NotNoneValueConverter()) \
                 .bind(view_model,
-                      property_name="remove_shape_command",
+                      property_name="remove_route_command",
+                      local_name="command")
+            MenuItem("Remove Area") \
+                .bind(view_model,
+                      property_name="selected_area",
+                      local_name="visible",
+                      converter=NotNoneValueConverter()) \
+                .bind(view_model,
+                      property_name="remove_area_command",
                       local_name="command")
         return self._context_menu
 
