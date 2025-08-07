@@ -68,8 +68,7 @@ class MapPolyline(MapShape):
     def locations(self, value: List[LatLng]):
         self._locations = value
 
-    @property
-    def bounds(self) -> GeoBounds:
+    def get_bounds(self) -> GeoBounds:
         if not self._bounds:
             self._bounds = GeoBounds(
                 LatLng(min((p.lat for p in self._locations)),
@@ -77,7 +76,6 @@ class MapPolyline(MapShape):
                 LatLng(max((p.lat for p in self._locations)),
                        max((p.lng for p in self._locations))))
         return self._bounds
-
 
     def to_dict(self):
         return {

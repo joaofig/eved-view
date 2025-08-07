@@ -50,8 +50,7 @@ class MapCircle(MapShape, Observable):
     def radius(self, value: float):
         self._radius = value
 
-    @property
-    def bounds(self) -> GeoBounds:
+    def get_bounds(self) -> GeoBounds:
         if not self._bounds:
             lat = self._center.lat
             lng = self._center.lng

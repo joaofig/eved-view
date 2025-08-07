@@ -4,6 +4,9 @@ from nicegui.elements.leaflet_layers import GenericLayer
 from nicemvvm.observables.observability import Observer
 
 
+HANDLED_EVENTS = ("click", "dblclick", "contextmenu")
+
+
 class Path(Observer):
     def __init__(
         self,
@@ -53,6 +56,8 @@ class Path(Observer):
 
     def remove(self):
         if self._layer is not None:
+            for js_event in HANDLED_EVENTS:
+                self._layer.run_method(":off", f"'{js_event}'", 'null', f"'{self._layer_id}'")
             self._layer.run_method("remove", None)
 
     @property
@@ -181,11 +186,11 @@ class Path(Observer):
             }};
         """
 
-        for js_event in ["click", "dblclick", "contextmenu"]:
+        for js_event in HANDLED_EVENTS:
             js_code = f"""
             (evt) => {{
                 {arg}
                 emitEvent('{shape}-{js_event}', arg);
             }}
             """
-            self._layer.run_method(":on", f"'{js_event}'", js_code)
+            self._layer.run_method(":on", f"'{js_event}'", js_code, f"'{self._layer_id}'")

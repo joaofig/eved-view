@@ -88,21 +88,18 @@ class MapViewModel(Observable):
     def select_polyline(self, layer_id: str) -> None:
         if layer_id in self._polyline_map:
             self.selected_polyline = self._polyline_map[layer_id]
-            # self.bounds = self.selected_polyline.bounds
             self.selected_polygon = None
             self.selected_circle = None
 
     def select_polygon(self, layer_id: str) -> None:
         if layer_id in self._polygon_map:
             self.selected_polygon = self._polygon_map[layer_id]
-            # self.bounds = self.selected_polygon.bounds
             self.selected_polyline = None
             self.selected_circle = None
 
     def select_circle(self, layer_id: str) -> None:
         if layer_id in self._circle_map:
             self.selected_circle = self._circle_map[layer_id]
-            # self.bounds = self.selected_circle.bounds
             self.selected_polyline = None
             self.selected_polygon = None
 
@@ -174,7 +171,7 @@ class MapViewModel(Observable):
             self._polylines.append(poly)
             self._polyline_map[poly.shape_id] = poly
             # self.selected_polyline = poly
-            self.bounds = poly.bounds
+            self.bounds = poly.get_bounds()
 
     def _fit_content(self) -> Any:
         def merge(a: GeoBounds, b: GeoBounds) -> GeoBounds:

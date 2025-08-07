@@ -293,7 +293,7 @@ class MapView(ui.column, Observer):
             MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
             MenuItem("Remove Route") \
                 .bind(view_model,
-                      property_name="selected_route",
+                      property_name="selected_polyline",
                       local_name="visible",
                       converter=NotNoneValueConverter()) \
                 .bind(view_model,
@@ -301,7 +301,7 @@ class MapView(ui.column, Observer):
                       local_name="command")
             MenuItem("Remove Area") \
                 .bind(view_model,
-                      property_name="selected_area",
+                      property_name="selected_polygon",
                       local_name="visible",
                       converter=NotNoneValueConverter()) \
                 .bind(view_model,

@@ -4,7 +4,7 @@ from nicegui import ui
 from nicegui.elements.leaflet_layers import GenericLayer
 
 from nicemvvm.controls.leaflet.path import Path
-from nicemvvm.controls.leaflet.types import LatLng
+from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
 
 
 class Polyline(Path):
@@ -83,12 +83,9 @@ class Polyline(Path):
         return None
 
     @property
-    async def bounds(self) -> List[LatLng]:
-        if self._layer is not None:
-            bounds = await self._layer.run_method("getBounds", None)
-            return [LatLng(b.lat, b.lng) for b in bounds]
-        else:
-            return self._points
+    async def bounds(self) -> GeoBounds:
+        bounds = await self._layer.run_method("getBounds", None)
+        return GeoBounds(LatLng(bounds.min.lat, bounds.min.lng), LatLng(bounds.max.lat, bounds.max.lng))
 
     def add_to(self, leaflet: ui.leaflet) -> GenericLayer:
         self.remove()

@@ -50,8 +50,7 @@ class MapPolygon(MapShape):
     def locations(self, value: List[LatLng]):
         self._locations = value
 
-    @property
-    def bounds(self) -> GeoBounds:
+    def get_bounds(self) -> GeoBounds:
         if not self._bounds:
             self._bounds = GeoBounds(
                 LatLng(min((p.lat for p in self._locations)),
