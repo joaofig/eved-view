@@ -180,8 +180,11 @@ def create_map(view_model: Observable) -> LeafletMap:
             .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
 
             .bind(view_model, "select_polyline_command", "polyline_click_command")
+            .bind(view_model, "select_polyline_command", "polyline_contextmenu_command")
             .bind(view_model, "select_polygon_command", "polygon_click_command")
+            .bind(view_model, "select_polygon_command", "polygon_contextmenu_command")
             .bind(view_model, "select_circle_command", "circle_click_command")
+            .bind(view_model, "select_circle_command", "circle_contextmenu_command")
     )
     asyncio.create_task(setup_map(m))
     return m
@@ -219,11 +222,6 @@ class MapView(ui.column, Observer):
             with main_splitter.before:
                 self._map = create_map(view_model)
                 self._map.on("draw:created", self._handle_draw)
-                #
-                # ui.on("polyline-click", lambda e: ui.notify(f"Polyline click: {e}"))
-                # ui.on("polygon-click", lambda e: ui.notify(f"Polygon click: {e}"))
-                # ui.on("circle-click", lambda e: ui.notify(f"Circle click: {e}"))
-
                 self._create_context_menu(view_model)
 
             with main_splitter.after:
@@ -306,6 +304,14 @@ class MapView(ui.column, Observer):
                       converter=NotNoneValueConverter()) \
                 .bind(view_model,
                       property_name="remove_area_command",
+                      local_name="command")
+            MenuItem("Remove Circle") \
+                .bind(view_model,
+                      property_name="selected_circle",
+                      local_name="visible",
+                      converter=NotNoneValueConverter()) \
+                .bind(view_model,
+                      property_name="remove_circle_command",
                       local_name="command")
         return self._context_menu
 

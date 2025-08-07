@@ -178,9 +178,9 @@ class MapViewModel(Observable):
             return a.merge(b)
 
         bounds = []
-        bounds.extend([polyline.bounds for polyline in self.polylines])
-        bounds.extend([polygon.bounds for polygon in self.polygons])
-        bounds.extend([circle.bounds for circle in self.circles])
+        bounds.extend([polyline.get_bounds() for polyline in self.polylines])
+        bounds.extend([polygon.get_bounds() for polygon in self.polygons])
+        bounds.extend([circle.get_bounds() for circle in self.circles])
 
         if len(bounds) > 0:
             self.bounds = reduce(merge, bounds)
@@ -209,6 +209,9 @@ class MapViewModel(Observable):
         return RelayCommand(lambda layer_id: self._remove_polyline(layer_id))
 
     def _remove_polygon(self, layer_id: str) -> None:
+        if not layer_id and self.selected_polygon is not None:
+            layer_id = self.selected_polygon.shape_id
+
         if layer_id in self._polygon_map:
             polygon = self._polygon_map[layer_id]
             del self._polygon_map[layer_id]
@@ -236,6 +239,9 @@ class MapViewModel(Observable):
         return RelayCommand(lambda _: self._remove_shape())
 
     def _remove_circle(self, layer_id: str) -> None:
+        if not layer_id and self.selected_circle is not None:
+            layer_id = self.selected_circle.shape_id
+
         if layer_id in self._circle_map:
             circle = self._circle_map[layer_id]
             del self._circle_map[layer_id]

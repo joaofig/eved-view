@@ -72,30 +72,36 @@ class LeafletMap(ui.leaflet, Observer):
             self.polyline_click_command.execute(e.args["layerId"])
 
     def _on_polyline_dblclick(self, e: GenericEventArguments):
-        ...
+        if self.polyline_dblclick_command:
+            self.polyline_dblclick_command.execute(e.args["layerId"])
 
     def _on_polyline_contextmenu(self, e: GenericEventArguments):
-        ...
+        if self.polyline_contextmenu_command:
+            self.polyline_contextmenu_command.execute(e.args["layerId"])
 
     def _on_polygon_click(self, e: GenericEventArguments):
         if self.polygon_click_command:
             self.polygon_click_command.execute(e.args["layerId"])
 
     def _on_polygon_dblclick(self, e: GenericEventArguments):
-        ...
+        if self.polygon_dblclick_command:
+            self.polygon_dblclick_command.execute(e.args["layerId"])
 
     def _on_polygon_contextmenu(self, e: GenericEventArguments):
-        ...
+        if self.polygon_contextmenu_command:
+            self.polygon_contextmenu_command.execute(e.args["layerId"])
 
     def _on_circle_click(self, e: GenericEventArguments):
         if self.circle_click_command:
             self.circle_click_command.execute(e.args["layerId"])
 
     def _on_circle_dblclick(self, e: GenericEventArguments):
-        ...
+        if self.circle_dblclick_command:
+            self.circle_dblclick_command.execute(e.args["layerId"])
 
     def _on_circle_contextmenu(self, e: GenericEventArguments):
-        ...
+        if self.circle_contextmenu_command:
+            self.circle_contextmenu_command.execute(e.args["layerId"])
 
     def _on_map_move(self, e: GenericEventArguments):
         center = e.args["center"]

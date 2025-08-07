@@ -1,9 +1,12 @@
-from typing import Any, Iterable, SupportsIndex
+from typing import Any, Iterable, SupportsIndex, TypeVar, Generic
 
 from nicemvvm.observables.observability import Observable
 
 
-class ObservableList(Observable, list):
+T = TypeVar('T')
+
+
+class ObservableList(Generic[T], Observable, list):
     """A list that notifies observers when it's modified"""
 
     def __init__(self, data: Iterable = None):
