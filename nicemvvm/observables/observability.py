@@ -65,6 +65,13 @@ class Binder:
     converter: ValueConverter | None = None
 
 
+@dataclass
+class LocalBinder:
+    source: Observable
+    name: str
+    handler: ObserverHandler | None = None
+    converter: ValueConverter | None = None
+
 
 class Observer:
     def __init__(self, **kwargs) -> None:

@@ -21,7 +21,7 @@ from nicemvvm.controls.grid_view import GridView, GridViewColumn
 from nicemvvm.controls.leaflet.map import LeafletMap
 from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
 from nicemvvm.controls.menu import MenuItem
-from nicemvvm.observables.observability import Observable, Observer
+from nicemvvm.observables.observability import Observable, Observer, LocalBinder
 
 
 class VerticalTabView(ui.column):
@@ -279,7 +279,6 @@ class MapView(ui.column, Observer):
     def _create_context_menu(self, view_model: Observable) -> ui.context_menu:
         with ui.context_menu().classes("small-menu") as self._context_menu:
             self._context_menu.on("before-show", self._context_menu_before)
-            # self._context_menu.on("show", lambda _: ui.notify(self._ctx_latlng))
 
             MenuItem("Zoom In", on_click=lambda _: self._map.zoom_in())
             MenuItem("Zoom Out", on_click=lambda _: self._map.zoom_out())
@@ -288,31 +287,20 @@ class MapView(ui.column, Observer):
                       property_name="fit_content_command",
                       local_name="command")
             ui.separator()
-            MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
-            MenuItem("Remove Route") \
-                .bind(view_model,
-                      property_name="selected_polyline",
-                      local_name="visible",
-                      converter=NotNoneValueConverter()) \
-                .bind(view_model,
-                      property_name="remove_route_command",
-                      local_name="command")
-            MenuItem("Remove Area") \
-                .bind(view_model,
-                      property_name="selected_polygon",
-                      local_name="visible",
-                      converter=NotNoneValueConverter()) \
-                .bind(view_model,
-                      property_name="remove_area_command",
-                      local_name="command")
-            MenuItem("Remove Circle") \
-                .bind(view_model,
-                      property_name="selected_circle",
-                      local_name="visible",
-                      converter=NotNoneValueConverter()) \
-                .bind(view_model,
-                      property_name="remove_circle_command",
-                      local_name="command")
+            # MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
+            MenuItem(text="Remove Route",
+                     visible_binder=LocalBinder(view_model, "selected_polyline",
+                                                converter=NotNoneValueConverter()),
+                     command_binder=LocalBinder(view_model, "remove_route_command"))
+
+            MenuItem(text="Remove Area",
+                     visible_binder=LocalBinder(view_model, "selected_polygon",
+                                                converter=NotNoneValueConverter()),
+                     command_binder=LocalBinder(view_model, "remove_area_command"))
+            MenuItem(text="Remove Circle",
+                     visible_binder=LocalBinder(view_model, "selected_circle",
+                                                converter=NotNoneValueConverter()),
+                     command_binder=LocalBinder(view_model, "remove_circle_command"))
         return self._context_menu
 
     async def _context_menu_before(self, event: GenericEventArguments) -> None:
