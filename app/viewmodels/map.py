@@ -145,13 +145,13 @@ class MapViewModel(Observable):
         if not self._has_trace(trip, trace_name):
             match trace_name:
                 case "gps":
-                    color = "#0000FF"
+                    color = "#8B0000"   # Dark Red
                     locations = [LatLng(p.lat, p.lon) for p in trip.signals]
                 case "match":
-                    color = "#FF0000"
+                    color = "#4B0082"   # Dark Purple / Indigo
                     locations = [LatLng(p.match_lat, p.match_lon) for p in trip.signals]
                 case "nodes":
-                    color = "#00FF00"
+                    color = "#006400"   # Dark Green
                     locations = [LatLng(n.lat, n.lon) for n in trip.nodes]
                 case _:
                     locations = []
