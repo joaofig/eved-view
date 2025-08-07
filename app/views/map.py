@@ -24,8 +24,8 @@ from nicemvvm.controls.menu import MenuItem
 from nicemvvm.observables.observability import Observable, Observer, LocalBinder
 
 
-class VerticalTabView(ui.column):
-    def __init__(self):
+class VerticalTabView(ui.column, Observer):
+    def __init__(self, view_model: Observable):
         super().__init__()
 
         with self:
@@ -44,6 +44,24 @@ class VerticalTabView(ui.column):
         self._routes_tab = routes_tab
         self._areas_tab = areas_tab
         self._circles_tab = circles_tab
+
+        view_model.register(self._tab_handler)
+
+    def _tab_handler(self, action: str, args: Mapping[str, Any]) -> None:
+        match action:
+            case "property_changed":
+                name = args["name"]
+                value = args["value"]
+                match name:
+                    case "selected_polyline":
+                        if value:
+                            self._tabs.set_value("routes")
+                    case "selected_polygon":
+                        if value:
+                            self._tabs.set_value("areas")
+                    case "selected_circle":
+                        if value:
+                            self._tabs.set_value("circles")
 
     @property
     def tabs(self) -> ui.tabs:
@@ -227,7 +245,7 @@ class MapView(ui.column, Observer):
             with main_splitter.after:
                 # Property view
                 with ui.grid(columns="auto 1fr").classes("w-full h-full gap-0"):
-                    vertical_tab = VerticalTabView().classes("h-full")
+                    vertical_tab = VerticalTabView(view_model).classes("h-full")
 
                     with ui.column().classes("h-full"):
                         self._tab_panels = (
