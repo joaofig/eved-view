@@ -315,6 +315,11 @@ class MapView(ui.column, Observer):
                      visible_binder=LocalBinder(view_model, "selected_polygon",
                                                 converter=NotNoneValueConverter()),
                      command_binder=LocalBinder(view_model, "remove_area_command"))
+            MenuItem(text="Convert Area to H3",
+                     visible_binder=LocalBinder(view_model, "selected_polygon",
+                                                converter=NotNoneValueConverter()),
+                     command_binder=LocalBinder(view_model, "convert_area_to_h3_command"))
+
             MenuItem(text="Remove Circle",
                      visible_binder=LocalBinder(view_model, "selected_circle",
                                                 converter=NotNoneValueConverter()),

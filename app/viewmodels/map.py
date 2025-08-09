@@ -1,4 +1,6 @@
 import uuid
+import h3.api.numpy_int as h3
+
 from functools import reduce
 from typing import Any, Dict, Tuple
 
@@ -221,6 +223,32 @@ class MapViewModel(Observable):
     @property
     def remove_area_command(self) -> Command:
         return RelayCommand(lambda layer_id: self._remove_polygon(layer_id))
+
+    def _convert_area_to_h3(self, layer_id: str) -> None:
+        if not layer_id and self.selected_polygon is not None:
+            layer_id = self.selected_polygon.shape_id
+
+        if layer_id in self._polygon_map:
+            polygon = self._polygon_map[layer_id]
+            h3_poly: h3.LatLngPoly = h3.LatLngPoly([(ll.lat, ll.lng) for ll in polygon.locations])
+            h3_cells = h3.h3shape_to_cells_experimental(h3_poly, 12, contain="overlap")
+            geo = h3.cells_to_geo(h3_cells, tight=True)
+            coordinates = geo["coordinates"]
+
+            # Coordinates are in (lng, lat) format.
+            locations = [LatLng(ll[1], ll[0]) for ll in coordinates[0]]
+            poly = MapPolygon(shape_id=f"area-{self._polygon_counter}",
+                              color=polygon.color, weight=polygon.weight,
+                              opacity=polygon.opacity, fill=polygon.fill,
+                              fill_color=polygon.fill_color, fill_opacity=polygon.fill_opacity,
+                              locations=locations,)
+            self._polygons.append(poly)
+            self._polygon_counter += 1
+            self._polygon_map[poly.shape_id] = poly
+
+    @property
+    def convert_area_to_h3_command(self) -> Command:
+        return RelayCommand(lambda layer_id: self._convert_area_to_h3(layer_id))
 
     def _remove_shape(self) -> None:
         if self.selected_shape is not None:
