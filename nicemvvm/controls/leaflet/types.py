@@ -30,12 +30,6 @@ class GeoBounds:
 
     def merge(self, other: Self) -> Self:
         return GeoBounds(
-            sw=LatLng(
-                min(self.sw.lat, other.sw.lat),
-                min(self.sw.lng, other.sw.lng)
-            ),
-            ne=LatLng(
-                max(self.ne.lat, other.ne.lat),
-                max(self.ne.lng, other.ne.lng)
-            )
+            sw=LatLng(min(self.sw.lat, other.sw.lat), min(self.sw.lng, other.sw.lng)),
+            ne=LatLng(max(self.ne.lat, other.ne.lat), max(self.ne.lng, other.ne.lng)),
         )

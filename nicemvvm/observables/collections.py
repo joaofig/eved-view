@@ -1,9 +1,8 @@
-from typing import Any, Iterable, SupportsIndex, TypeVar, Generic
+from typing import Any, Generic, Iterable, SupportsIndex, TypeVar
 
 from nicemvvm.observables.observability import Observable
 
-
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ObservableList(Generic[T], Observable, list):

@@ -1,13 +1,10 @@
 from typing import Any, Callable
 
-from nicemvvm.observables.observability import Observable, notify_change, Observer
+from nicemvvm.observables.observability import Observable, Observer, notify_change
 
 
 class Command(Observable):
-    def __init__(self,
-                 is_async: bool = False,
-                 is_enabled: bool = True,
-                 **kwargs):
+    def __init__(self, is_async: bool = False, is_enabled: bool = True, **kwargs):
         self._is_enabled: bool = is_enabled
         self._is_async: bool = is_async
         super().__init__(**kwargs)
@@ -33,10 +30,12 @@ class Command(Observable):
 
 
 class RelayCommand(Command, Observer):
-    def __init__(self,
-                 action: Callable[[Any], Any],
-                 is_enabled: bool = True,
-                 **kwargs,):
+    def __init__(
+        self,
+        action: Callable[[Any], Any],
+        is_enabled: bool = True,
+        **kwargs,
+    ):
         super().__init__(is_enabled=is_enabled, **kwargs)
         self._action = action
 

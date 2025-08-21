@@ -10,9 +10,11 @@ from nicemvvm.observables.observability import Observable, Observer, notify_chan
 
 
 class CirclePropertyEditor(ui.column, Observer):
-    def __init__(self,
-                 view_model: Observable | None = None,
-                 remove_command: Command | None = None):
+    def __init__(
+        self,
+        view_model: Observable | None = None,
+        remove_command: Command | None = None,
+    ):
         super().__init__()
         self._observable: Observable | None = None
 
@@ -20,8 +22,8 @@ class CirclePropertyEditor(ui.column, Observer):
             with ui.row().classes("w-full p-0 m-0"):
                 self._remove_button = (
                     Button(text="Remove", command=remove_command)
-                        .classes("w-full m-0")
-                        .props("icon=delete")
+                    .classes("w-full m-0")
+                    .props("icon=delete")
                 )
 
             with ui.row().classes("w-full h-full gap-0"):

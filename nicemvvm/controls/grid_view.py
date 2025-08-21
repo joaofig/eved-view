@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import asdict, dataclass, is_dataclass
 from typing import Any, Dict, List, Mapping, Self
 
@@ -12,6 +11,7 @@ from nicemvvm.observables.observability import (
     Observer,
     ObserverHandler,
 )
+from nicemvvm.tasks import ManagedTasks
 
 
 @dataclass
@@ -56,6 +56,7 @@ class GridView(NiceGUIAgGrid, Observer):
         self._selected_items: List[Dict[str, Any]] = []
         self._row_id: str = ""
         self._item_converter: ValueConverter | None = None
+        self._tasks = set()
 
         self._options = {
             "columnDefs": [],
@@ -201,7 +202,7 @@ class GridView(NiceGUIAgGrid, Observer):
         if event.args["source"] == "rowClicked":
             column = self._row_id
             if column:
-                asyncio.create_task(self._find_selected_row(column))
+                ManagedTasks().create(self._find_selected_row(column))
 
     def _items_handler(self, action: str, args: Mapping[str, Any]) -> None:
         self.update()
@@ -222,7 +223,7 @@ class GridView(NiceGUIAgGrid, Observer):
         self._set_row_id(row_id)
         self._row_id = row_id
 
-    def _select_item(self, item: Dict[str, Any]|None) -> None:
+    def _select_item(self, item: Dict[str, Any] | None) -> None:
         if not item:
             self.run_grid_method("deselectAll", "all")
         else:
@@ -256,4 +257,4 @@ class GridView(NiceGUIAgGrid, Observer):
     def selected_items(self, items: List[Any] | None) -> None:
         if self._selected_items != items:
             self._selected_items = items
-            asyncio.create_task(self._select_items(items))
+            ManagedTasks().create(self._select_items(items))

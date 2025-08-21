@@ -1,16 +1,13 @@
 import contextlib
 import sqlite3
-import threading
 from sqlite3 import Connection
-from typing import Dict, List, Optional, Iterator
+from typing import List
 
-import pandas as pd
 import pandas.io.sql as sqlio
 from pandas import DataFrame
 
 
 class BaseDb(object):
-
     def __init__(self, db_name):
         self.db_name = db_name
 

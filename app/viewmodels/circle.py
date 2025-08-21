@@ -1,6 +1,6 @@
-from app.geo.geomath import num_haversine, delta_location
+from app.geo.geomath import delta_location, num_haversine
 from app.viewmodels.shape import MapShape
-from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
+from nicemvvm.controls.leaflet.types import GeoBounds, LatLng
 from nicemvvm.observables.observability import Observable, notify_change
 
 
@@ -20,7 +20,13 @@ class MapCircle(MapShape, Observable):
         dash_offset: str = "",
     ):
         super().__init__(
-            shape_id, color, weight, opacity, fill, fill_color, fill_opacity,
+            shape_id,
+            color,
+            weight,
+            opacity,
+            fill,
+            fill_color,
+            fill_opacity,
             dash_array=dash_array,
             dash_offset=dash_offset,
         )

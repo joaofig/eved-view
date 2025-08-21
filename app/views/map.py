@@ -1,4 +1,3 @@
-import asyncio
 from typing import Any, Mapping
 
 from nicegui import ui
@@ -6,11 +5,12 @@ from nicegui.events import GenericEventArguments
 
 from app.converters.general import NotNoneValueConverter
 from app.converters.map import (
+    MapCircleGridConverter,
     MapCircleMapConverter,
     MapPolygonGridConverter,
     MapPolygonMapConverter,
     MapPolylineGridConverter,
-    MapPolylineMapConverter, MapCircleGridConverter,
+    MapPolylineMapConverter,
 )
 from app.views.editors.circle import CirclePropertyEditor
 from app.views.editors.polygon import PolygonPropertyEditor
@@ -19,9 +19,10 @@ from nicemvvm import nm
 from nicemvvm.command import Command
 from nicemvvm.controls.grid_view import GridView, GridViewColumn
 from nicemvvm.controls.leaflet.map import LeafletMap
-from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
+from nicemvvm.controls.leaflet.types import GeoBounds, LatLng
 from nicemvvm.controls.menu import MenuItem
-from nicemvvm.observables.observability import Observable, Observer, LocalBinder
+from nicemvvm.observables.observability import LocalBinder, Observable, Observer
+from nicemvvm.tasks import ManagedTasks
 
 
 class VerticalTabView(ui.column, Observer):
@@ -30,12 +31,12 @@ class VerticalTabView(ui.column, Observer):
 
         with self:
             with ui.tabs().props("vertical").classes("w-full") as tabs:
-                routes_tab = ui.tab(
-                    name="routes", label="Routes", icon="route"
-                ).props("no-caps")
-                areas_tab = ui.tab(
-                    name="areas", label="Areas", icon="pentagon"
-                ).props("no-caps")
+                routes_tab = ui.tab(name="routes", label="Routes", icon="route").props(
+                    "no-caps"
+                )
+                areas_tab = ui.tab(name="areas", label="Areas", icon="pentagon").props(
+                    "no-caps"
+                )
                 circles_tab = ui.tab(
                     name="circles", label="Circles", icon="brightness_1"
                 ).props("no-caps")
@@ -119,10 +120,10 @@ def create_area_grid(view_model: Observable) -> GridView:
             supress_auto_size=True,
         )
         .classes("h_full h-full")
-        .bind(view_model, "polygons", "items",
-              converter=polygon_converter)
-        .bind(view_model, "selected_polygon", "selected_item",
-              converter=polygon_converter)
+        .bind(view_model, "polygons", "items", converter=polygon_converter)
+        .bind(
+            view_model, "selected_polygon", "selected_item", converter=polygon_converter
+        )
     )
     grid.columns = [
         GridViewColumn(
@@ -140,13 +141,15 @@ def create_area_grid(view_model: Observable) -> GridView:
 def create_circle_grid(view_model: Observable) -> GridView:
     circle_converter = MapCircleGridConverter()
     grid = (
-        nm.gridview(row_selection="single", supress_auto_size=True,)
+        nm.gridview(
+            row_selection="single",
+            supress_auto_size=True,
+        )
         .classes("h_full h-full")
-        .bind(view_model, "circles", "items",
-              converter=circle_converter)
-        .bind(view_model, "selected_circle",
-              "selected_item",
-              converter=circle_converter)
+        .bind(view_model, "circles", "items", converter=circle_converter)
+        .bind(
+            view_model, "selected_circle", "selected_item", converter=circle_converter
+        )
     )
     grid.columns = [
         GridViewColumn(
@@ -187,24 +190,24 @@ def create_map(view_model: Observable) -> LeafletMap:
     }
 
     m = (
-        nm.leaflet(draw_control=draw_control,
-                   hide_drawn_items=True,
-                   )
-            .classes("h-full w-full")
-            .bind(view_model, "zoom", "zoom")
-            .bind(view_model, "center", "center")
-            .bind(view_model, "polylines", "polylines", converter=MapPolylineMapConverter())
-            .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
-            .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
-
-            .bind(view_model, "select_polyline_command", "polyline_click_command")
-            .bind(view_model, "select_polyline_command", "polyline_contextmenu_command")
-            .bind(view_model, "select_polygon_command", "polygon_click_command")
-            .bind(view_model, "select_polygon_command", "polygon_contextmenu_command")
-            .bind(view_model, "select_circle_command", "circle_click_command")
-            .bind(view_model, "select_circle_command", "circle_contextmenu_command")
+        nm.leaflet(
+            draw_control=draw_control,
+            hide_drawn_items=True,
+        )
+        .classes("h-full w-full")
+        .bind(view_model, "zoom", "zoom")
+        .bind(view_model, "center", "center")
+        .bind(view_model, "polylines", "polylines", converter=MapPolylineMapConverter())
+        .bind(view_model, "polygons", "polygons", converter=MapPolygonMapConverter())
+        .bind(view_model, "circles", "circles", converter=MapCircleMapConverter())
+        .bind(view_model, "select_polyline_command", "polyline_click_command")
+        .bind(view_model, "select_polyline_command", "polyline_contextmenu_command")
+        .bind(view_model, "select_polygon_command", "polygon_click_command")
+        .bind(view_model, "select_polygon_command", "polygon_contextmenu_command")
+        .bind(view_model, "select_circle_command", "circle_click_command")
+        .bind(view_model, "select_circle_command", "circle_contextmenu_command")
     )
-    asyncio.create_task(setup_map(m))
+    ManagedTasks().create(setup_map(m))
     return m
 
 
@@ -249,42 +252,64 @@ class MapView(ui.column, Observer):
 
                     with ui.column().classes("h-full"):
                         self._tab_panels = (
-                            ui.tab_panels(vertical_tab.tabs, value=vertical_tab.routes_tab)
+                            ui.tab_panels(
+                                vertical_tab.tabs, value=vertical_tab.routes_tab
+                            )
                             .classes("w-full h-full")
-                            .props("transition-prev=slide-down transition-next=slide-up")
+                            .props(
+                                "transition-prev=slide-down transition-next=slide-up"
+                            )
                         )
                         with self._tab_panels:
-                            with ui.tab_panel(vertical_tab.routes_tab).classes("w-full h-full p-0"):
+                            with ui.tab_panel(vertical_tab.routes_tab).classes(
+                                "w-full h-full p-0"
+                            ):
                                 # Route properties
-                                with ui.splitter(horizontal=False, value=80) \
-                                        .classes("w-full h-full") as route_splitter:
+                                with ui.splitter(horizontal=False, value=80).classes(
+                                    "w-full h-full"
+                                ) as route_splitter:
                                     with route_splitter.before:
                                         create_polyline_grid(view_model)
 
                                     with route_splitter.after:
-                                        PolylinePropertyEditor(view_model,
-                                                               remove_command=self.remove_route_command) \
-                                            .classes("w-full h-full")
+                                        PolylinePropertyEditor(
+                                            view_model,
+                                            remove_command=self.remove_route_command,
+                                        ).classes("w-full h-full")
 
-                            with ui.tab_panel(vertical_tab.areas_tab).classes("w-full h-full p-0"):
-                                with ui.splitter(horizontal=False, value=80) \
-                                        .classes("h-full w-full") as area_splitter:
+                            with ui.tab_panel(vertical_tab.areas_tab).classes(
+                                "w-full h-full p-0"
+                            ):
+                                with ui.splitter(horizontal=False, value=80).classes(
+                                    "h-full w-full"
+                                ) as area_splitter:
                                     with area_splitter.before:
-                                        create_area_grid(view_model).classes("w-full h-full")
+                                        create_area_grid(view_model).classes(
+                                            "w-full h-full"
+                                        )
 
                                     with area_splitter.after:
-                                        PolygonPropertyEditor(view_model, remove_command=self.remove_area_command) \
-                                            .classes("w-full h-full")
+                                        PolygonPropertyEditor(
+                                            view_model,
+                                            remove_command=self.remove_area_command,
+                                        ).classes("w-full h-full")
 
-                            with ui.tab_panel(vertical_tab.circles_tab).classes("w-full h-full p-0"):
-                                with ui.splitter(horizontal=False, value=80) \
-                                        .classes("h-full w-full") as circle_splitter:
+                            with ui.tab_panel(vertical_tab.circles_tab).classes(
+                                "w-full h-full p-0"
+                            ):
+                                with ui.splitter(horizontal=False, value=80).classes(
+                                    "h-full w-full"
+                                ) as circle_splitter:
                                     with circle_splitter.before:
-                                        create_circle_grid(view_model).classes("w-full h-full")
+                                        create_circle_grid(view_model).classes(
+                                            "w-full h-full"
+                                        )
 
                                     with circle_splitter.after:
-                                        CirclePropertyEditor(view_model, remove_command=self.remove_circle_command) \
-                                            .classes("w-full h-full")
+                                        CirclePropertyEditor(
+                                            view_model,
+                                            remove_command=self.remove_circle_command,
+                                        ).classes("w-full h-full")
 
             # Make sure the map is correctly resized
             main_splitter.on_value_change(
@@ -300,30 +325,41 @@ class MapView(ui.column, Observer):
 
             MenuItem("Zoom In", on_click=lambda _: self._map.zoom_in())
             MenuItem("Zoom Out", on_click=lambda _: self._map.zoom_out())
-            MenuItem("Fit to Content") \
-                .bind(view_model,
-                      property_name="fit_content_command",
-                      local_name="command")
+            MenuItem("Fit to Content").bind(
+                view_model, property_name="fit_content_command", local_name="command"
+            )
             ui.separator()
             # MenuItem("Show LatLng", on_click=lambda _: ui.notify(self._ctx_latlng))
-            MenuItem(text="Remove Route",
-                     visible_binder=LocalBinder(view_model, "selected_polyline",
-                                                converter=NotNoneValueConverter()),
-                     command_binder=LocalBinder(view_model, "remove_route_command"))
+            MenuItem(
+                text="Remove Route",
+                visible_binder=LocalBinder(
+                    view_model, "selected_polyline", converter=NotNoneValueConverter()
+                ),
+                command_binder=LocalBinder(view_model, "remove_route_command"),
+            )
 
-            MenuItem(text="Remove Area",
-                     visible_binder=LocalBinder(view_model, "selected_polygon",
-                                                converter=NotNoneValueConverter()),
-                     command_binder=LocalBinder(view_model, "remove_area_command"))
-            MenuItem(text="Convert Area to H3",
-                     visible_binder=LocalBinder(view_model, "selected_polygon",
-                                                converter=NotNoneValueConverter()),
-                     command_binder=LocalBinder(view_model, "convert_area_to_h3_command"))
+            MenuItem(
+                text="Remove Area",
+                visible_binder=LocalBinder(
+                    view_model, "selected_polygon", converter=NotNoneValueConverter()
+                ),
+                command_binder=LocalBinder(view_model, "remove_area_command"),
+            )
+            MenuItem(
+                text="Convert Area to H3",
+                visible_binder=LocalBinder(
+                    view_model, "selected_polygon", converter=NotNoneValueConverter()
+                ),
+                command_binder=LocalBinder(view_model, "convert_area_to_h3_command"),
+            )
 
-            MenuItem(text="Remove Circle",
-                     visible_binder=LocalBinder(view_model, "selected_circle",
-                                                converter=NotNoneValueConverter()),
-                     command_binder=LocalBinder(view_model, "remove_circle_command"))
+            MenuItem(
+                text="Remove Circle",
+                visible_binder=LocalBinder(
+                    view_model, "selected_circle", converter=NotNoneValueConverter()
+                ),
+                command_binder=LocalBinder(view_model, "remove_circle_command"),
+            )
         return self._context_menu
 
     async def _context_menu_before(self, event: GenericEventArguments) -> None:

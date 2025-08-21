@@ -1,7 +1,7 @@
 from typing import List
 
 from app.viewmodels.shape import MapShape
-from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
+from nicemvvm.controls.leaflet.types import GeoBounds, LatLng
 from nicemvvm.observables.observability import notify_change
 
 
@@ -29,7 +29,7 @@ class MapPolyline(MapShape):
             fill_color=color,
             fill_opacity=opacity,
             dash_array=dash_array,
-            dash_offset=dash_offset
+            dash_offset=dash_offset,
         )
         self._traj_id = traj_id
         self._vehicle_id = vehicle_id
@@ -71,10 +71,15 @@ class MapPolyline(MapShape):
     def get_bounds(self) -> GeoBounds:
         if not self._bounds:
             self._bounds = GeoBounds(
-                LatLng(min((p.lat for p in self._locations)),
-                       min((p.lng for p in self._locations))),
-                LatLng(max((p.lat for p in self._locations)),
-                       max((p.lng for p in self._locations))))
+                LatLng(
+                    min((p.lat for p in self._locations)),
+                    min((p.lng for p in self._locations)),
+                ),
+                LatLng(
+                    max((p.lat for p in self._locations)),
+                    max((p.lng for p in self._locations)),
+                ),
+            )
         return self._bounds
 
     def to_dict(self):

@@ -1,8 +1,8 @@
 import uuid
-import h3.api.numpy_int as h3
-
 from functools import reduce
 from typing import Any, Dict, Tuple
+
+import h3.api.numpy_int as h3
 
 from app.converters.general import NotNoneValueConverter
 from app.models.trip import Trip, TripModel
@@ -11,7 +11,7 @@ from app.viewmodels.polygon import MapPolygon
 from app.viewmodels.polyline import MapPolyline
 from app.viewmodels.shape import MapShape
 from nicemvvm.command import Command, RelayCommand
-from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
+from nicemvvm.controls.leaflet.types import GeoBounds, LatLng
 from nicemvvm.observables.collections import ObservableList
 from nicemvvm.observables.observability import Observable, Observer, notify_change
 from nicemvvm.ResourceLocator import ResourceLocator
@@ -40,7 +40,7 @@ class MapViewModel(Observable):
         self._polyline_map: dict[str, MapPolyline] = dict()
         self._polygon_map: dict[str, MapPolygon] = dict()
         self._circle_map: dict[str, MapCircle] = dict()
-        
+
         # Cache for faster trace lookup
         self._trace_cache: Dict[str, bool] = {}
 
@@ -56,24 +56,25 @@ class MapViewModel(Observable):
         """
         Check if a trace exists for the given trip and trace name.
         Uses a cache for better performance.
-        
+
         :param trip: The trip to check
         :param trace_name: The name of the trace
         :return: True if the trace exists, False otherwise
         """
         # Create a unique key for the cache
         cache_key = f"{trip.traj_id}_{trace_name}"
-        
+
         # Check the cache first
         if cache_key in self._trace_cache:
             return self._trace_cache[cache_key]
-        
+
         # If not in cache, do the lookup
         result = any(
-            t for t in self._polylines
+            t
+            for t in self._polylines
             if t.traj_id == trip.traj_id and t.trace_name == trace_name
         )
-        
+
         # Cache the result
         self._trace_cache[cache_key] = result
         return result
@@ -124,21 +125,33 @@ class MapViewModel(Observable):
         lng = latlng["lng"]
         center = LatLng(lat, lng)
         radius = circle["_mRadius"]
-        circle = MapCircle(shape_id=str(uuid.uuid4()), color=options["color"],
-                           weight=options["weight"], opacity=options["opacity"],
-                           center=center, radius=radius, fill=options["fill"],
-                           fill_color=options["fillColor"], fill_opacity=options["fillOpacity"],)
+        circle = MapCircle(
+            shape_id=str(uuid.uuid4()),
+            color=options["color"],
+            weight=options["weight"],
+            opacity=options["opacity"],
+            center=center,
+            radius=radius,
+            fill=options["fill"],
+            fill_color=options["fillColor"],
+            fill_opacity=options["fillOpacity"],
+        )
         self._circles.append(circle)
         self._circle_map[circle.shape_id] = circle
 
     def show_polygon(self, draw_polygon: Dict) -> None:
         options = draw_polygon["options"]
         locations = [LatLng(ll["lat"], ll["lng"]) for ll in draw_polygon["_latlngs"][0]]
-        poly = MapPolygon(shape_id=f"area-{self._polygon_counter}",
-                          color=options["color"], weight=options["weight"],
-                          opacity=options["opacity"], fill=options["fill"],
-                          fill_color=options["fillColor"], fill_opacity=options["fillOpacity"],
-                          locations=locations,)
+        poly = MapPolygon(
+            shape_id=f"area-{self._polygon_counter}",
+            color=options["color"],
+            weight=options["weight"],
+            opacity=options["opacity"],
+            fill=options["fill"],
+            fill_color=options["fillColor"],
+            fill_opacity=options["fillOpacity"],
+            locations=locations,
+        )
         self._polygons.append(poly)
         self._polygon_counter += 1
         self._polygon_map[poly.shape_id] = poly
@@ -147,13 +160,13 @@ class MapViewModel(Observable):
         if not self._has_trace(trip, trace_name):
             match trace_name:
                 case "gps":
-                    color = "#800000"   # Dark Red
+                    color = "#800000"  # Dark Red
                     locations = [LatLng(p.lat, p.lon) for p in trip.signals]
                 case "match":
-                    color = "#000080"   # Dark Purple / Indigo
+                    color = "#000080"  # Dark Purple / Indigo
                     locations = [LatLng(p.match_lat, p.match_lon) for p in trip.signals]
                 case "nodes":
-                    color = "#004225"   # Dark Green
+                    color = "#004225"  # Dark Green
                     locations = [LatLng(n.lat, n.lon) for n in trip.nodes]
                 case _:
                     locations = []
@@ -230,18 +243,25 @@ class MapViewModel(Observable):
 
         if layer_id in self._polygon_map:
             polygon = self._polygon_map[layer_id]
-            h3_poly: h3.LatLngPoly = h3.LatLngPoly([(ll.lat, ll.lng) for ll in polygon.locations])
+            h3_poly: h3.LatLngPoly = h3.LatLngPoly(
+                [(ll.lat, ll.lng) for ll in polygon.locations]
+            )
             h3_cells = h3.h3shape_to_cells_experimental(h3_poly, 12, contain="overlap")
             geo = h3.cells_to_geo(h3_cells, tight=True)
             coordinates = geo["coordinates"]
 
             # Coordinates are in (lng, lat) format.
             locations = [LatLng(ll[1], ll[0]) for ll in coordinates[0]]
-            poly = MapPolygon(shape_id=f"area-{self._polygon_counter}",
-                              color=polygon.color, weight=polygon.weight,
-                              opacity=polygon.opacity, fill=polygon.fill,
-                              fill_color=polygon.fill_color, fill_opacity=polygon.fill_opacity,
-                              locations=locations,)
+            poly = MapPolygon(
+                shape_id=f"area-{self._polygon_counter}",
+                color=polygon.color,
+                weight=polygon.weight,
+                opacity=polygon.opacity,
+                fill=polygon.fill,
+                fill_color=polygon.fill_color,
+                fill_opacity=polygon.fill_opacity,
+                locations=locations,
+            )
             self._polygons.append(poly)
             self._polygon_counter += 1
             self._polygon_map[poly.shape_id] = poly

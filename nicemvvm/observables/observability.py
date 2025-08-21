@@ -1,5 +1,4 @@
 import functools
-from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Callable, Coroutine, Dict, Mapping, Self, Set
 

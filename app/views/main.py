@@ -26,25 +26,39 @@ class MainView:
 
                 with ui.row():
                     gps_cmd = RelayCommand(lambda arg: self._add_route_to_map("gps"))
-                    gps_cmd.bind(self._view_model,
-                                 property_name="selected_trip",
-                                 local_name="is_enabled",
-                                 converter=NotNoneValueConverter())
-                    nm.button(text="Add GPS", command=gps_cmd).props("size=sm no-caps").disable()
+                    gps_cmd.bind(
+                        self._view_model,
+                        property_name="selected_trip",
+                        local_name="is_enabled",
+                        converter=NotNoneValueConverter(),
+                    )
+                    nm.button(text="Add GPS", command=gps_cmd).props(
+                        "size=sm no-caps"
+                    ).disable()
 
-                    match_cmd = RelayCommand(lambda arg: self._add_route_to_map("match"))
-                    match_cmd.bind(self._view_model,
-                                   property_name="selected_trip",
-                                   local_name="is_enabled",
-                                   converter=NotNoneValueConverter())
-                    nm.button(text="Add Match", command=match_cmd).props("size=sm no-caps").disable()
+                    match_cmd = RelayCommand(
+                        lambda arg: self._add_route_to_map("match")
+                    )
+                    match_cmd.bind(
+                        self._view_model,
+                        property_name="selected_trip",
+                        local_name="is_enabled",
+                        converter=NotNoneValueConverter(),
+                    )
+                    nm.button(text="Add Match", command=match_cmd).props(
+                        "size=sm no-caps"
+                    ).disable()
 
                     node_cmd = RelayCommand(lambda arg: self._add_route_to_map("nodes"))
-                    node_cmd.bind(self._view_model,
-                                  property_name="selected_trip",
-                                  local_name="is_enabled",
-                                  converter=NotNoneValueConverter())
-                    nm.button(text="Add Nodes", command=node_cmd).props("size=sm no-caps").disable()
+                    node_cmd.bind(
+                        self._view_model,
+                        property_name="selected_trip",
+                        local_name="is_enabled",
+                        converter=NotNoneValueConverter(),
+                    )
+                    nm.button(text="Add Nodes", command=node_cmd).props(
+                        "size=sm no-caps"
+                    ).disable()
 
             with splitter.after:
                 MapView(self._view_model)

@@ -52,25 +52,27 @@ class Trip:
         Load signals for this trip.
         """
         signals_df = load_signals(self.traj_id)
-        self.signals.extend([
-            Signal(
-                signal_id=int(raw_signal.signal_id),
-                day_num=raw_signal.day_num,
-                timestamp=raw_signal.time_stamp,
-                vehicle_id=int(raw_signal.vehicle_id),
-                trip_id=int(raw_signal.trip_id),
-                lat=raw_signal.latitude,
-                lon=raw_signal.longitude,
-                match_lat=raw_signal.match_latitude,
-                match_lon=raw_signal.match_longitude,
-                speed=raw_signal.speed,
-                elevation=raw_signal.elevation,
-                elevation_smooth=raw_signal.elevation_smooth,
-                gradient=raw_signal.gradient,
-                h3_12=int(raw_signal.h3_12),
-            )
-            for raw_signal in signals_df.itertuples(index=False)
-        ])
+        self.signals.extend(
+            [
+                Signal(
+                    signal_id=int(raw_signal.signal_id),
+                    day_num=raw_signal.day_num,
+                    timestamp=raw_signal.time_stamp,
+                    vehicle_id=int(raw_signal.vehicle_id),
+                    trip_id=int(raw_signal.trip_id),
+                    lat=raw_signal.latitude,
+                    lon=raw_signal.longitude,
+                    match_lat=raw_signal.match_latitude,
+                    match_lon=raw_signal.match_longitude,
+                    speed=raw_signal.speed,
+                    elevation=raw_signal.elevation,
+                    elevation_smooth=raw_signal.elevation_smooth,
+                    gradient=raw_signal.gradient,
+                    h3_12=int(raw_signal.h3_12),
+                )
+                for raw_signal in signals_df.itertuples(index=False)
+            ]
+        )
 
     def load_nodes(self) -> None:
         """
@@ -80,17 +82,19 @@ class Trip:
 
         # Pre-allocate the list
         self.nodes = []
-        self.nodes.extend([
-            MapNode(
-                node_id=int(row.node_id),
-                traj_id=int(row.traj_id),
-                lat=row.latitude,
-                lon=row.longitude,
-                h3_12=int(row.h3_12),
-                match_error=row.match_error,
-            )
-            for row in nodes_df.itertuples(index=False)
-        ])
+        self.nodes.extend(
+            [
+                MapNode(
+                    node_id=int(row.node_id),
+                    traj_id=int(row.traj_id),
+                    lat=row.latitude,
+                    lon=row.longitude,
+                    h3_12=int(row.h3_12),
+                    match_error=row.match_error,
+                )
+                for row in nodes_df.itertuples(index=False)
+            ]
+        )
 
 
 class TripModel:
@@ -102,7 +106,7 @@ class TripModel:
         """
         Load all trips with optimized performance.
         Returns a list of Trip objects and caches them in the trips dictionary.
-        
+
         Optimizations:
         - Uses numpy structured arrays for faster iteration
         - Pre-allocates result list
@@ -111,17 +115,16 @@ class TripModel:
         # Return cached trips if already loaded
         if self._loaded and self.trips:
             return list(self.trips.values())
-            
+
         # Load raw trip data
         raw_trips = load_all_trips()
-        
+
         # Pre-allocate result list with estimated size
-        trip_count = len(raw_trips)
         trip_list: List[Trip] = []
-        
+
         # Convert to numpy structured array for faster iteration
         trips_array = raw_trips.to_records(index=False)
-        
+
         # Process all trips
         for raw_trip in trips_array:
             trip = Trip(
@@ -139,6 +142,6 @@ class TripModel:
             )
             self.trips[trip.traj_id] = trip
             trip_list.append(trip)
-            
+
         self._loaded = True
         return trip_list

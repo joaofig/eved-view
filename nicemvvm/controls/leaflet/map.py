@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Self, Union, Mapping
+from typing import Any, Dict, Mapping, Self, Union
 
 from nicegui import ui
 from nicegui.events import GenericEventArguments
@@ -8,7 +8,7 @@ from nicemvvm.controls.leaflet.circle import Circle
 from nicemvvm.controls.leaflet.path import Path
 from nicemvvm.controls.leaflet.polygon import Polygon
 from nicemvvm.controls.leaflet.polyline import Polyline
-from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
+from nicemvvm.controls.leaflet.types import GeoBounds, LatLng
 from nicemvvm.converter import ValueConverter
 from nicemvvm.observables.collections import ObservableList
 from nicemvvm.observables.observability import Observable, Observer, ObserverHandler
@@ -26,7 +26,8 @@ class LeafletMap(ui.leaflet, Observer):
             options = dict()
 
         ui.leaflet.__init__(
-            self, draw_control=draw_control,
+            self,
+            draw_control=draw_control,
             hide_drawn_items=hide_drawn_items,
             options=options,
             **kwargs,
@@ -244,8 +245,7 @@ class LeafletMap(ui.leaflet, Observer):
         return self
 
     def fit_bounds(self, bounds: GeoBounds, options: Dict | None = None) -> Self:
-        bounds_list = [[bounds.sw.lat, bounds.sw.lng],
-                       [bounds.ne.lat, bounds.ne.lng]]
+        bounds_list = [[bounds.sw.lat, bounds.sw.lng], [bounds.ne.lat, bounds.ne.lng]]
         self.run_map_method("fitBounds", bounds_list, options)
         return self
 
@@ -256,4 +256,3 @@ class LeafletMap(ui.leaflet, Observer):
     def zoom_out(self) -> Self:
         self.run_map_method("zoomOut")
         return self
-

@@ -1,20 +1,23 @@
-from typing import Optional, Mapping, Any
+from typing import Any, Mapping, Optional
 
 from nicegui import ui
-from nicegui.events import Handler, ClickEventArguments
+from nicegui.events import ClickEventArguments, Handler
 
 from nicemvvm.command import Command
-from nicemvvm.observables.observability import Observer, LocalBinder
+from nicemvvm.observables.observability import LocalBinder, Observer
 
 
 class MenuItem(ui.menu_item, Observer):
-    def __init__(self, text: str = "",
-                 command: Command | None = None,
-                 command_binder: LocalBinder | None = None,
-                 visible_binder: LocalBinder | None = None,
-                 on_click: Optional[Handler[ClickEventArguments]] = None,
-                 *,
-                 auto_close: bool = True) -> None:
+    def __init__(
+        self,
+        text: str = "",
+        command: Command | None = None,
+        command_binder: LocalBinder | None = None,
+        visible_binder: LocalBinder | None = None,
+        on_click: Optional[Handler[ClickEventArguments]] = None,
+        *,
+        auto_close: bool = True,
+    ) -> None:
         super().__init__(text, on_click, auto_close=auto_close)
 
         self._command: Command | None = command

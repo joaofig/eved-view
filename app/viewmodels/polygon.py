@@ -4,7 +4,7 @@ from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
 
 from app.viewmodels.shape import MapShape
-from nicemvvm.controls.leaflet.types import LatLng, GeoBounds
+from nicemvvm.controls.leaflet.types import GeoBounds, LatLng
 from nicemvvm.observables.observability import notify_change
 
 
@@ -53,10 +53,15 @@ class MapPolygon(MapShape):
     def get_bounds(self) -> GeoBounds:
         if not self._bounds:
             self._bounds = GeoBounds(
-                LatLng(min((p.lat for p in self._locations)),
-                       min((p.lng for p in self._locations))),
-                LatLng(max((p.lat for p in self._locations)),
-                       max((p.lng for p in self._locations))))
+                LatLng(
+                    min((p.lat for p in self._locations)),
+                    min((p.lng for p in self._locations)),
+                ),
+                LatLng(
+                    max((p.lat for p in self._locations)),
+                    max((p.lng for p in self._locations)),
+                ),
+            )
         return self._bounds
 
     def to_dict(self):
