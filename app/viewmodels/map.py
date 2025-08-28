@@ -5,7 +5,7 @@ from typing import Any, Dict, Tuple
 import h3.api.numpy_int as h3
 
 from app.converters.general import NotNoneValueConverter
-from app.models.trip import Trip, TripModel
+from app.models.TripModel import Trip, TripModel
 from app.viewmodels.circle import MapCircle
 from app.viewmodels.polygon import MapPolygon
 from app.viewmodels.polyline import MapPolyline

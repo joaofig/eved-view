@@ -1,6 +1,6 @@
 from nicegui import context, ui
 
-from app.models.trip import TripModel
+from app.models.TripModel import TripModel
 from app.views.main import MainView
 from nicemvvm.ResourceLocator import ResourceLocator
 

@@ -1,6 +1,6 @@
 from typing import Dict
 
-from app.models.trip import Trip
+from app.models.TripModel import Trip
 from nicemvvm.converter import ValueConverter
 
 
